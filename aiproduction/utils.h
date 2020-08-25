@@ -68,8 +68,7 @@ cv::Mat convertTensortToMat(torch::Tensor tensor, int width, int height)
     cv::Mat resultImg(height, width, CV_8UC3);
     std::memcpy((void *)resultImg.data, tensor.data_ptr(), sizeof(torch::kU8) * tensor.numel());
 
-    //cv::cvtColor(resultImg, resultImg, COLOR_RGB2BGR);
-
+    
 
     return resultImg;
 }
