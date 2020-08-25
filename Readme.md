@@ -1,9 +1,19 @@
 # BUILD
 
 CPU
+ONNXRUNTIME
 Comando utilizzato per s
 ./build.sh --config RelWithDebInfo --build_shared_lib --parallel
 
+TORCHVISION
+
+Per il momento è possibile compilare ma non lo aggiungiamo perchè non ci sono ancora le trasformazioni.
+
+Per includerlo devo cambiare le path dei file torchvision/share/TorchVisionTargets-noconfig.cmake dove c'è scritto path da cambiare
+
+
+La cartella torchvision è stata creata copiando i file in usr/local/include/torchvision /usr/local/lib/libtorchvision.so /usr/local/share/cmake/torchvision 
+una volta completato il build della libreria e eseguendo sudo make install
 
 
 
@@ -131,8 +141,16 @@ https://github.com/wang-xinyu/tensorrtx
 
 
 
+# ONNXRUNTIME LIBTORCH THREAD
+
+https://discuss.pytorch.org/t/onnx-deploying-a-trained-model-in-a-c-project/9593/13
 
 
+# TORCHVISION CPP
+
+https://discuss.pytorch.org/t/about-torchvision-for-c-frontend/49822/8
+
+Scivere a Sharirar quando il framework sarà pronto
 
 
 

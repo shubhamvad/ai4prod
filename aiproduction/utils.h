@@ -11,6 +11,11 @@ Cose da Fare
 1) Creare una funzione per verificare se 2 immagini sono uguali o capire quanto sono diverse
 per il momento dice solo se le 2 immagini sono uguali
 
+2) Funzione per convertire torch::Tensor come input per onnxruntime
+
+3) Compilare TorchVision e aggiungerlo alle librerie. Verificare le trasformazioni con torchVision
+
+
 */
 
 //LIBTORCH

@@ -6,6 +6,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <torchvision/models/resnet.h>
+
 using namespace classification;
 using namespace std;
 
