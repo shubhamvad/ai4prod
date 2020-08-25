@@ -45,12 +45,13 @@ int main(){
     Mat img;
 
     
-    img=imread("/home/eric/Documenti/Predictive-man.png");
+    img=imread("/home/tondelli/Pictures/img1.png");
 
+    resize(img,img,Size(640,480),0.5,0.5,cv::INTER_LANCZOS4);
 
     test = resnet->preprocessing(img);
     
-    std::cout << test << std::endl;
+    //std::cout << test << std::endl;
     
     // cout<<resnet->model<<endl;
     // cout<< "test"<< endl;

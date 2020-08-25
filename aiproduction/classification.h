@@ -1,5 +1,5 @@
 #include "modelInterface.h"
-
+#include "utils.h"
 
 namespace classification{
 
@@ -17,14 +17,16 @@ class ResNet50 : modelInterface{
     
 
     public:
-
+    
     ResNet50();
+    ResNet50(std::string modelPath);
+    
+    
     torch::Tensor preprocessing(Mat &Image);
     torch::Tensor postprocessing(torch::Tensor &input);
     torch::Tensor runmodel(torch::Tensor &output);
 
-    int model;
-
+   
 };
 
 
