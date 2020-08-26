@@ -8,11 +8,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-
-
 using namespace classification;
 using namespace std;
-
 
 //classe Custom posso cambiare solo il preprocessing lasciando invariato il resto
 //Link lista funzioni che possono essere usate
@@ -24,8 +21,7 @@ class customResnet : ResNet50{
 
         cout<<"costruttoreCustom"<<endl;
     }
-    
-    
+
     torch::Tensor preprocessing(Mat &Image){
 
        torch::Tensor test= torch::rand({2, 3});
@@ -34,18 +30,15 @@ class customResnet : ResNet50{
     }
 };
 
-
 int main(){
-    
-    ResNet50 *resnet;    
-    
-    resnet = new ResNet50();
-    
-    
-    
+
+    ResNet50 *resnet;
+
+    resnet = new ResNet50("/home/eric/Scrivania/2020/RepoProduction/aiproductionready/onnxruntime/model/cpu/resnet.onnx");
+
     torch::Tensor test;
-    
-    
+    torch::Tensor out;
+
     Mat img;
 
     cout<<"immagine"<<endl;
@@ -55,12 +48,38 @@ int main(){
 
     waitKey(0);
 
-    resize(img,img,Size(640,480),0.5,0.5,cv::INTER_LANCZOS4);
+    clock_t start,end;
+    
+    resize(img,img,Size(224,224),0.5,0.5,cv::INTER_LANCZOS4);
 
     test = resnet->preprocessing(img);
+
+    try{
+    start = clock();
+    out= resnet->runmodel(test);
+    end = clock();
+    }
+    catch(...){
+
+        cout<<"exception"<<endl;
+
+    }
+
+     
+
+     double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
+        cout << "TOTOAL TIME : " << fixed
+             << time_taken << setprecision(5);
+        cout << " sec " << endl;
+
+
+    clock_t start2,end2;
+
     
+   
+
     //std::cout << test << std::endl;
-    
+
     // cout<<resnet->model<<endl;
     // cout<< "test"<< endl;
 
@@ -73,3 +92,4 @@ int main(){
 
     return 0;
 }
+
