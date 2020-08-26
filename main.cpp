@@ -5,8 +5,10 @@
 #include "aiproduction/classification.h"
 
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 
-#include <torchvision/models/resnet.h>
+
 
 using namespace classification;
 using namespace std;
@@ -46,8 +48,12 @@ int main(){
     
     Mat img;
 
-    
-    img=imread("/home/tondelli/Pictures/img1.png");
+    cout<<"immagine"<<endl;
+    img=imread("/home/eric/Immagini/index.jpeg");
+
+    imshow("test",img);
+
+    waitKey(0);
 
     resize(img,img,Size(640,480),0.5,0.5,cv::INTER_LANCZOS4);
 

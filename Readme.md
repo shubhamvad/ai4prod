@@ -5,7 +5,7 @@ ONNXRUNTIME
 Comando utilizzato per s
 ./build.sh --config RelWithDebInfo --build_shared_lib --parallel
 
-TORCHVISION
+#TORCHVISION
 
 Per il momento è possibile compilare ma non lo aggiungiamo perchè non ci sono ancora le trasformazioni.
 
@@ -14,6 +14,12 @@ Per includerlo devo cambiare le path dei file torchvision/share/TorchVisionTarge
 
 La cartella torchvision è stata creata copiando i file in usr/local/include/torchvision /usr/local/lib/libtorchvision.so /usr/local/share/cmake/torchvision 
 una volta completato il build della libreria e eseguendo sudo make install
+
+# BUILD OPENCV 
+
+cmake -DCMAKE_BUILD_TYPE= RELEASE -D CMAKE_INSTALL_PREFIX=/home/eric/Scrivania/2020/opencv4.1.0/install -D WITH_TTB=ON -D OPENCV_GENERATE_PKGCONFIG=YES -DBUILD_SHARED_LIBS=ON -DOPENCV_EXTRA_MODULES_PATH=./opencv_contrib/modules ..
+
+make package -> crea un file zip contenente tutti i file per includere le opencv in un progetto esterno
 
 
 

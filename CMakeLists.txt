@@ -31,7 +31,7 @@ set(Torch_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libtorch/share/cmake/Torch/)
 # ritorna direttamente gli include senza bisogno di aggiungere target_include_directories
 find_package(Torch REQUIRED)
 
-find_package(TorchVision REQUIRED)
+#find_package(TorchVision REQUIRED)
 
 # servono per compilare libtorch
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
@@ -53,5 +53,5 @@ add_executable(interface main.cpp)
 # include torchvision
 #target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime custom_op_library TorchVision::TorchVision)
 
-target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime custom_op_library)
+target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime )
 

@@ -39,6 +39,16 @@ ResNet50::ResNet50(std::string path){
 }
 
 
+/*
+Distruttore
+*/
+ResNet50::~ResNet50(){
+
+
+
+}
+
+
 torch::Tensor ResNet50::preprocessing(Mat &Image){
 
     //ResNet50::model=data;
@@ -73,6 +83,8 @@ torch::Tensor ResNet50::preprocessing(Mat &Image){
     return inputTensor;
 
 }
+
+
 
 
 
