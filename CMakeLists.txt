@@ -53,5 +53,5 @@ add_executable(interface main.cpp)
 # include torchvision
 #target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime custom_op_library TorchVision::TorchVision)
 
-target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime )
+target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime onnxruntime_providers_tensorrt onnxruntime_providers_shared)
 

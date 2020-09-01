@@ -3,6 +3,8 @@
 #include <opencv2/opencv.hpp>
 #include <onnxruntime_cxx_api.h>
 
+
+
 using namespace cv;
 
 //classe interfaccia su come devono essere create le varie classi

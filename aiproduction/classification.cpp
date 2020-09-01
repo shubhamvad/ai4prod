@@ -1,5 +1,9 @@
 #include "classification.h"
+
+#include "../onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
+
 using namespace std;
+
 
 namespace classification
 {
@@ -27,12 +31,25 @@ ResNet50::ResNet50()
 ResNet50::ResNet50(std::string path)
 {
 
-    env = new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "test");
+    env = new Ort::Env(ORT_LOGGING_LEVEL_VERBOSE, "test");
+
+    //le opzioni devono essere settate prima della creazione della sessione
+
+    //session_options.SetIntraOpNumThreads(6);
+    //session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+    Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options,0));
+
+    
 
     session = new Ort::Session(*env, path.c_str(), session_options);
     //controlla quanti thread sono utilizzati
-    session_options.SetIntraOpNumThreads(6);
-    session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+    
+    
+
+    
+    //Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
+
+   
 
     //INPUT
     num_input_nodes = session->GetInputCount();

@@ -75,7 +75,24 @@ int main(){
 
     clock_t start2,end2;
 
-    
+
+    try{
+    start2 = clock();
+    out= resnet->runmodel(test);
+    end2 = clock();
+    }
+    catch(...){
+
+        cout<<"exception"<<endl;
+
+    }
+
+     
+
+     double time_taken2 = double(end2 - start2) / double(CLOCKS_PER_SEC);
+        cout << "TOTOAL TIME : " << fixed
+             << time_taken2 << setprecision(5);
+        cout << " sec " << endl;    
    
 
     //std::cout << test << std::endl;
