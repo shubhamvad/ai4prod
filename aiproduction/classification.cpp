@@ -35,10 +35,17 @@ ResNet50::ResNet50(std::string path)
 
     //le opzioni devono essere settate prima della creazione della sessione
 
-    //session_options.SetIntraOpNumThreads(6);
-    //session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
-    Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options,0));
+    #ifdef CPU
+    
+    session_options.SetIntraOpNumThreads(1);
+    //ORT_ENABLE_ALL sembra avere le performance migliori
+    session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+    
+    #endif
 
+    #ifdef TENSORRT
+    Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options,0));
+    #endif
     
 
     session = new Ort::Session(*env, path.c_str(), session_options);

@@ -34,7 +34,7 @@ int main(){
 
     ResNet50 *resnet;
 
-    resnet = new ResNet50("/home/eric/Scrivania/2020/RepoProduction/aiproductionready/onnxruntime/model/cpu/resnet.onnx");
+    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx");
 
     torch::Tensor test;
     torch::Tensor out;
@@ -42,7 +42,7 @@ int main(){
     Mat img;
 
     cout<<"immagine"<<endl;
-    img=imread("/home/eric/Immagini/index.jpeg");
+    img=imread("/home/aistudios/Develop/aiproductionready/dog.jpeg");
 
     imshow("test",img);
 
