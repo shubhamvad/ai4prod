@@ -1,0 +1,2 @@
+//#define TENSORRT
+#define CPU
