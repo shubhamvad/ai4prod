@@ -41,13 +41,16 @@ class ResNet50 : modelInterface{
 
     torch::Tensor inputTensor;
 
+    //path del modello di tensorrt
+    std::string m_sModelTrPath;
+
    
     
 
     public:
     
     ResNet50();
-    ResNet50(std::string modelPath);
+    ResNet50(std::string modelPath,std::string modelTr_path=NULL);
     //il distruttore virtual permette di avere una migliore gestione della memoria evitando memory leak
     virtual ~ResNet50();
     

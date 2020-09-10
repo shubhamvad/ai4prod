@@ -34,7 +34,7 @@ int main(){
 
     ResNet50 *resnet;
 
-    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx");
+    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/");
 
     torch::Tensor test;
     torch::Tensor out;
