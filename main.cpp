@@ -34,10 +34,17 @@ int main(){
 
     ResNet50 *resnet;
 
-    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/");
+    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/1");
+
+    ResNet50 *resnet2;
+
+    resnet2 = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/2");
 
     torch::Tensor test;
+    torch::Tensor test2;
     torch::Tensor out;
+
+    torch::Tensor out2;
 
     Mat img;
 
@@ -53,6 +60,9 @@ int main(){
     resize(img,img,Size(224,224),0.5,0.5,cv::INTER_LANCZOS4);
 
     test = resnet->preprocessing(img);
+    
+    test2= resnet2->preprocessing(img);
+
 
     try{
     start = clock();
@@ -94,6 +104,11 @@ int main(){
              << time_taken2 << setprecision(5);
         cout << " sec " << endl;    
    
+    cout<< "SECOND MODEL"<<endl;
+
+    
+    out2= resnet2->runmodel(test2);
+    
 
     //std::cout << test << std::endl;
 

@@ -67,7 +67,7 @@ namespace classification
 
         //esporto le variabili
         m_sModelTrPath = modelTr_path;
-
+        
         Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
 #endif
 
