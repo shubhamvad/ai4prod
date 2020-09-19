@@ -3,111 +3,132 @@
 #include "torch/torch.h"
 
 #include "aiproduction/classification.h"
+#include "aiproduction/objectdetection.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-using namespace classification;
+
 using namespace std;
+using namespace aiProductionReady;
+using namespace objectDetection;
+using namespace classification;
 
 //classe Custom posso cambiare solo il preprocessing lasciando invariato il resto
 //Link lista funzioni che possono essere usate
-class customResnet : ResNet50{
+// class customResnet : ResNet50{
 
-    public:
+//     public:
 
-    customResnet(){
+//     customResnet(){
 
-        cout<<"costruttoreCustom"<<endl;
-    }
+//         cout<<"costruttoreCustom"<<endl;
+//     }
 
-    torch::Tensor preprocessing(Mat &Image){
+//     torch::Tensor preprocessing(Mat &Image){
 
-       torch::Tensor test= torch::rand({2, 3});
-        return test;
+//        torch::Tensor test= torch::rand({2, 3});
+//         return test;
 
-    }
-};
+//     }
+// };
 
 int main(){
 
-    ResNet50 *resnet;
 
-    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/1");
+    Yolov3 *yolov3;
 
-    ResNet50 *resnet2;
-
-    resnet2 = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/2");
-
-    torch::Tensor test;
-    torch::Tensor test2;
-    torch::Tensor out;
-
-    torch::Tensor out2;
+    yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/1");
 
     Mat img;
-
-    cout<<"immagine"<<endl;
-    img=imread("/home/aistudios/Develop/aiproductionready/dog.jpeg");
-
-    imshow("test",img);
-
-    waitKey(0);
-
-    clock_t start,end;
+    img=imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
     
-    resize(img,img,Size(224,224),0.5,0.5,cv::INTER_LANCZOS4);
+    torch::Tensor test;
 
-    test = resnet->preprocessing(img);
+    test=yolov3->preprocessing(img);
+    yolov3->runmodel(test);
+
     
-    test2= resnet2->preprocessing(img);
-
-
-    try{
-    start = clock();
-    out= resnet->runmodel(test);
-    end = clock();
-    }
-    catch(...){
-
-        cout<<"exception"<<endl;
-
-    }
-
-     
-
-     double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
-        cout << "TOTOAL TIME : " << fixed
-             << time_taken << setprecision(5);
-        cout << " sec " << endl;
-
-
-    clock_t start2,end2;
-
-
-    try{
-    start2 = clock();
-    out= resnet->runmodel(test);
-    end2 = clock();
-    }
-    catch(...){
-
-        cout<<"exception"<<endl;
-
-    }
-
-     
-
-     double time_taken2 = double(end2 - start2) / double(CLOCKS_PER_SEC);
-        cout << "TOTOAL TIME : " << fixed
-             << time_taken2 << setprecision(5);
-        cout << " sec " << endl;    
    
-    cout<< "SECOND MODEL"<<endl;
 
     
-    out2= resnet2->runmodel(test2);
+    // ResNet50 *resnet;
+
+    // resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/1");
+
+    // ResNet50 *resnet2;
+
+    // resnet2 = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/2");
+
+    // torch::Tensor test;
+    // torch::Tensor test2;
+    // torch::Tensor out;
+
+    // torch::Tensor out2;
+
+    // Mat img;
+
+    // cout<<"immagine"<<endl;
+    // img=imread("/home/aistudios/Develop/aiproductionready/dog.jpeg");
+
+    // imshow("test",img);
+
+    // waitKey(0);
+
+    // clock_t start,end;
+    
+    // resize(img,img,Size(224,224),0.5,0.5,cv::INTER_LANCZOS4);
+
+    // test = resnet->preprocessing(img);
+    
+    // test2= resnet2->preprocessing(img);
+
+
+    // try{
+    // start = clock();
+    // out= resnet->runmodel(test);
+    // end = clock();
+    // }
+    // catch(...){
+
+    //     cout<<"exception"<<endl;
+
+    // }
+
+     
+
+    //  double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
+    //     cout << "TOTOAL TIME : " << fixed
+    //          << time_taken << setprecision(5);
+    //     cout << " sec " << endl;
+
+
+    // clock_t start2,end2;
+
+
+    // try{
+    // start2 = clock();
+    // out= resnet->runmodel(test);
+    // end2 = clock();
+    // }
+    // catch(...){
+
+    //     cout<<"exception"<<endl;
+
+    // }
+
+     
+
+    //  double time_taken2 = double(end2 - start2) / double(CLOCKS_PER_SEC);
+    //     cout << "TOTOAL TIME : " << fixed
+    //          << time_taken2 << setprecision(5);
+    //     cout << " sec " << endl;    
+   
+    // cout<< "SECOND MODEL"<<endl;
+
+    
+    // out2= resnet2->runmodel(test2);
     
 
     //std::cout << test << std::endl;

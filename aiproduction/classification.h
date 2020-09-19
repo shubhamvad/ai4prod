@@ -1,10 +1,12 @@
 #include "modelInterface.h"
-#include "utils.h"
+
+namespace aiProductionReady{
+
 
 namespace classification{
 
 
-class ResNet50 : modelInterface{
+class ResNet50 : aiProductionReady::modelInterface{
 
 
 
@@ -44,6 +46,8 @@ class ResNet50 : modelInterface{
     //path del modello di tensorrt
     std::string m_sModelTrPath;
 
+    aiProductionReady::aiutils aut;
+
    
     
 
@@ -65,4 +69,6 @@ class ResNet50 : modelInterface{
 
 
 
-}
+}//namespace classification
+
+}//namespace aiproductionReady

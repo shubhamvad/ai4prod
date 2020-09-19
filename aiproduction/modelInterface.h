@@ -3,20 +3,29 @@
 #include <opencv2/opencv.hpp>
 #include <onnxruntime_cxx_api.h>
 #include "define.h"
+#include "utils.h"
 
-
-
+#pragma once
 using namespace cv;
 
-//classe interfaccia su come devono essere create le varie classi
-class modelInterface{
+namespace aiProductionReady
+{
 
-public:
+//include guards
+//#ifndef AIPRODMODELINTERFACE
+//#define AIPRODMODELINTERFACE
+    //classe interfaccia su come devono essere create le varie classi
+    class modelInterface
+    {
 
-virtual torch::Tensor preprocessing(Mat &Image)=0;
+    public:
+        virtual torch::Tensor preprocessing(Mat &Image) = 0;
 
-virtual torch::Tensor runmodel(torch::Tensor &input)=0;
+        virtual torch::Tensor runmodel(torch::Tensor &input) = 0;
 
-virtual torch::Tensor postprocessing(torch::Tensor &output)=0;
+        virtual torch::Tensor postprocessing(torch::Tensor &output) = 0;
+    };
 
-};
+//#endif
+
+} // namespace aiProductionReady

@@ -6,7 +6,7 @@
 using namespace std;
 
 using namespace onnxruntime;
-
+namespace aiProductionReady{
 namespace classification
 {
 
@@ -100,7 +100,7 @@ Distruttore
 
         //ResNet50::model=data;
 
-        inputTensor = convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
+        inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
         //definisco la dimensione di input
 
@@ -325,3 +325,5 @@ Distruttore
     }
 
 } // namespace classification
+
+}//namesapce aiProductionReady
