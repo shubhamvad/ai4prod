@@ -39,10 +39,10 @@ int main(){
 
     Yolov3 *yolov3;
 
-    yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/1");
+    yolov3= new Yolov3("/home/nvidia/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/nvidia/1");
 
     Mat img;
-    img=imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
+    img=imread("/home/nvidia/Develop/aiproductionready/test/objectDetection/dog.jpg");
     
     torch::Tensor test;
 

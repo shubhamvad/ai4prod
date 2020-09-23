@@ -395,7 +395,7 @@ namespace aiProductionReady
 
 
             Mat img;
-            img = imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
+            img = imread("/home/nvidia/Develop/aiproductionready/test/objectDetection/dog.jpg");
 
             int indNms = 0;
             for (auto &value : bboxValues)
