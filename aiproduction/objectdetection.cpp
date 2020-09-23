@@ -3,6 +3,8 @@
 #include "../onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 #include "../onnxruntime/include/onnxruntime/core/providers/providers.h"
 
+
+/*
 using namespace std;
 namespace aiProductionReady
 {
@@ -395,7 +397,7 @@ namespace aiProductionReady
 
 
             Mat img;
-            img = imread("/home/nvidia/Develop/aiproductionready/test/objectDetection/dog.jpg");
+            img = imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
 
             int indNms = 0;
             for (auto &value : bboxValues)
@@ -491,3 +493,5 @@ namespace aiProductionReady
     } // namespace objectDetection
 
 } // namespace aiProductionReady
+
+*/

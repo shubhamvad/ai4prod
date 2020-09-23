@@ -6,7 +6,7 @@ namespace aiProductionReady{
 namespace classification{
 
 
-class ResNet50 : aiProductionReady::modelInterface{
+class ResNet50 : aiProductionReady::modelInterfaceClassification{
 
 
 
@@ -39,9 +39,21 @@ class ResNet50 : aiProductionReady::modelInterface{
     //Dimensione del tensore di input modello .onnx
     size_t input_tensor_size;
 
-    float *p;
+
+    //
+
+    int m_iModelNumberOfClass;
+    int m_iNumberOfReturnedPrediction;
+    
+    
+    
+
+    //puntatori dati uscita ingresso onnxruntime
+    float *m_fpOutOnnxRuntime;
+    float *m_fpInOnnxRuntime;
 
     torch::Tensor inputTensor;
+    torch::Tensor m_TOutputTensor;
 
     //path del modello di tensorrt
     std::string m_sModelTrPath;
@@ -54,13 +66,13 @@ class ResNet50 : aiProductionReady::modelInterface{
     public:
     
     ResNet50();
-    ResNet50(std::string modelPath,std::string modelTr_path=NULL);
+    ResNet50(std::string modelPath ,int ModelNumberOfClass,int NumberOfReturnedPrediction,std::string modelTr_path=NULL);
     //il distruttore virtual permette di avere una migliore gestione della memoria evitando memory leak
     virtual ~ResNet50();
     
-    torch::Tensor preprocessing(Mat &Image);
-    torch::Tensor postprocessing(torch::Tensor &input);
-    torch::Tensor runmodel(torch::Tensor &output);
+    void preprocessing(Mat &Image);
+   std::tuple<torch::Tensor,torch::Tensor>postprocessing();
+    void runmodel();
 
    
 };

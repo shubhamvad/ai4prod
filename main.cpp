@@ -9,10 +9,9 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-
 using namespace std;
 using namespace aiProductionReady;
-using namespace objectDetection;
+//using namespace objectDetection;
 using namespace classification;
 
 //classe Custom posso cambiare solo il preprocessing lasciando invariato il resto
@@ -34,28 +33,34 @@ using namespace classification;
 //     }
 // };
 
-int main(){
+int main()
+{
 
+    // Yolov3 *yolov3;
 
-    Yolov3 *yolov3;
+    // yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/1");
 
-    yolov3= new Yolov3("/home/nvidia/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/nvidia/1");
+    // Mat img;
+    // img=imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
 
+    // torch::Tensor test;
+
+    // test=yolov3->preprocessing(img);
+    // yolov3->runmodel(test);
+    // yolov3->runmodel(test);
+
+    ResNet50 *resnet;
+
+    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx",1000,5, "/home/aistudios/2");
     Mat img;
-    img=imread("/home/nvidia/Develop/aiproductionready/test/objectDetection/dog.jpg");
+    img = imread("/home/aistudios/Develop/aiproductionready/test/classification/dog.jpeg");
+
+    resnet->preprocessing(img);
+    resnet->runmodel();
     
-    torch::Tensor test;
+    std::tuple<torch::Tensor,torch::Tensor> prediction = resnet->postprocessing();
 
-    test=yolov3->preprocessing(img);
-    yolov3->runmodel(test);
-
-    
-   
-
-    
-    // ResNet50 *resnet;
-
-    // resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/1");
+    cout<<"Class "<< std::get<0>(prediction)[0]<<endl;
 
     // ResNet50 *resnet2;
 
@@ -77,13 +82,12 @@ int main(){
     // waitKey(0);
 
     // clock_t start,end;
-    
+
     // resize(img,img,Size(224,224),0.5,0.5,cv::INTER_LANCZOS4);
 
     // test = resnet->preprocessing(img);
-    
-    // test2= resnet2->preprocessing(img);
 
+    // test2= resnet2->preprocessing(img);
 
     // try{
     // start = clock();
@@ -96,16 +100,12 @@ int main(){
 
     // }
 
-     
-
     //  double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
     //     cout << "TOTOAL TIME : " << fixed
     //          << time_taken << setprecision(5);
     //     cout << " sec " << endl;
 
-
     // clock_t start2,end2;
-
 
     // try{
     // start2 = clock();
@@ -118,18 +118,14 @@ int main(){
 
     // }
 
-     
-
     //  double time_taken2 = double(end2 - start2) / double(CLOCKS_PER_SEC);
     //     cout << "TOTOAL TIME : " << fixed
     //          << time_taken2 << setprecision(5);
-    //     cout << " sec " << endl;    
-   
+    //     cout << " sec " << endl;
+
     // cout<< "SECOND MODEL"<<endl;
 
-    
     // out2= resnet2->runmodel(test2);
-    
 
     //std::cout << test << std::endl;
 
@@ -145,4 +141,3 @@ int main(){
 
     return 0;
 }
-

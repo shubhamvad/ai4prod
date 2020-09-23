@@ -2,6 +2,7 @@
 
 namespace aiProductionReady{
 
+/*
 namespace objectDetection
 {
 
@@ -114,4 +115,6 @@ namespace objectDetection
 
 } // namespace objectDetection
 
+*/
 }//namespace aiProductionReady
+

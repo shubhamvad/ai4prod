@@ -15,15 +15,27 @@ namespace aiProductionReady
 //#ifndef AIPRODMODELINTERFACE
 //#define AIPRODMODELINTERFACE
     //classe interfaccia su come devono essere create le varie classi
-    class modelInterface
+    class modelInterfaceClassification
     {
 
     public:
-        virtual torch::Tensor preprocessing(Mat &Image) = 0;
+        virtual void preprocessing(Mat &Image) = 0;
 
-        virtual torch::Tensor runmodel(torch::Tensor &input) = 0;
+        virtual void runmodel() = 0;
 
-        virtual torch::Tensor postprocessing(torch::Tensor &output) = 0;
+        virtual std::tuple<torch::Tensor,torch::Tensor> postprocessing()=0;
+    };
+
+
+     class modelInterfaceObjectDetection
+    {
+
+    public:
+        virtual void preprocessing(Mat &Image) = 0;
+
+        virtual void runmodel() = 0;
+
+        virtual torch::Tensor postprocessing()=0;
     };
 
 //#endif
