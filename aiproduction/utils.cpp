@@ -88,95 +88,29 @@ verify if 2 Mat are equal
         Scalar s = sum(a - b);
 
         std::cout << s << std::endl;
-
+        
         return (s[0] == 0) && (s[1] == 0) && (s[2] == 0);
     }
 
-//sort index function
-    template <typename T>
-    std::deque<size_t> aiutils::sortIndexes(const std::vector<T> &v)
+
+ torch::Tensor aiutils::convert2dVectorToTensor(std::vector<std::vector<float>>& input){
+
+    cv::Mat NewSamples(0, input[0].size(), cv::DataType<float>::type);
+
+    for (unsigned int i = 0; i < input.size(); ++i)
     {
+        // Make a temporary cv::Mat row and add to NewSamples _without_ data copy
+        cv::Mat Sample(1, input[0].size(), cv::DataType<float>::type, input[i].data());
 
-        std::deque<size_t> indices(v.size());
-        std::iota(indices.begin(), indices.end(), 0);
-
-        std::stable_sort(std::begin(indices), std::end(indices), [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
-
-        return indices;
+        NewSamples.push_back(Sample);
     }
 
-//non max suppression
-    std::vector<uint64_t> aiutils::nms(const std::vector<std::array<float, 4>> &bboxes,           //
-                                       const std::vector<float> &scores,                          //
-                                       const float overlapThresh,                          //
-                                       const uint64_t topK  //
-    )
-    {
-        assert(bboxes.size() > 0);
-        uint64_t boxesLength = bboxes.size();
-        const uint64_t realK = std::max(std::min(boxesLength, topK), static_cast<uint64_t>(1));
 
-        std::vector<uint64_t> keepIndices;
-        keepIndices.reserve(realK);
+    torch::Tensor Output=torch::from_blob(NewSamples.data,{(long int)input.size(),(long int)input[0].size()}).contiguous().clone();
 
-        std::deque<uint64_t> sortedIndices = aiutils::sortIndexes(scores);
+    
+    return Output;
 
-        // keep only topk bboxes
-        for (uint64_t i = 0; i < boxesLength - realK; ++i)
-        {
-            sortedIndices.pop_front();
-        }
-
-        std::vector<float> areas;
-        areas.reserve(boxesLength);
-        std::transform(std::begin(bboxes), std::end(bboxes), std::back_inserter(areas),
-                       [](const auto &elem) { return (elem[2] - elem[0]) * (elem[3] - elem[1]); });
-
-        while (!sortedIndices.empty())
-        {
-            uint64_t currentIdx = sortedIndices.back();
-            keepIndices.emplace_back(currentIdx);
-
-            if (sortedIndices.size() == 1)
-            {
-                break;
-            }
-
-            sortedIndices.pop_back();
-            std::vector<float> ious;
-            ious.reserve(sortedIndices.size());
-
-            const auto &curBbox = bboxes[currentIdx];
-            const float curArea = areas[currentIdx];
-
-            std::deque<uint64_t> newSortedIndices;
-
-            for (const uint64_t elem : sortedIndices)
-            {
-                const auto &bbox = bboxes[elem];
-                float tmpXmin = std::max(curBbox[0], bbox[0]);
-                float tmpYmin = std::max(curBbox[1], bbox[1]);
-                float tmpXmax = std::min(curBbox[2], bbox[2]);
-                float tmpYmax = std::min(curBbox[3], bbox[3]);
-
-                float tmpW = std::max<float>(tmpXmax - tmpXmin, 0.0);
-                float tmpH = std::max<float>(tmpYmax - tmpYmin, 0.0);
-
-                const float intersection = tmpW * tmpH;
-                const float tmpArea = areas[elem];
-                const float unionArea = tmpArea + curArea - intersection;
-                const float iou = intersection / unionArea;
-
-                if (iou <= overlapThresh)
-                {
-                    newSortedIndices.emplace_back(elem);
-                }
-            }
-
-            sortedIndices = newSortedIndices;
-        }
-
-        return keepIndices;
-    }
+ }
 
 } // namespace aiProductionReady

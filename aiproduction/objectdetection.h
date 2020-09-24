@@ -2,22 +2,16 @@
 
 namespace aiProductionReady{
 
-/*
+
 namespace objectDetection
 {
 
-    class Yolov3 : aiProductionReady::modelInterface
+    class Yolov3 : aiProductionReady::modelInterfaceObjectDetection
     {
 
     private:
 
-        struct alignas(float) Detection{
-        //x y w h
-        float bbox[4];
-        float det_confidence;
-        float class_id;
-        float class_confidence;
-    };
+
         //ONNX RUNTIME
         Ort::SessionOptions session_options;
         //la sessione deve essere inizializzata nel costruttore
@@ -40,11 +34,12 @@ namespace objectDetection
         std::vector<int64_t> out_node_dims;
 
         //Dimensione del tensore di input modello .onnx
-        size_t input_tensor_size;
+        size_t m_InputTorchTensorSize;
 
-        float *p;
+        float *m_fpInputOnnxRuntime;
+        float *m_fpOutOnnxRuntime[2];
 
-        torch::Tensor inputTensor;
+        torch::Tensor m_TInputTorchTensor;
 
         //path del modello di tensorrt
         std::string m_sModelTrPath;
@@ -69,7 +64,7 @@ namespace objectDetection
 
         //funzioni di POST PROCESSING
 
-        
+        std::vector<int64_t> m_viNumberOfBoundingBox;
 
        
 
@@ -88,9 +83,9 @@ namespace objectDetection
 
         Yolov3(std::string modelPathOnnx, int input_h,int input_w,std::string modelTr_path = NULL);
 
-        torch::Tensor preprocessing(Mat &Image);
-        torch::Tensor postprocessing(torch::Tensor &input);
-        torch::Tensor runmodel(torch::Tensor &output);
+        void preprocessing(Mat &Image);
+        torch::Tensor postprocessing();
+        void runmodel();
 
         //return width of input image
         int getWidth(){
@@ -115,6 +110,6 @@ namespace objectDetection
 
 } // namespace objectDetection
 
-*/
+
 }//namespace aiProductionReady
 

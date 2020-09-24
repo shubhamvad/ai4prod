@@ -60,7 +60,7 @@ class ResNet50 : aiProductionReady::modelInterfaceClassification{
 
     aiProductionReady::aiutils aut;
 
-   
+    
     
 
     public:

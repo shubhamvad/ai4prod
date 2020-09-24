@@ -205,33 +205,16 @@ Distruttore
                 Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_tensor_size, input_node_dims.data(), 4);
                 assert(input_tensor.IsTensor());
 
-#ifdef TENSORRT
 
-                //conversione string to char[]
-                // m_sModelTrPath= "ORT_TENSORRT_ENGINE_CACHE_PATH='" + m_sModelTrPath + "'";
-                // int n = m_sModelTrPath.length();
-                // char modelSavePath[n + 1];
+                
 
-                // strcpy(modelSavePath,m_sModelTrPath.c_str());
-                // //esporto le path del modello di Tensorrt
-                // putenv(modelSavePath );
-
-                // std::cout << "TEMP = " << getenv("ORT_TENSORRT_ENGINE_CACHE_PATH") << std::endl;
-
-#endif
-
-                clock_t start, end;
-
-                // start = clock();
+         
                 auto output_tensors = session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
-                // end = clock();
+                
 
                 assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
 
-                // double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
-                // cout << "Time taken by program is : " << fixed
-                //      << time_taken << setprecision(5);
-                // cout << " sec " << endl;
+
 
                 assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
 
@@ -263,13 +246,13 @@ Distruttore
             m_TOutputTensor = torch::from_blob(m_fpOutOnnxRuntime, {m_iModelNumberOfClass}).clone();
 
 
-            std::tuple<torch::Tensor,torch::Tensor> best5Prediction=torch::sort(m_TOutputTensor,0,true);
+            std::tuple<torch::Tensor,torch::Tensor> bestTopPrediction=torch::sort(m_TOutputTensor,0,true);
 
-            torch::Tensor ind= torch::slice(std::get<1>(best5Prediction),0,0,m_iNumberOfReturnedPrediction,1);
-            torch::Tensor value= torch::slice(std::get<0>(best5Prediction),0,0,m_iNumberOfReturnedPrediction,1);
+            torch::Tensor indeces= torch::slice(std::get<1>(bestTopPrediction),0,0,m_iNumberOfReturnedPrediction,1);
+            torch::Tensor value= torch::slice(std::get<0>(bestTopPrediction),0,0,m_iNumberOfReturnedPrediction,1);
             
 
-            std::tuple<torch::Tensor,torch::Tensor> topPrediction={ind,value};
+            std::tuple<torch::Tensor,torch::Tensor> topPrediction={indeces,value};
 
             return topPrediction;
         }
