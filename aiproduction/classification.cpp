@@ -42,7 +42,7 @@ namespace aiProductionReady
 
             m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + modelTr_path;
 
-            cout << m_sModelTrPath << endl;
+            //cout << m_sModelTrPath << endl;
 
             int n = m_sModelTrPath.length();
             char modelSavePath[n + 1];
@@ -87,7 +87,7 @@ namespace aiProductionReady
             num_out_nodes = session->GetOutputCount();
             out_node_names = std::vector<const char *>(num_out_nodes);
 
-            cout << "sessione inizializzata" << endl;
+            //cout << "sessione inizializzata" << endl;
         }
 
         /*
@@ -158,7 +158,7 @@ Distruttore
                 {
                     // print input node names
                     char *input_name = session->GetInputName(i, allocator);
-                    printf("Input %d : name=%s\n", i, input_name);
+                    //printf("Input %d : name=%s\n", i, input_name);
                     input_node_names[i] = input_name;
 
                     // print input node types
@@ -166,32 +166,32 @@ Distruttore
                     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
 
                     ONNXTensorElementDataType type = tensor_info.GetElementType();
-                    printf("Input %d : type=%d\n", i, type);
+                    //printf("Input %d : type=%d\n", i, type);
 
                     // print input shapes/dims
                     input_node_dims = tensor_info.GetShape();
-                    printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
-                    for (int j = 0; j < input_node_dims.size(); j++)
-                        printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
+                    //printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
+                    //for (int j = 0; j < input_node_dims.size(); j++)
+                        //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
                 }
 
                 for (int i = 0; i < num_out_nodes; i++)
                 {
                     // print input node names
                     char *input_name = session->GetOutputName(i, allocator);
-                    printf("Input %d : name=%s\n", i, input_name);
+                    //printf("Input %d : name=%s\n", i, input_name);
 
                     Ort::TypeInfo type_info = session->GetOutputTypeInfo(i);
                     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
 
                     ONNXTensorElementDataType type = tensor_info.GetElementType();
-                    printf("Input %d : type=%d\n", i, type);
+                    //rintf("Input %d : type=%d\n", i, type);
 
                     // print input shapes/dims
                     out_node_dims = tensor_info.GetShape();
-                    printf("Input %d : num_dims=%zu\n", i, out_node_dims.size());
-                    for (int j = 0; j < out_node_dims.size(); j++)
-                        printf("Input %d : dim %d=%jd\n", i, j, out_node_dims[j]);
+                    //printf("Input %d : num_dims=%zu\n", i, out_node_dims.size());
+                    //for (int j = 0; j < out_node_dims.size(); j++)
+                        //printf("Input %d : dim %d=%jd\n", i, j, out_node_dims[j]);
                 }
 
                 std::vector<const char *> output_node_names = {"output1"};
@@ -222,16 +222,16 @@ Distruttore
 
                 clock_t start, end;
 
-                start = clock();
+                // start = clock();
                 auto output_tensors = session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
-                end = clock();
+                // end = clock();
 
                 assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
 
-                double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
-                cout << "Time taken by program is : " << fixed
-                     << time_taken << setprecision(5);
-                cout << " sec " << endl;
+                // double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
+                // cout << "Time taken by program is : " << fixed
+                //      << time_taken << setprecision(5);
+                // cout << " sec " << endl;
 
                 assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
 

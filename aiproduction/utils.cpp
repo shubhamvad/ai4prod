@@ -48,8 +48,8 @@ namespace aiProductionReady
         // you need to be contiguous to have all address memory of tensor sequentially
         img_tensor = img_tensor.permute({0, 3, 1, 2}).contiguous();
 
-        std::cout << img_tensor.dim() << std::endl;
-        std::cout << img_tensor.sizes() << std::endl;
+        //std::cout << img_tensor.dim() << std::endl;
+        //std::cout << img_tensor.sizes() << std::endl;
 
         return img_tensor;
     }

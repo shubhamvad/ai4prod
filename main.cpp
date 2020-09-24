@@ -14,6 +14,8 @@ using namespace aiProductionReady;
 //using namespace objectDetection;
 using namespace classification;
 
+using namespace std::chrono;
+
 //classe Custom posso cambiare solo il preprocessing lasciando invariato il resto
 //Link lista funzioni che possono essere usate
 // class customResnet : ResNet50{
@@ -51,17 +53,35 @@ int main()
 
     ResNet50 *resnet;
 
-    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx",1000,5, "/home/aistudios/2");
+    resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx", 1000, 5, "/home/aistudios/resnet");
     Mat img;
     img = imread("/home/aistudios/Develop/aiproductionready/test/classification/dog.jpeg");
 
-    resnet->preprocessing(img);
-    resnet->runmodel();
+    auto start = high_resolution_clock::now(); 
+
     
-    std::tuple<torch::Tensor,torch::Tensor> prediction = resnet->postprocessing();
 
-    cout<<"Class "<< std::get<0>(prediction)[0]<<endl;
+    for (int i=0; i<100;i++){
 
+
+    resnet->preprocessing(img);
+    
+    resnet->runmodel();
+
+    std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
+    }
+
+    auto stop = high_resolution_clock::now(); 
+    //cout << "Class " << std::get<0>(prediction)[0] << endl;
+
+    auto duration = duration_cast<microseconds>(stop - start); 
+    
+    cout << "SINGLE TIME INFERENCE "<< (double)duration.count()/(1000000*100) << "Sec"<<endl;
+
+    
+    
+    
+    
     // ResNet50 *resnet2;
 
     // resnet2 = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/2");
