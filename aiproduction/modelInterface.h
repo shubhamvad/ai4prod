@@ -4,6 +4,8 @@
 #include <onnxruntime_cxx_api.h>
 #include "define.h"
 #include "utils.h"
+//generato a runtime da Cmake
+#include "aiproduction_export.h"
 
 #pragma once
 using namespace cv;

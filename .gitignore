@@ -3,3 +3,11 @@ libtorch/
 onnxruntime/
 opencv/
 .vscode/
+aiproduction/aiproduction_export.h
+sample/Windows/CmakeOnnxRuntime
+sample/Windows/include/
+sample/Windows/OnnxTestVisualStudios/model/
+sample/Windows/OnnxTestVisualStudios/lib/
+sample/Windows/OnnxTestVisualStudios/x64/
+sample/Windows/OnnxTestVisualStudios/.vs/
+sample/Windows/OnnxTestVisualStudios/OnnxTestVisualStudios/

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(aiproduction)
 
+include(GenerateExportHeader)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -26,23 +27,59 @@ find_package(Torch REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
+# windows Only
 
 #opencv
 if(${X86_64})
+    if(UNIX)
     find_package(OpenCV 4.1 EXACT REQUIRED PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../opencv/)
+        endif()
+    if (MSVC)
+        find_package(OpenCV 4.4 EXACT REQUIRED PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../opencv/)
+    endif()
 elseif(${AARCH64})
     find_package(OpenCV 4.1 REQUIRED)
 endif()
 
 
-add_library(aiproduction SHARED classification.cpp classification.h objectdetection.h objectdetection.cpp utils.h utils.cpp define.h)
+add_library(aiproduction SHARED classification.cpp classification.h objectdetection.h objectdetection.cpp utils.h utils.cpp define.h aiproduction_export.h)
 
 #onnx runtime
 
 
+#linux
+#target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS})
 
+#windows
+target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime )
 
-target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} )
+# crea gli export necessari per includere le librerie sia su windows che su linux 
+#aggiungo questo file a gitignore siccome è generato a runtime
+generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction_export.h)
+
+if (MSVC)
+  #libtorch
+  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+  add_custom_command(TARGET aiproduction
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TORCH_DLLS}
+                     $<TARGET_FILE_DIR:aiproduction>)
+    #tensorrt 
+   file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
+   add_custom_command(TARGET aiproduction
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TENSORRT_DLL}
+                     $<TARGET_FILE_DIR:aiproduction>)
+
+    file(GLOB ONNXRUNTIME_DLL "../onnxruntime/lib/onnxruntime/tensorrt/*.dll")
+    add_custom_command(TARGET aiproduction
+                    POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${ONNXRUNTIME_DLL}
+                    $<TARGET_FILE_DIR:aiproduction>)
+endif (MSVC)
 
 
 

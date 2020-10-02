@@ -11,13 +11,13 @@ namespace aiProductionReady
     namespace classification
     {
 
-        //Da fare
-
-        /*
-1) Costruttore inserire la path di caricamento del modello
-2) Sistemare il codice per caricare il modello Resnet
-*/
-
+        //        //Da fare
+        //
+        //        /*
+        //1) Costruttore inserire la path di caricamento del modello
+        //2) Sistemare il codice per caricare il modello Resnet
+        //*/
+        //
         ResNet50::ResNet50()
         {
 
@@ -31,18 +31,21 @@ namespace aiProductionReady
             //session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
         }
 
-        ResNet50::ResNet50(std::string path,int ModelNumberOfClass,int NumberOfReturnedPrediction, std::string modelTr_path)
-        {   
-            m_iModelNumberOfClass=ModelNumberOfClass;
-            m_iNumberOfReturnedPrediction=NumberOfReturnedPrediction;
+        ResNet50::ResNet50(std::string path, int ModelNumberOfClass, int NumberOfReturnedPrediction, std::string modelTr_path)
+        {
+            m_iModelNumberOfClass = ModelNumberOfClass;
+            m_iNumberOfReturnedPrediction = NumberOfReturnedPrediction;
 
             //queste variabili devono essere settate prima di inzializzara la sessione
             char cacheModel[] = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=1";
-            putenv(cacheModel);
 
             m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + modelTr_path;
 
             //cout << m_sModelTrPath << endl;
+
+#ifdef __linux__
+
+            putenv(cacheModel);
 
             int n = m_sModelTrPath.length();
             char modelSavePath[n + 1];
@@ -52,7 +55,12 @@ namespace aiProductionReady
             putenv(modelSavePath);
 
             //test = OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options,0);
+#elif _WIN32
 
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", "1");
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", modelTr_path.c_str());
+
+#endif
             env = new Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test");
 
             //le opzioni devono essere settate prima della creazione della sessione
@@ -72,8 +80,19 @@ namespace aiProductionReady
 
             Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
 #endif
-
+#ifdef __linux__
             session = new Ort::Session(*env, path.c_str(), session_options);
+
+#elif _WIN32
+
+            //in windows devo inizializzarlo in questo modo
+            std::wstring widestr = std::wstring(path.begin(), path.end());
+            session = new Ort::Session(*env, widestr.c_str(), session_options);
+
+#endif
+
+            //linux
+            //
 
             //controlla quanti thread sono utilizzati
 
@@ -172,7 +191,7 @@ Distruttore
                     input_node_dims = tensor_info.GetShape();
                     //printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
                     //for (int j = 0; j < input_node_dims.size(); j++)
-                        //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
+                    //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
                 }
 
                 for (int i = 0; i < num_out_nodes; i++)
@@ -191,7 +210,7 @@ Distruttore
                     out_node_dims = tensor_info.GetShape();
                     //printf("Input %d : num_dims=%zu\n", i, out_node_dims.size());
                     //for (int j = 0; j < out_node_dims.size(); j++)
-                        //printf("Input %d : dim %d=%jd\n", i, j, out_node_dims[j]);
+                    //printf("Input %d : dim %d=%jd\n", i, j, out_node_dims[j]);
                 }
 
                 std::vector<const char *> output_node_names = {"output1"};
@@ -205,16 +224,9 @@ Distruttore
                 Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_tensor_size, input_node_dims.data(), 4);
                 assert(input_tensor.IsTensor());
 
-
-                
-
-         
                 auto output_tensors = session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
-                
 
                 assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
-
-
 
                 assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
 
@@ -223,10 +235,6 @@ Distruttore
                 float label;
 
                 int cls;
-
-               
-
-               
             }
 
             else
@@ -234,25 +242,20 @@ Distruttore
 
                 cout << "Il tensore non è contiguous non possibile eseguire inferenza" << endl;
             }
-
-           
         }
 
-        std::tuple<torch::Tensor,torch::Tensor> ResNet50::postprocessing()
+        std::tuple<torch::Tensor, torch::Tensor> ResNet50::postprocessing()
         {
-
 
             //https://discuss.pytorch.org/t/can-i-initialize-tensor-from-std-vector-in-libtorch/33236/4
             m_TOutputTensor = torch::from_blob(m_fpOutOnnxRuntime, {m_iModelNumberOfClass}).clone();
 
+            std::tuple<torch::Tensor, torch::Tensor> bestTopPrediction = torch::sort(m_TOutputTensor, 0, true);
 
-            std::tuple<torch::Tensor,torch::Tensor> bestTopPrediction=torch::sort(m_TOutputTensor,0,true);
+            torch::Tensor indeces = torch::slice(std::get<1>(bestTopPrediction), 0, 0, m_iNumberOfReturnedPrediction, 1);
+            torch::Tensor value = torch::slice(std::get<0>(bestTopPrediction), 0, 0, m_iNumberOfReturnedPrediction, 1);
 
-            torch::Tensor indeces= torch::slice(std::get<1>(bestTopPrediction),0,0,m_iNumberOfReturnedPrediction,1);
-            torch::Tensor value= torch::slice(std::get<0>(bestTopPrediction),0,0,m_iNumberOfReturnedPrediction,1);
-            
-
-            std::tuple<torch::Tensor,torch::Tensor> topPrediction={indeces,value};
+            std::tuple<torch::Tensor, torch::Tensor> topPrediction = {indeces, value};
 
             return topPrediction;
         }

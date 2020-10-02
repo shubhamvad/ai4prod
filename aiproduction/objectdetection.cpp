@@ -2,8 +2,6 @@
 #include "../onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 #include "../onnxruntime/include/onnxruntime/core/providers/providers.h"
 
-
-
 using namespace std;
 namespace aiProductionReady
 {
@@ -24,10 +22,12 @@ namespace aiProductionReady
             m_iInput_w = input_w;
 
             char cacheModel[] = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=1";
-            putenv(cacheModel);
 
             m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + modelTr_path;
 
+#ifdef __linux__
+
+            putenv(cacheModel);
             cout << m_sModelTrPath << endl;
 
             int n = m_sModelTrPath.length();
@@ -36,7 +36,12 @@ namespace aiProductionReady
             strcpy(modelSavePath, m_sModelTrPath.c_str());
             //esporto le path del modello di Tensorrt
             putenv(modelSavePath);
+#elif _WIN32
 
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", "1");
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", modelTr_path.c_str());
+
+#endif
             env = new Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test");
 
 #ifdef CPU
@@ -55,7 +60,17 @@ namespace aiProductionReady
             Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
 #endif
 
+#ifdef __linux__
+            
             session = new Ort::Session(*env, modelPathOnnx.c_str(), session_options);
+
+#elif _WIN32
+
+            //in windows devo inizializzarlo in questo modo
+            std::wstring widestr = std::wstring(modelPathOnnx.begin(), modelPathOnnx.end());
+            session = new Ort::Session(*env, widestr.c_str(), session_options);
+
+#endif
 
             //controlla quanti thread sono utilizzati
 
@@ -113,7 +128,6 @@ namespace aiProductionReady
 
             m_InputTorchTensorSize = Image.cols * Image.rows * Image.channels();
 
-
             cv::Mat test;
             test = aut.convertTensortToMat(m_TInputTorchTensor, 608, 608);
         }
@@ -142,7 +156,7 @@ namespace aiProductionReady
                 input_node_dims = tensor_info.GetShape();
                 //printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
                 //for (int j = 0; j < input_node_dims.size(); j++)
-                    //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
+                //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
             }
 
             for (int i = 0; i < num_out_nodes; i++)
@@ -161,7 +175,7 @@ namespace aiProductionReady
                 out_node_dims = tensor_info.GetShape();
                 //printf("Output %d : num_dims=%zu\n", i, out_node_dims.size());
                 //for (int j = 0; j < out_node_dims.size(); j++)
-                    //printf("Output %d : dim %d=%jd\n", i, j, out_node_dims[j]);
+                //printf("Output %d : dim %d=%jd\n", i, j, out_node_dims[j]);
             }
 
             //https://github.com/microsoft/onnxruntime/issues/3170#issuecomment-596613449
@@ -173,31 +187,27 @@ namespace aiProductionReady
             OrtValue *p_output_tensors[NUM_OUTPUTS] = {nullptr};
 
             auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-            Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info,m_fpInputOnnxRuntime , m_InputTorchTensorSize, input_node_dims.data(), 4);
-              
+            Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, m_fpInputOnnxRuntime, m_InputTorchTensorSize, input_node_dims.data(), 4);
+
             assert(input_tensor.IsTensor());
 
-            
             std::vector<Ort::Value> output_tensors = session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 2);
- 
+
             m_fpOutOnnxRuntime[0] = output_tensors[0].GetTensorMutableData<float>();
             m_fpOutOnnxRuntime[1] = output_tensors[1].GetTensorMutableData<float>();
 
             m_viNumberOfBoundingBox = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
-            
 
         } // namespace objectDetection
 
         torch::Tensor Yolov3::postprocessing()
         {
-            
 
             //vettore contenente gli indici con soglia maggiore di 0.7
             std::vector<std::tuple<int, int, float>> bboxIndex;
 
             //vettore dei bounding box con soglia milgiore di 0.7
             vector<vector<float>> bboxValues;
-
 
             //m_viNumberOfBoundingBox[0]=(22743,80)
             //m_viNumberOfBoundingBox[1]=(22743,4)
@@ -221,19 +231,19 @@ namespace aiProductionReady
                     }
                 }
 
-                //inserisco elemento solo se è maggiore della soglia 
+                //inserisco elemento solo se è maggiore della soglia
                 if (indexClassMaxValue > -1)
                 {
                     //il primo valore è l'indice il secondo la classe
                     bboxIndex.push_back(std::make_tuple(index, indexClassMaxValue, classProbability));
-                   
+
                     // indice
                     float x = m_fpOutOnnxRuntime[1][index * 4];
                     float y = m_fpOutOnnxRuntime[1][index * 4 + 1];
                     float w = m_fpOutOnnxRuntime[1][index * 4 + 2];
                     float h = m_fpOutOnnxRuntime[1][index * 4 + 3];
 
-                    vector<float> tmpbox{x, y, w, h,(float)indexClassMaxValue,classProbability};
+                    vector<float> tmpbox{x, y, w, h, (float)indexClassMaxValue, classProbability};
 
                     bboxValues.push_back(tmpbox);
                 }
@@ -253,22 +263,19 @@ namespace aiProductionReady
                     {
 
                         //calcolo iou
-                       
+
                         float ar1[4] = {bboxValues[i][0], bboxValues[i][1], bboxValues[i][2], bboxValues[i][3]};
                         float ar2[4] = {bboxValues[j][0], bboxValues[j][1], bboxValues[j][2], bboxValues[j][3]};
 
-                        float area1=((bboxValues[i][2]+bboxValues[i][0]-bboxValues[i][0]) * (bboxValues[i][3]+bboxValues[i][1]-bboxValues[i][1]))/2;
-                        float area2=((bboxValues[j][2]+bboxValues[j][0]-bboxValues[j][0]) * (bboxValues[j][3]+bboxValues[j][1]-bboxValues[j][1]))/2;
-
-            
+                        float area1 = ((bboxValues[i][2] + bboxValues[i][0] - bboxValues[i][0]) * (bboxValues[i][3] + bboxValues[i][1] - bboxValues[i][1])) / 2;
+                        float area2 = ((bboxValues[j][2] + bboxValues[j][0] - bboxValues[j][0]) * (bboxValues[j][3] + bboxValues[j][1] - bboxValues[j][1])) / 2;
 
                         float iouValue = iou(ar1, ar2);
-                        
- 
+
                         //confronto intersezione bbox
                         if (iouValue > 0.6)
                         {
-                            
+
                             if (std::get<2>(bboxIndex[i]) > std::get<2>(bboxIndex[j]))
                             {
                                 //ritorno gli indici del vettore dei bounding box
@@ -281,30 +288,24 @@ namespace aiProductionReady
                                 indexAfterNms.push_back(i);
                                 break;
                             }
-
                         }
                     }
                     //calcolo iou
                 }
             }
 
-        
-
             for (int i = 0; i < indexAfterNms.size(); i++)
             {
-             
-                //devo aggiungere -i perchè tutte le volte che elimino un elemento si riduce la dimensione 
+
+                //devo aggiungere -i perchè tutte le volte che elimino un elemento si riduce la dimensione
                 //dell'array quindi gli indici calcolati prima devono essere scalati
-                bboxValues.erase(bboxValues.begin() + indexAfterNms[i]-i);
+                bboxValues.erase(bboxValues.begin() + indexAfterNms[i] - i);
             }
 
-           
-            torch::Tensor Output= aut.convert2dVectorToTensor(bboxValues);
+            torch::Tensor Output = aut.convert2dVectorToTensor(bboxValues);
 
             return Output;
-
         }
-
 
         //get rect coordinate in Yolo Format with padding as preprocessing
 
@@ -338,7 +339,6 @@ namespace aiProductionReady
             return cv::Rect(l, t, r - l, b - t);
         }
 
-
         float Yolov3::iou(float lbox[4], float rbox[4])
         {
 
@@ -359,4 +359,3 @@ namespace aiProductionReady
     } // namespace objectDetection
 
 } // namespace aiProductionReady
-

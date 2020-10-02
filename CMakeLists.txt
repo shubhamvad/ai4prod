@@ -43,12 +43,21 @@ find_package(Torch REQUIRED)
 # servono per compilare libtorch
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
+# windows Only
+
+
 
 #OpenCv
 
 #OpenCv
 if(${X86_64})
-    find_package(OpenCV 4.1 EXACT REQUIRED PATHS opencv/)
+    
+    if(UNIX)
+        find_package(OpenCV 4.1 EXACT REQUIRED PATHS opencv/)
+    endif()
+    if (MSVC)
+        find_package(OpenCV 4.4 EXACT REQUIRED PATHS opencv/)
+    endif()
 elseif(${AARCH64})
     find_package(OpenCV 4.1 REQUIRED)
 endif()
@@ -67,5 +76,38 @@ add_executable(interface main.cpp)
 #target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime onnxruntime_providers_tensorrt onnxruntime_providers_shared)
 
 
-target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime)
+#linux
 
+#target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS}  onnxruntime )
+
+#windows 
+target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime )
+#target_link_libraries(interface "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime)
+
+
+if (MSVC)
+  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+  add_custom_command(TARGET interface
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TORCH_DLLS}
+                     $<TARGET_FILE_DIR:interface>)
+     #tensorrt 
+   file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
+   add_custom_command(TARGET interface
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TENSORRT_DLL}
+                     $<TARGET_FILE_DIR:interface>)
+     
+                     
+    file(GLOB ONNXRUNTIME_DLL "onnxruntime/lib/onnxruntime/tensorrt/*.dll")
+    add_custom_command(TARGET interface
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${ONNXRUNTIME_DLL}
+                     $<TARGET_FILE_DIR:interface>)
+    
+    
+            
+endif (MSVC)
