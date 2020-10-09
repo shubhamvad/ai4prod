@@ -1,0 +1,9 @@
+{
+
+    "name":"aiproductionready",
+    "version-string": "0.00.014",
+    "dependencies": [
+
+        "yaml-cpp"
+    ]
+}

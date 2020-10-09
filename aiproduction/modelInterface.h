@@ -1,3 +1,4 @@
+#include "yaml-cpp/yaml.h"
 #include <iostream>
 #include "torch/torch.h"
 #include <opencv2/opencv.hpp>
@@ -6,6 +7,7 @@
 #include "utils.h"
 //generato a runtime da Cmake
 #include "aiproduction_export.h"
+
 
 #pragma once
 using namespace cv;

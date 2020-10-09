@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 
+
+
+message("INCLUDE VCPKG")
 project(aiproduction)
 
 include(GenerateExportHeader)
@@ -20,6 +23,8 @@ set(Torch_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../libtorch/share/cmake/Torch/)
 #   ${ONNXRUNTIME_INCLUDE_DIR}
 #   ${ONNXRUNTIME_INCLUDE_DIR}onnxruntime/core/session
 # )
+
+find_package(yaml-cpp CONFIG REQUIRED)
 
 message("libtorch Path ${Torch_DIR}")
 
@@ -51,7 +56,9 @@ add_library(aiproduction SHARED classification.cpp classification.h objectdetect
 #target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS})
 
 #windows
-target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime )
+target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp )
+
+
 
 # crea gli export necessari per includere le librerie sia su windows che su linux 
 #aggiungo questo file a gitignore siccome è generato a runtime

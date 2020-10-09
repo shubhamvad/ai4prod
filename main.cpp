@@ -57,36 +57,36 @@ int main()
 
 	
 	//linux
-    //yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/1");
+    yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/1");
 
 	//windows
 
 	//C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
 
-	yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
+	//yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
     
 	//yolov3 = new Yolov3();
 	Mat img;
     //linux
-	//img=imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
+	img=imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
 
 	//windows
 
 
-	img = imread("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/test/objectDetection/dog.jpg");
+	//img = imread("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/test/objectDetection/dog.jpg");
     //torch::Tensor test;
 
 
     auto start = high_resolution_clock::now();
     
-    for(int i=0;i<100;i++){
+    //for(int i=0;i<100;i++){
     yolov3->preprocessing(img);
     yolov3->runmodel();
     
     
     torch::Tensor result = yolov3->postprocessing();
     
-    }
+    //}
 
      auto stop = high_resolution_clock::now(); 
     //cout << "Class " << std::get<0>(prediction)[0] << endl;
@@ -96,21 +96,21 @@ int main()
     cout << "SINGLE TIME INFERENCE "<< (double)duration.count()/(1000000*100) << "Sec"<<endl;
 
 
-    //    for (int i=0; i<result.sizes()[0];i++)
-    //    {
+       for (int i=0; i<result.sizes()[0];i++)
+       {
 
-    //        cv::Rect brect;
-    //        cout << result << endl;
+           cv::Rect brect;
+           cout << result << endl;
 
-    //        float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+           float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
 
            
-    //        brect = yolov3->get_rect(img, tmp);
+           brect = yolov3->get_rect(img, tmp);
 
-    //        cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+           cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
            
-    //        put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
-    //    }
+           //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+       }
 
        imshow("immagine", img);
        waitKey(0);

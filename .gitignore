@@ -11,3 +11,5 @@ sample/Windows/OnnxTestVisualStudios/lib/
 sample/Windows/OnnxTestVisualStudios/x64/
 sample/Windows/OnnxTestVisualStudios/.vs/
 sample/Windows/OnnxTestVisualStudios/OnnxTestVisualStudios/
+vcpkg/
+tensorrt/

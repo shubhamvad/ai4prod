@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 
+set(CMAKE_TOOLCHAIN_FILE "vcpkg/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "")
+    
 project(interface)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -84,7 +87,7 @@ add_executable(interface main.cpp)
 target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime )
 #target_link_libraries(interface "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime)
 
-
+#su windows devo copiare le dll nella cartella dell'eseguibile altrimenti non funziona
 if (MSVC)
   file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
   add_custom_command(TARGET interface
