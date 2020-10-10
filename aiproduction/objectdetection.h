@@ -66,7 +66,9 @@ namespace objectDetection
 
        std::vector<int64_t> m_viNumberOfBoundingBox;
 
-      
+
+        //Config
+        YAML::Node m_ymlConfig;
 
        //intersection over unit 
        //float iou(float lbox[4], float rbox[4]);

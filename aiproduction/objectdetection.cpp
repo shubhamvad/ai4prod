@@ -16,26 +16,57 @@ namespace aiProductionReady
         Yolov3::Yolov3(std::string modelPathOnnx, int input_h, int input_w, std::string modelTr_path)
         {
 
+            //verifico se esiste il file di configurazione altrimenti ne creo uno
+            
+            if (aut.checkFileExists(modelTr_path + "/config.yaml"))
+            {
+                cout << "file1" << endl;
+
+                m_ymlConfig = YAML::LoadFile(modelTr_path + "/config.yaml");
+
+               
+            }
+            else
+            {
+
+                     // starts out as null
+                m_ymlConfig["fp16"] = "0"; // it now is a map node
+                m_ymlConfig["engine_cache"]="1";
+                m_ymlConfig["engine_path"]=modelTr_path;
+                std::ofstream fout(modelTr_path + "/config.yaml");
+                fout << m_ymlConfig;
+            }
+
             //set width height of input image
 
             m_iInput_h = input_h;
             m_iInput_w = input_w;
 
-            char cacheModel[] = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=1";
-
-            m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + modelTr_path;
+            
 
 #ifdef __linux__
 
-            putenv(cacheModel);
-            cout << m_sModelTrPath << endl;
+            string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
 
+            int cacheLenght = cacheModel.length();
+            char cacheModelchar[cacheLenght + 1];
+            strcpy(cacheModelchar, cacheModel.c_str());
+            putenv(cacheModelchar);
+
+            string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_ymlConfig["fp16"].as<std::string>();
+            int fp16Lenght = cacheModel.length();
+            char fp16char[cacheLenght + 1];
+            strcpy(fp16char, fp16.c_str());
+            putenv(fp16char);
+
+            m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_ymlConfig["engine_path"].as<std::string>();
             int n = m_sModelTrPath.length();
             char modelSavePath[n + 1];
-
             strcpy(modelSavePath, m_sModelTrPath.c_str());
             //esporto le path del modello di Tensorrt
             putenv(modelSavePath);
+
+
 #elif _WIN32
 
             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", "1");
@@ -61,7 +92,7 @@ namespace aiProductionReady
 #endif
 
 #ifdef __linux__
-            
+
             session = new Ort::Session(*env, modelPathOnnx.c_str(), session_options);
 
 #elif _WIN32

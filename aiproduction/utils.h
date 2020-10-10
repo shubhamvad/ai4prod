@@ -3,6 +3,14 @@
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
 
+
+#ifdef _WIN32
+   #include <io.h> 
+   #define access    _access_s
+#else
+   #include <unistd.h>
+#endif
+
 #pragma once
 using namespace cv;
 using namespace std;
@@ -21,6 +29,11 @@ public:
     cv::Mat convertTensortToMat(torch::Tensor tensor, int width, int height);
     bool equalImage(const Mat &a, const Mat &b);
     torch::Tensor convert2dVectorToTensor(std::vector<std::vector<float>>& input);
+
+
+    //utils file handling
+
+    bool checkFileExists(std::string Filename);
 
 
 

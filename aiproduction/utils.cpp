@@ -113,4 +113,11 @@ verify if 2 Mat are equal
 
  }
 
+bool aiutils::checkFileExists(std::string Filename )
+{
+    return access( Filename.c_str(), 0 ) == 0;
+}
+
+
+
 } // namespace aiProductionReady

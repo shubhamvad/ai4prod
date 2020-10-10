@@ -79,14 +79,14 @@ int main()
 
     auto start = high_resolution_clock::now();
     
-    //for(int i=0;i<100;i++){
+    for(int i=0;i<100;i++){
     yolov3->preprocessing(img);
     yolov3->runmodel();
     
     
     torch::Tensor result = yolov3->postprocessing();
     
-    //}
+    }
 
      auto stop = high_resolution_clock::now(); 
     //cout << "Class " << std::get<0>(prediction)[0] << endl;
@@ -96,24 +96,24 @@ int main()
     cout << "SINGLE TIME INFERENCE "<< (double)duration.count()/(1000000*100) << "Sec"<<endl;
 
 
-       for (int i=0; i<result.sizes()[0];i++)
-       {
+    //    for (int i=0; i<result.sizes()[0];i++)
+    //    {
 
-           cv::Rect brect;
-           cout << result << endl;
+    //        cv::Rect brect;
+    //        cout << result << endl;
 
-           float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+    //        float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
 
            
-           brect = yolov3->get_rect(img, tmp);
+    //        brect = yolov3->get_rect(img, tmp);
 
-           cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+    //        cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
            
-           //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
-       }
+    //        //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+    //    }
 
-       imshow("immagine", img);
-       waitKey(0);
+    //    imshow("immagine", img);
+    //    waitKey(0);
     // yolov3->runmodel(test);
 
     // ResNet50 *resnet;
