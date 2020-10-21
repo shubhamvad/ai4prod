@@ -47,6 +47,8 @@ using namespace std::chrono;
 //     }
 // };
 
+
+
 int main()
 {
 
@@ -55,10 +57,15 @@ int main()
     
 	Yolov3 *yolov3;
 
-	
+	auto start1 = high_resolution_clock::now();
 	//linux
     yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/1");
 
+    auto stop1 = high_resolution_clock::now();
+    
+    auto duration1 = duration_cast<microseconds>(stop1 - start1); 
+    
+    cout<<"tempo costruttore 1" << duration1.count()/(1000000) <<endl;
 	//windows
 
 	//C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
@@ -79,14 +86,14 @@ int main()
 
     auto start = high_resolution_clock::now();
     
-    for(int i=0;i<100;i++){
+    //for(int i=0;i<100;i++){
     yolov3->preprocessing(img);
     yolov3->runmodel();
     
     
     torch::Tensor result = yolov3->postprocessing();
     
-    }
+    //}
 
      auto stop = high_resolution_clock::now(); 
     //cout << "Class " << std::get<0>(prediction)[0] << endl;
@@ -96,24 +103,24 @@ int main()
     cout << "SINGLE TIME INFERENCE "<< (double)duration.count()/(1000000*100) << "Sec"<<endl;
 
 
-    //    for (int i=0; i<result.sizes()[0];i++)
-    //    {
+       for (int i=0; i<result.sizes()[0];i++)
+       {
 
-    //        cv::Rect brect;
-    //        cout << result << endl;
+           cv::Rect brect;
+           cout << result << endl;
 
-    //        float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+           float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
 
            
-    //        brect = yolov3->get_rect(img, tmp);
+           brect = yolov3->get_rect(img, tmp);
 
-    //        cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+           cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
            
-    //        //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
-    //    }
+           //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+       }
 
-    //    imshow("immagine", img);
-    //    waitKey(0);
+       imshow("immagine", img);
+       waitKey(0);
     // yolov3->runmodel(test);
 
     // ResNet50 *resnet;
@@ -224,5 +231,29 @@ int main()
     //torch::Tensor tensor = torch::rand({2, 3});
     //std::cout << tensor << std::endl;
 
+
+    cout<<"pre-delete-1"<<endl;
+    //delete yolov3;
+
+    cout<<"post-delete"<<endl;
+
+
+    auto start2 = high_resolution_clock::now();
+
+    Yolov3 *yolov3_2;
+    yolov3_2= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/3");
+
+    auto stop2 = high_resolution_clock::now();
+    
+    auto duration2 = duration_cast<microseconds>(stop2 - start2); 
+    
+    cout<<"tempo costruttore 2" << duration2.count()/(1000000) <<endl;
+    
+    cout<<"pre-delet2"<<endl;
+
+    delete yolov3;
+
+
+    cout <<"exit"<<endl;
     return 0;
 }

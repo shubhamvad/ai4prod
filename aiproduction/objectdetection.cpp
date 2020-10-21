@@ -2,6 +2,7 @@
 #include "../onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 #include "../onnxruntime/include/onnxruntime/core/providers/providers.h"
 
+
 using namespace std;
 namespace aiProductionReady
 {
@@ -17,22 +18,20 @@ namespace aiProductionReady
         {
 
             //verifico se esiste il file di configurazione altrimenti ne creo uno
-            
+
             if (aut.checkFileExists(modelTr_path + "/config.yaml"))
             {
                 cout << "file1" << endl;
 
                 m_ymlConfig = YAML::LoadFile(modelTr_path + "/config.yaml");
-
-               
             }
             else
             {
 
-                     // starts out as null
+                // starts out as null
                 m_ymlConfig["fp16"] = "0"; // it now is a map node
-                m_ymlConfig["engine_cache"]="1";
-                m_ymlConfig["engine_path"]=modelTr_path;
+                m_ymlConfig["engine_cache"] = "1";
+                m_ymlConfig["engine_path"] = modelTr_path;
                 std::ofstream fout(modelTr_path + "/config.yaml");
                 fout << m_ymlConfig;
             }
@@ -41,8 +40,6 @@ namespace aiProductionReady
 
             m_iInput_h = input_h;
             m_iInput_w = input_w;
-
-            
 
 #ifdef __linux__
 
@@ -66,20 +63,19 @@ namespace aiProductionReady
             //esporto le path del modello di Tensorrt
             putenv(modelSavePath);
 
-
 #elif _WIN32
 
             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", "1");
             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", modelTr_path.c_str());
 
 #endif
-            env = new Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test");
+            m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
 
 #ifdef CPU
 
-            session_options.SetIntraOpNumThreads(1);
+            m_OrtSessionOptions.SetIntraOpNumThreads(1);
             //ORT_ENABLE_ALL sembra avere le performance migliori
-            session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+            m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 
 #endif
 
@@ -88,18 +84,19 @@ namespace aiProductionReady
             //esporto le variabili
             m_sModelTrPath = modelTr_path;
 
-            Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
+            Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
 #endif
 
 #ifdef __linux__
 
-            session = new Ort::Session(*env, modelPathOnnx.c_str(), session_options);
+            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, modelPathOnnx.c_str(), m_OrtSessionOptions));
 
 #elif _WIN32
 
             //in windows devo inizializzarlo in questo modo
             std::wstring widestr = std::wstring(modelPathOnnx.begin(), modelPathOnnx.end());
-            session = new Ort::Session(*env, widestr.c_str(), session_options);
+            //session = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
+            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
 
 #endif
 
@@ -108,18 +105,14 @@ namespace aiProductionReady
             //Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
 
             //INPUT
-            num_input_nodes = session->GetInputCount();
+            num_input_nodes = m_OrtSession->GetInputCount();
             input_node_names = std::vector<const char *>(num_input_nodes);
 
             //OUTPUT
-            num_out_nodes = session->GetOutputCount();
+            num_out_nodes = m_OrtSession->GetOutputCount();
             out_node_names = std::vector<const char *>(num_out_nodes);
 
             cout << "sessione inizializzata" << endl;
-        }
-
-        Yolov3::~Yolov3()
-        {
         }
 
         cv::Mat Yolov3::padding(cv::Mat &img, int width, int height)
@@ -172,12 +165,12 @@ namespace aiProductionReady
             for (int i = 0; i < num_input_nodes; i++)
             {
                 // print input node names
-                char *input_name = session->GetInputName(i, allocator);
+                char *input_name = m_OrtSession->GetInputName(i, allocator);
                 //printf("Input %d : name=%s\n", i, input_name);
                 input_node_names[i] = input_name;
 
                 // print input node types
-                Ort::TypeInfo type_info = session->GetInputTypeInfo(i);
+                Ort::TypeInfo type_info = m_OrtSession->GetInputTypeInfo(i);
                 auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
 
                 ONNXTensorElementDataType type = tensor_info.GetElementType();
@@ -193,10 +186,10 @@ namespace aiProductionReady
             for (int i = 0; i < num_out_nodes; i++)
             {
                 // print input node names
-                char *input_name = session->GetOutputName(i, allocator);
+                char *input_name = m_OrtSession->GetOutputName(i, allocator);
                 //printf("Output %d : name=%s\n", i, input_name);
 
-                Ort::TypeInfo type_info = session->GetOutputTypeInfo(i);
+                Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
                 auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
 
                 ONNXTensorElementDataType type = tensor_info.GetElementType();
@@ -222,7 +215,7 @@ namespace aiProductionReady
 
             assert(input_tensor.IsTensor());
 
-            std::vector<Ort::Value> output_tensors = session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 2);
+            std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 2);
 
             m_fpOutOnnxRuntime[0] = output_tensors[0].GetTensorMutableData<float>();
             m_fpOutOnnxRuntime[1] = output_tensors[1].GetTensorMutableData<float>();
@@ -387,6 +380,14 @@ namespace aiProductionReady
             return interBoxS / (lbox[2] * lbox[3] + rbox[2] * rbox[3] - interBoxS);
         }
 
-    } // namespace objectDetection
+        Yolov3::~Yolov3()
+        {
+            
+            
+            m_OrtSession.reset();
+            m_OrtEnv.reset();
 
+        }
+
+    } // namespace objectDetection
 } // namespace aiProductionReady
