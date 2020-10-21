@@ -11,13 +11,7 @@ namespace aiProductionReady
     namespace classification
     {
 
-        //        //Da fare
-        //
-        //        /*
-        //1) Costruttore inserire la path di caricamento del modello
-        //2) Sistemare il codice per caricare il modello Resnet
-        //*/
-        //
+
         ResNet50::ResNet50()
         {
 
@@ -31,7 +25,7 @@ namespace aiProductionReady
             //session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
         }
 
-        ResNet50::ResNet50(std::string path, int ModelNumberOfClass, int NumberOfReturnedPrediction, std::string modelTr_path)
+        ResNet50::ResNet50(std::string path, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
         {
             m_iModelNumberOfClass = ModelNumberOfClass;
             m_iNumberOfReturnedPrediction = NumberOfReturnedPrediction;
@@ -65,21 +59,23 @@ namespace aiProductionReady
 
             //le opzioni devono essere settate prima della creazione della sessione
 
-#ifdef CPU
+            if (t == Cpu)
+            {
 
-            session_options.SetIntraOpNumThreads(1);
-            //ORT_ENABLE_ALL sembra avere le performance migliori
-            session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+                session_options.SetIntraOpNumThreads(1);
+                //ORT_ENABLE_ALL sembra avere le performance migliori
+                session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+            }
 
-#endif
+            if (t == TensorRT)
+            {
 
-#ifdef TENSORRT
+                //esporto le variabili
+                m_sModelTrPath = modelTr_path;
 
-            //esporto le variabili
-            m_sModelTrPath = modelTr_path;
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
+            }
 
-            Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
-#endif
 #ifdef __linux__
             session = new Ort::Session(*env, path.c_str(), session_options);
 

@@ -16,6 +16,9 @@ using namespace classification;
 
 using namespace std::chrono;
 
+
+
+
 // #pragma comment(lib, "onnxruntime.lib")
 // #pragma comment(lib, "user32.lib")
 // #pragma comment(lib, "gdi32.lib")
@@ -50,7 +53,9 @@ using namespace std::chrono;
 
 
 int main()
-{
+{   
+
+
 
     cout<<"programma inizializato"<<endl;
    
@@ -59,7 +64,7 @@ int main()
 
 	auto start1 = high_resolution_clock::now();
 	//linux
-    yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/1");
+    yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,TensorRT,"/home/aistudios/1");
 
     auto stop1 = high_resolution_clock::now();
     
@@ -241,7 +246,7 @@ int main()
     auto start2 = high_resolution_clock::now();
 
     Yolov3 *yolov3_2;
-    yolov3_2= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/3");
+    yolov3_2= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,TensorRT,"/home/aistudios/3");
 
     auto stop2 = high_resolution_clock::now();
     

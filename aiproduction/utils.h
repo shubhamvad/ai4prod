@@ -18,6 +18,15 @@ using namespace std;
 
 namespace aiProductionReady{
 
+
+enum MODE{
+
+   TensorRT,
+   Cpu
+
+
+};
+
 //#ifndef AIPRODUTILS
 //#define AIPRODUTILS
 class aiutils
@@ -34,7 +43,7 @@ public:
     //utils file handling
 
     bool checkFileExists(std::string Filename);
-
+   
 
 
 //#endif

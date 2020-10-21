@@ -83,7 +83,7 @@ namespace objectDetection
 
        virtual ~Yolov3();
 
-       Yolov3(std::string modelPathOnnx, int input_h,int input_w,std::string modelTr_path = NULL);
+       Yolov3(std::string modelPathOnnx, int input_h,int input_w,MODE t,std::string modelTr_path = NULL);
 
        void preprocessing(Mat &Image);
        torch::Tensor postprocessing();

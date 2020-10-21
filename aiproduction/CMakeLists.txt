@@ -47,7 +47,7 @@ elseif(${AARCH64})
 endif()
 
 
-add_library(aiproduction SHARED classification.cpp classification.h objectdetection.h objectdetection.cpp utils.h utils.cpp define.h aiproduction_export.h)
+add_library(aiproduction SHARED classification.cpp classification.h objectdetection.h objectdetection.cpp utils.h utils.cpp aiproduction_export.h)
 
 #onnx runtime
 

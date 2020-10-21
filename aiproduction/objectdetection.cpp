@@ -2,7 +2,6 @@
 #include "../onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 #include "../onnxruntime/include/onnxruntime/core/providers/providers.h"
 
-
 using namespace std;
 namespace aiProductionReady
 {
@@ -14,7 +13,7 @@ namespace aiProductionReady
         {
         }
 
-        Yolov3::Yolov3(std::string modelPathOnnx, int input_h, int input_w, std::string modelTr_path)
+        Yolov3::Yolov3(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string modelTr_path)
         {
 
             //verifico se esiste il file di configurazione altrimenti ne creo uno
@@ -71,21 +70,22 @@ namespace aiProductionReady
 #endif
             m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
 
-#ifdef CPU
+            if (t == Cpu)
+            {
 
-            m_OrtSessionOptions.SetIntraOpNumThreads(1);
-            //ORT_ENABLE_ALL sembra avere le performance migliori
-            m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+                m_OrtSessionOptions.SetIntraOpNumThreads(1);
+                //ORT_ENABLE_ALL sembra avere le performance migliori
+                m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+            }
 
-#endif
+            if (t == TensorRT)
+            {
 
-#ifdef TENSORRT
+                //esporto le variabili
+                m_sModelTrPath = modelTr_path;
 
-            //esporto le variabili
-            m_sModelTrPath = modelTr_path;
-
-            Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
-#endif
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
+            }
 
 #ifdef __linux__
 
@@ -382,11 +382,9 @@ namespace aiProductionReady
 
         Yolov3::~Yolov3()
         {
-            
-            
+
             m_OrtSession.reset();
             m_OrtEnv.reset();
-
         }
 
     } // namespace objectDetection
