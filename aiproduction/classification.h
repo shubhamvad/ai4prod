@@ -11,11 +11,11 @@ namespace aiProductionReady
 
       private:
          //ONNX RUNTIME
-         Ort::SessionOptions session_options;
+         Ort::SessionOptions m_OrtSessionOptions;
          //la sessione deve essere inizializzata nel costruttore
-         Ort::Session *session;
+         std::unique_ptr<Ort::Session> m_OrtSession;
          //env inizializzato nel costruttore
-         Ort::Env *env;
+         std::unique_ptr<Ort::Env> m_OrtEnv;
 
          Ort::AllocatorWithDefaultOptions allocator;
 

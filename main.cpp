@@ -64,7 +64,7 @@ int main()
 
 	auto start1 = high_resolution_clock::now();
 	//linux
-    yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,TensorRT,"/home/aistudios/1");
+    yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,Cpu,"/home/aistudios/1");
 
     auto stop1 = high_resolution_clock::now();
     

@@ -11,7 +11,6 @@ namespace aiProductionReady
     namespace classification
     {
 
-
         ResNet50::ResNet50()
         {
 
@@ -55,16 +54,15 @@ namespace aiProductionReady
             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", modelTr_path.c_str());
 
 #endif
-            env = new Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test");
+            m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
 
-            //le opzioni devono essere settate prima della creazione della sessione
-
+            //option must be set before session initialization
             if (t == Cpu)
             {
 
-                session_options.SetIntraOpNumThreads(1);
+                m_OrtSessionOptions.SetIntraOpNumThreads(1);
                 //ORT_ENABLE_ALL sembra avere le performance migliori
-                session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+                m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
             }
 
             if (t == TensorRT)
@@ -73,43 +71,31 @@ namespace aiProductionReady
                 //esporto le variabili
                 m_sModelTrPath = modelTr_path;
 
-                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
             }
 
 #ifdef __linux__
-            session = new Ort::Session(*env, path.c_str(), session_options);
+
+            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, path.c_str(), m_OrtSessionOptions));
 
 #elif _WIN32
 
             //in windows devo inizializzarlo in questo modo
             std::wstring widestr = std::wstring(path.begin(), path.end());
-            session = new Ort::Session(*env, widestr.c_str(), session_options);
+            //m_OrtSession = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
+            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
 
 #endif
 
-            //linux
-            //
-
-            //controlla quanti thread sono utilizzati
-
-            //Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
-
             //INPUT
-            num_input_nodes = session->GetInputCount();
+            num_input_nodes = m_OrtSession->GetInputCount();
             input_node_names = std::vector<const char *>(num_input_nodes);
 
             //OUTPUT
-            num_out_nodes = session->GetOutputCount();
+            num_out_nodes = m_OrtSession->GetOutputCount();
             out_node_names = std::vector<const char *>(num_out_nodes);
 
             //cout << "sessione inizializzata" << endl;
-        }
-
-        /*
-Distruttore
-*/
-        ResNet50::~ResNet50()
-        {
         }
 
         void ResNet50::preprocessing(Mat &Image)
@@ -172,12 +158,12 @@ Distruttore
                 for (int i = 0; i < num_input_nodes; i++)
                 {
                     // print input node names
-                    char *input_name = session->GetInputName(i, allocator);
+                    char *input_name = m_OrtSession->GetInputName(i, allocator);
                     //printf("Input %d : name=%s\n", i, input_name);
                     input_node_names[i] = input_name;
 
                     // print input node types
-                    Ort::TypeInfo type_info = session->GetInputTypeInfo(i);
+                    Ort::TypeInfo type_info = m_OrtSession->GetInputTypeInfo(i);
                     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
 
                     ONNXTensorElementDataType type = tensor_info.GetElementType();
@@ -193,10 +179,10 @@ Distruttore
                 for (int i = 0; i < num_out_nodes; i++)
                 {
                     // print input node names
-                    char *input_name = session->GetOutputName(i, allocator);
+                    char *input_name = m_OrtSession->GetOutputName(i, allocator);
                     //printf("Input %d : name=%s\n", i, input_name);
 
-                    Ort::TypeInfo type_info = session->GetOutputTypeInfo(i);
+                    Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
                     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
 
                     ONNXTensorElementDataType type = tensor_info.GetElementType();
@@ -220,7 +206,7 @@ Distruttore
                 Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_tensor_size, input_node_dims.data(), 4);
                 assert(input_tensor.IsTensor());
 
-                auto output_tensors = session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
+                auto output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
 
                 assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
 
@@ -254,6 +240,12 @@ Distruttore
             std::tuple<torch::Tensor, torch::Tensor> topPrediction = {indeces, value};
 
             return topPrediction;
+        }
+
+        ResNet50::~ResNet50()
+        {
+           m_OrtSession.reset();
+           m_OrtEnv.reset(); 
         }
 
     } // namespace classification

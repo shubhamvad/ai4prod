@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <iostream>
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
@@ -11,7 +13,6 @@
    #include <unistd.h>
 #endif
 
-#pragma once
 using namespace cv;
 using namespace std;
 
