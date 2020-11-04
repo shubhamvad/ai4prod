@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 3.13)
 
+#vcpg set before project
 set(CMAKE_TOOLCHAIN_FILE "vcpkg/scripts/buildsystems/vcpkg.cmake"
     CACHE STRING "")
-    
-project(interface)
+
+
+project(aiprod)
 
 set(CMAKE_CXX_STANDARD 14)
 
-#verifica archiettura
+#architecture definition
+
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
     set(X86_64 1)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
@@ -15,102 +18,101 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
 endif()
 
 
-#onnxruntime
-set(ONNXRUNTIME_INCLUDE_DIR onnxruntime/include/)
+#Where to install the library
 
-message(${ONNXRUNTIME_INCLUDE_DIR})
+if(${X86_64})
+    
 
-link_directories(onnxruntime/lib/onnxruntime/tensorrt)
+    if(UNIX)
+        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/install-Lib")
+    endif()
+    if (MSVC)
+        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/install-Lib")
+    endif()
+elseif(${AARCH64})
+        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Aarch64/install-Lib")
+endif()
+
+
+
+
+# library to generate export header
+include(GenerateExportHeader)
+
+set(ONNXRUNTIME_INCLUDE_DIR deps/onnxruntime/include/)
+
+#onnxruntime build with tensorrt 
+# tensorrt library must be in /usr/local/tensorrt for linux
+link_directories(deps/onnxruntime/lib/onnxruntime/tensorrt)
 
 include_directories(
   ${ONNXRUNTIME_INCLUDE_DIR}
   ${ONNXRUNTIME_INCLUDE_DIR}onnxruntime/core/session
 )
 
-# torchVision
-
-#serve per includere torchvision
-#set(TorchVision_DIR /home/tondelli/Desktop/2020/aiproductionready/torchvision/share)
-
-
-
-
-#serve per il find_package di includere il progetto libtorch
-set(Torch_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libtorch/share/cmake/Torch/)
-
-# ritorna direttamente gli include senza bisogno di aggiungere target_include_directories
+#Libtorch
+set(Torch_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/libtorch/share/cmake/Torch/)
 find_package(Torch REQUIRED)
-
-#find_package(TorchVision REQUIRED)
-
-# servono per compilare libtorch
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-# windows Only
+#opencv usually without contrib
+find_package(OpenCV 4.1 EXACT REQUIRED PATHS deps/opencv/)
+
+#yaml-cpp
+find_package(yaml-cpp CONFIG REQUIRED)
+
+#ai4production Library
+add_library(aiproduction SHARED aiproduction/classification.cpp 
+
+aiproduction/classification.h 
+aiproduction/objectdetection.h 
+aiproduction/objectdetection.cpp 
+aiproduction/utils.h 
+aiproduction/utils.cpp 
+aiproduction/aiproduction_export.h 
+aiproduction/modelInterface.h)
 
 
+target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp )
 
-#OpenCv
-
-#OpenCv
-if(${X86_64})
-    
-    if(UNIX)
-        find_package(OpenCV 4.1 EXACT REQUIRED PATHS opencv/)
-    endif()
-    if (MSVC)
-        find_package(OpenCV 4.4 EXACT REQUIRED PATHS opencv/)
-    endif()
-elseif(${AARCH64})
-    find_package(OpenCV 4.1 REQUIRED)
-endif()
-
-# aggiunge la libreria di classficazione del framework
-#add_library(classification SHARED src/classification.cpp src/classification.h )
-
-add_subdirectory(aiproduction)
+#need for symbol visibility
+generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/aiproduction_export.h)
 
 
-add_executable(interface main.cpp)
+#Library Version
 
-# include torchvision
-#target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime custom_op_library TorchVision::TorchVision)
+set_target_properties(
+  aiproduction PROPERTIES
+    SOVERSION 1
+    VERSION 1.0.0
+)
 
-#target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime onnxruntime_providers_tensorrt onnxruntime_providers_shared)
+#Installing
+
+set(AIPRODUCTION_INCLUDES aiproduction/classification.h 
+aiproduction/objectdetection.h 
+aiproduction/utils.h 
+aiproduction/aiproduction_export.h aiproduction/modelInterface.h
+)
+
+set_target_properties(aiproduction PROPERTIES PUBLIC_HEADER "${AIPRODUCTION_INCLUDES}" )
+
+# generate aiproductionConfig.cmake used by find_package
+configure_file(aiproductionConfig.cmake.in "${CMAKE_INSTALL_PREFIX}/aiproductionConfig.cmake" @ONLY)
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/deps/ DESTINATION ${CMAKE_INSTALL_PREFIX}/deps/ )
+
+#vcpkg yaml-cpp install include
+install(DIRECTORY ${YAML_CPP_INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+#install ai4prod deps
+install(TARGETS aiproduction
+    #EXPORT aiproductionTargets.cmake
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+)
+
+#export ( TARGETS aiproduction FILE ${CMAKE_INSTALL_PREFIX}/aiproductionTargets.cmake  )
 
 
-#linux
-
-#target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS}  onnxruntime )
-
-#windows 
-target_link_libraries(interface aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime )
-#target_link_libraries(interface "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime)
-
-#su windows devo copiare le dll nella cartella dell'eseguibile altrimenti non funziona
-if (MSVC)
-  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-  add_custom_command(TARGET interface
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TORCH_DLLS}
-                     $<TARGET_FILE_DIR:interface>)
-     #tensorrt 
-   file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
-   add_custom_command(TARGET interface
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TENSORRT_DLL}
-                     $<TARGET_FILE_DIR:interface>)
-     
-                     
-    file(GLOB ONNXRUNTIME_DLL "onnxruntime/lib/onnxruntime/tensorrt/*.dll")
-    add_custom_command(TARGET interface
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${ONNXRUNTIME_DLL}
-                     $<TARGET_FILE_DIR:interface>)
-    
-    
-            
-endif (MSVC)

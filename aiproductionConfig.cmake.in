@@ -1,0 +1,23 @@
+
+get_filename_component(AIPRODUCTION_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+set(Torch_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/libtorch/share/cmake/Torch/)
+
+find_package(Torch REQUIRED)
+
+find_package(OpenCV 4.1 EXACT REQUIRED PATHS ${CMAKE_CURRENT_LIST_DIR}/deps/opencv/)
+
+set(ONNXRUNTIME_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/onnxruntime/include/)
+
+# vedere differenza tra current_List_DIR
+set(AIPRODUCTION_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/include/ ${TORCH_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${ONNXRUNTIME_INCLUDE_DIR} ${ONNXRUNTIME_INCLUDE_DIR}onnxruntime/core/session)
+
+
+#include("${AIPRODUCTION_CMAKE_DIR}/aiproductionTargets.cmake")
+
+link_directories(${CMAKE_CURRENT_LIST_DIR}/lib)
+link_directories(${CMAKE_CURRENT_LIST_DIR}/deps/onnxruntime/lib/onnxruntime/tensorrt)
+
+set(AIPRODUCTION_LIBS aiproduction ${OpenCV_LIBS} ${TORCH_LIBRARIES} onnxruntime)
+
+

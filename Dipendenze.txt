@@ -1,9 +1,0 @@
-
-COMPILAZIONE TORCHVISION
-# disattivare Anaconda o un virtualEnv
-
-sudo apt intall libpng-dev
-sudo apt-get install python3.6-dev
-
-
-Cmake 3.13 o superiori-> Altrimenti non contiene il modulo di python3

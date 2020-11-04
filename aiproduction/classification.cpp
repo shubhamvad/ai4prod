@@ -1,7 +1,7 @@
 #include "classification.h"
 
-#include "../onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
-#include "../onnxruntime/include/onnxruntime/core/providers/providers.h"
+#include "../deps/onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
+#include "../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
 
 using namespace std;
 
