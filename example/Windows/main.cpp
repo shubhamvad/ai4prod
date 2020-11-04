@@ -1,134 +1,228 @@
-// Copyright(c) Microsoft Corporation.All rights reserved.
-// Licensed under the MIT License.
-//
+#include <iostream>
 
-#include <assert.h>
-#include <vector>
-#include <onnxruntime_cxx_api.h>
+#include "torch/torch.h"
+
+#include "classification.h"
+#include "objectdetection.h"
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+
+using namespace std;
+using namespace aiProductionReady;
+using namespace objectDetection;
+using namespace classification;
+using namespace cv;
+using namespace std::chrono;
+
+// #pragma comment(lib, "onnxruntime.lib")
+// #pragma comment(lib, "user32.lib")
+// #pragma comment(lib, "gdi32.lib")
+//#pragma comment(lib, "onnxruntime_providers.lib")
+//#pragma comment(lib, "onnxruntime_session.lib")
+//#pragma comment(lib, "onnxruntime_optimizer.lib")
+//#pragma comment(lib, "onnxruntime_mocked_allocator.lib")
+//#pragma comment(lib, "onnxruntime_mlas.lib")
+//#pragma comment(lib, "onnxruntime_graph.lib")
+//#pragma comment(lib, "onnxruntime_common.lib")
 
 
+//classe Custom posso cambiare solo il preprocessing lasciando invariato il resto
+//Link lista funzioni che possono essere usate
+// class customResnet : ResNet50{
 
-int main(int argc, char* argv[]) {
-  //*************************************************************************
-  // initialize  enviroment...one enviroment per process
-  // enviroment maintains thread pools and other state info
-  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "test");
+//     public:
 
-  // initialize session options if needed
-  Ort::SessionOptions session_options;
-  session_options.SetIntraOpNumThreads(1);
+//     customResnet(){
 
-  // If onnxruntime.dll is built with CUDA enabled, we can uncomment out this line to use CUDA for this
-  // session (we also need to include cuda_provider_factory.h above which defines it)
-  // #include "cuda_provider_factory.h"
-  // OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 1);
+//         cout<<"costruttoreCustom"<<endl;
+//     }
 
-  // Sets graph optimization level
-  // Available levels are
-  // ORT_DISABLE_ALL -> To disable all optimizations
-  // ORT_ENABLE_BASIC -> To enable basic optimizations (Such as redundant node removals)
-  // ORT_ENABLE_EXTENDED -> To enable extended optimizations (Includes level 1 + more complex optimizations like node fusions)
-  // ORT_ENABLE_ALL -> To Enable All possible opitmizations
-  session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+//     torch::Tensor preprocessing(Mat &Image){
 
-  //*************************************************************************
-  // create session and load model into memory
-  // using squeezenet version 1.3
-  // URL = https://github.com/onnx/models/tree/master/squeezenet
-#ifdef _WIN32
-  const wchar_t* model_path = L"model/squeezenet1.1.onnx";
-#else
-  const char* model_path = "squeezenet.onnx";
-#endif
+//        torch::Tensor test= torch::rand({2, 3});
+//         return test;
 
-  printf("Using Onnxruntime C++ API\n");
-  Ort::Session session(env, model_path, session_options);
+//     }
+// };
 
-  //*************************************************************************
-  // print model input layer (node names, types, shape etc.)
-  Ort::AllocatorWithDefaultOptions allocator;
+int main()
+{
 
-  // print number of model input nodes
-  size_t num_input_nodes = session.GetInputCount();
-  std::vector<const char*> input_node_names(num_input_nodes);
-  std::vector<int64_t> input_node_dims;  // simplify... this model has only 1 input node {1, 3, 224, 224}.
-                                         // Otherwise need vector<vector<>>
+    cout<<"programma inizializato"<<endl;
+   
+    
+	Yolov3 *yolov3;
 
-  printf("Number of inputs = %zu\n", num_input_nodes);
+	
+	//linux
+    //yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,"/home/aistudios/1");
 
-  // iterate over all input nodes
-  for (int i = 0; i < num_input_nodes; i++) {
-    // print input node names
-    char* input_name = session.GetInputName(i, allocator);
-    printf("Input %d : name=%s\n", i, input_name);
-    input_node_names[i] = input_name;
+	//windows
 
-    // print input node types
-    Ort::TypeInfo type_info = session.GetInputTypeInfo(i);
-    auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+	//C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
 
-    ONNXTensorElementDataType type = tensor_info.GetElementType();
-    printf("Input %d : type=%d\n", i, type);
+	yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608,Cpu, "C:/Users/erict/OneDrive/Desktop/engine");
+    
+	//yolov3 = new Yolov3();
+	Mat img;
+    //linux
+	//img=imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
 
-    // print input shapes/dims
-    input_node_dims = tensor_info.GetShape();
-    printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
-    for (int j = 0; j < input_node_dims.size(); j++)
-      printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
-  }
+	//windows
 
-  // Results should be...
-  // Number of inputs = 1
-  // Input 0 : name = data_0
-  // Input 0 : type = 1
-  // Input 0 : num_dims = 4
-  // Input 0 : dim 0 = 1
-  // Input 0 : dim 1 = 3
-  // Input 0 : dim 2 = 224
-  // Input 0 : dim 3 = 224
 
-  //*************************************************************************
-  // Similar operations to get output node information.
-  // Use OrtSessionGetOutputCount(), OrtSessionGetOutputName()
-  // OrtSessionGetOutputTypeInfo() as shown above.
+	img = imread("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/test/objectDetection/dog.jpg");
+    //torch::Tensor test;
 
-  //*************************************************************************
-  // Score the model using sample data, and inspect values
 
-  size_t input_tensor_size = 224 * 224 * 3;  // simplify ... using known dim values to calculate size
-                                             // use OrtGetTensorShapeElementCount() to get official size!
+    auto start = high_resolution_clock::now();
+    
+    //for(int i=0;i<100;i++){
+    yolov3->preprocessing(img);
+    yolov3->runmodel();
+    
+    
+    torch::Tensor result = yolov3->postprocessing();
+    
+    //}
 
-  std::vector<float> input_tensor_values(input_tensor_size);
-  std::vector<const char*> output_node_names = {"softmaxout_1"};
+     auto stop = high_resolution_clock::now(); 
+    //cout << "Class " << std::get<0>(prediction)[0] << endl;
 
-  // initialize input data with values in [0.0, 1.0]
-  for (unsigned int i = 0; i < input_tensor_size; i++)
-    input_tensor_values[i] = (float)i / (input_tensor_size + 1);
+    auto duration = duration_cast<microseconds>(stop - start); 
+    
+    cout << "SINGLE TIME INFERENCE "<< (double)duration.count()/(1000000*100) << "Sec"<<endl;
 
-  // create input tensor object from data values
-  auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-  Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_tensor_size, input_node_dims.data(), 4);
-  assert(input_tensor.IsTensor());
 
-  // score model & input tensor, get back output tensor
-  auto output_tensors = session.Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
-  assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
+        for (int i=0; i<result.sizes()[0];i++)
+        {
 
-  // Get pointer to output tensor float values
-  float* floatarr = output_tensors.front().GetTensorMutableData<float>();
-  assert(abs(floatarr[0] - 0.000045) < 1e-6);
+            cv::Rect brect;
+            cout << result << endl;
 
-  // score the model, and print scores for first 5 classes
-  for (int i = 0; i < 5; i++)
-    printf("Score for class [%d] =  %f\n", i, floatarr[i]);
+            float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
 
-  // Results should be as below...
-  // Score for class[0] = 0.000045
-  // Score for class[1] = 0.003846
-  // Score for class[2] = 0.000125
-  // Score for class[3] = 0.001180
-  // Score for class[4] = 0.001317
-  printf("Done!\n");
-  getchar();
-  return 0;
+           
+            brect = yolov3->get_rect(img, tmp);
+
+            cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+           
+			//put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+       }
+
+       imshow("immagine", img);
+       waitKey(0);
+    // yolov3->runmodel(test);
+
+    // ResNet50 *resnet;
+
+    // resnet = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx", 1000, 5, "/home/aistudios/resnet");
+    // Mat img;
+    // img = imread("/home/aistudios/Develop/aiproductionready/test/classification/dog.jpeg");
+
+    // auto start = high_resolution_clock::now(); 
+
+    
+
+    // for (int i=0; i<100;i++){
+
+
+    // resnet->preprocessing(img);
+    
+    // resnet->runmodel();
+
+    // std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
+    // }
+
+    // auto stop = high_resolution_clock::now(); 
+    // //cout << "Class " << std::get<0>(prediction)[0] << endl;
+
+    // auto duration = duration_cast<microseconds>(stop - start); 
+    
+    // cout << "SINGLE TIME INFERENCE "<< (double)duration.count()/(1000000*100) << "Sec"<<endl;
+
+    
+    
+    
+    
+    // ResNet50 *resnet2;
+
+    // resnet2 = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/2");
+
+    // torch::Tensor test;
+    // torch::Tensor test2;
+    // torch::Tensor out;
+
+    // torch::Tensor out2;
+
+    // Mat img;
+
+    // cout<<"immagine"<<endl;
+    // img=imread("/home/aistudios/Develop/aiproductionready/dog.jpeg");
+
+    // imshow("test",img);
+
+    // waitKey(0);
+
+    // clock_t start,end;
+
+    // resize(img,img,Size(224,224),0.5,0.5,cv::INTER_LANCZOS4);
+
+    // test = resnet->preprocessing(img);
+
+    // test2= resnet2->preprocessing(img);
+
+    // try{
+    // start = clock();
+    // out= resnet->runmodel(test);
+    // end = clock();
+    // }
+    // catch(...){
+
+    //     cout<<"exception"<<endl;
+
+    // }
+
+    //  double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
+    //     cout << "TOTOAL TIME : " << fixed
+    //          << time_taken << setprecision(5);
+    //     cout << " sec " << endl;
+
+    // clock_t start2,end2;
+
+    // try{
+    // start2 = clock();
+    // out= resnet->runmodel(test);
+    // end2 = clock();
+    // }
+    // catch(...){
+
+    //     cout<<"exception"<<endl;
+
+    // }
+
+    //  double time_taken2 = double(end2 - start2) / double(CLOCKS_PER_SEC);
+    //     cout << "TOTOAL TIME : " << fixed
+    //          << time_taken2 << setprecision(5);
+    //     cout << " sec " << endl;
+
+    // cout<< "SECOND MODEL"<<endl;
+
+    // out2= resnet2->runmodel(test2);
+
+    //std::cout << test << std::endl;
+
+    // cout<<resnet->model<<endl;
+    // cout<< "test"<< endl;
+
+    // customResnet cRes;
+
+    // cRes.preprocessing(1);
+
+    //torch::Tensor tensor = torch::rand({2, 3});
+    //std::cout << tensor << std::endl;
+
+    return 0;
 }
