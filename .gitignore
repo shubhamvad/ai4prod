@@ -4,4 +4,6 @@ deps/
 vcpkg/
 example/Linux/install-Lib
 example/Linux/build
+example/Windows/install-Lib
+example/Windows/build
 

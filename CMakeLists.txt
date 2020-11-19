@@ -55,7 +55,19 @@ find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 #opencv usually without contrib
-find_package(OpenCV 4.1 EXACT REQUIRED PATHS deps/opencv/)
+
+if(${X86_64})
+    
+    if(UNIX)
+        find_package(OpenCV 4.1 EXACT REQUIRED PATHS deps/opencv/)
+    endif()
+    if (MSVC)
+        find_package(OpenCV 4.4 EXACT REQUIRED PATHS deps/opencv/)
+    endif()
+elseif(${AARCH64})
+    find_package(OpenCV 4.1 REQUIRED)
+endif()
+
 
 #yaml-cpp
 find_package(yaml-cpp CONFIG REQUIRED) 
@@ -98,7 +110,7 @@ generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}
 set_target_properties(
   aiproduction PROPERTIES
     SOVERSION 1
-    VERSION 1.0.0
+    VERSION 1.1.0
 )
 
 #Installing
@@ -125,6 +137,7 @@ install(TARGETS aiproduction
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 )
 
 #export ( TARGETS aiproduction FILE ${CMAKE_INSTALL_PREFIX}/aiproductionTargets.cmake  )
