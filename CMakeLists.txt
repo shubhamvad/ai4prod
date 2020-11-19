@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.13)
 
 #vcpg set before project
-set(CMAKE_TOOLCHAIN_FILE "vcpkg/scripts/buildsystems/vcpkg.cmake"
-    CACHE STRING "")
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 
 project(aiprod)
 
-set(CMAKE_CXX_STANDARD 14)
-
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED)
 #architecture definition
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
@@ -59,8 +58,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 find_package(OpenCV 4.1 EXACT REQUIRED PATHS deps/opencv/)
 
 #yaml-cpp
-find_package(yaml-cpp CONFIG REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED) 
 
+#json-cpp
+
+find_package(jsoncpp CONFIG REQUIRED)
+
+# get_cmake_property(_variableNames VARIABLES)
+# list (SORT _variableNames)
+# foreach (_variableName ${_variableNames})
+#     message(STATUS "${_variableName}=${${_variableName}}")
+# endforeach()
+
+
+message("JSON CPP ${JSON_CPP_INCLUDE_DIRS}")
+
+
+message("YAML-CPP ${YAML_CPP_INCLUDE_DIR}")
 #ai4production Library
 add_library(aiproduction SHARED aiproduction/classification.cpp 
 
@@ -73,7 +87,7 @@ aiproduction/aiproduction_export.h
 aiproduction/modelInterface.h)
 
 
-target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp )
+target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp_static stdc++fs)
 
 #need for symbol visibility
 generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/aiproduction_export.h)

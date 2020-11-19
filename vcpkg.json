@@ -4,6 +4,7 @@
     "version-string": "0.00.014",
     "dependencies": [
 
-        "yaml-cpp"
+        "yaml-cpp",
+	"jsoncpp"
     ]
 }

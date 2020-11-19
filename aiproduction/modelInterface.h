@@ -3,11 +3,17 @@
 #include "torch/torch.h"
 #include <opencv2/opencv.hpp>
 #include <onnxruntime_cxx_api.h>
-
+#include <fstream>
 #include "utils.h"
 //generato a runtime da Cmake
 #include "aiproduction_export.h"
 
+#include <json/json.h>
+
+#include <experimental/filesystem>
+#include <algorithm>
+
+namespace fs = std::experimental::filesystem;
 
 #pragma once
 using namespace cv;

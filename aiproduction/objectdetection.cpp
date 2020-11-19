@@ -110,7 +110,7 @@ namespace aiProductionReady
 
             //OUTPUT
             num_out_nodes = m_OrtSession->GetOutputCount();
-            out_node_names = std::vector<const char *>(num_out_nodes);
+            //out_node_names = std::vector<const char *>(num_out_nodes);
 
             cout << "sessione inizializzata" << endl;
         }
@@ -144,16 +144,21 @@ namespace aiProductionReady
 
         void Yolov3::preprocessing(Mat &Image)
         {
-            cv::Mat padImage;
 
-            padImage = padding(Image, m_iInput_w, m_iInput_h);
+            //free all resources allocated
 
-            m_TInputTorchTensor = aut.convertMatToTensor(padImage, padImage.cols, padImage.rows, padImage.channels(), 1);
+            m_viNumberOfBoundingBox.clear();
+
+            Image = padding(Image, m_iInput_w, m_iInput_h);
+
+            m_TInputTorchTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
             m_InputTorchTensorSize = Image.cols * Image.rows * Image.channels();
 
-            cv::Mat test;
-            test = aut.convertTensortToMat(m_TInputTorchTensor, 608, 608);
+            // imshow("insidePadding", Image);
+            // waitKey(500);
+            // cv::Mat test;
+            // test = aut.convertTensortToMat(m_TInputTorchTensor, 608, 608);
         }
 
         void Yolov3::runmodel()
@@ -161,6 +166,8 @@ namespace aiProductionReady
 
             //conversione del tensore a onnx runtime
             m_fpInputOnnxRuntime = static_cast<float *>(m_TInputTorchTensor.storage().data());
+
+            std::vector<int64_t> input_node_dims;
 
             for (int i = 0; i < num_input_nodes; i++)
             {
@@ -177,38 +184,37 @@ namespace aiProductionReady
                 //printf("Input %d : type=%d\n", i, type);
 
                 // print input shapes/dims
+
                 input_node_dims = tensor_info.GetShape();
                 //printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
                 //for (int j = 0; j < input_node_dims.size(); j++)
                 //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
             }
 
-            for (int i = 0; i < num_out_nodes; i++)
-            {
-                // print input node names
-                char *input_name = m_OrtSession->GetOutputName(i, allocator);
-                //printf("Output %d : name=%s\n", i, input_name);
+            // for (int i = 0; i < num_out_nodes; i++)
+            // {
+            //     // print input node names
+            //     char *input_name = m_OrtSession->GetOutputName(i, allocator);
+            //     //printf("Output %d : name=%s\n", i, input_name);
 
-                Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
-                auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+            //     Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
+            //     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
 
-                ONNXTensorElementDataType type = tensor_info.GetElementType();
-                //printf("Output %d : type=%d\n", i, type);
+            //     ONNXTensorElementDataType type = tensor_info.GetElementType();
+            //     //printf("Output %d : type=%d\n", i, type);
 
-                // print input shapes/dims
-                out_node_dims = tensor_info.GetShape();
-                //printf("Output %d : num_dims=%zu\n", i, out_node_dims.size());
-                //for (int j = 0; j < out_node_dims.size(); j++)
-                //printf("Output %d : dim %d=%jd\n", i, j, out_node_dims[j]);
-            }
+            //     // print input shapes/dims
+            //     //out_node_dims = tensor_info.GetShape();
+            //     //printf("Output %d : num_dims=%zu\n", i, out_node_dims.size());
+            //     //for (int j = 0; j < out_node_dims.size(); j++)
+            //     //printf("Output %d : dim %d=%jd\n", i, j, out_node_dims[j]);
+            // }
 
             //https://github.com/microsoft/onnxruntime/issues/3170#issuecomment-596613449
             std::vector<const char *> output_node_names = {"classes", "boxes"};
 
             static const char *output_names[] = {"classes", "boxes"};
             static const size_t NUM_OUTPUTS = sizeof(output_names) / sizeof(output_names[0]);
-
-            OrtValue *p_output_tensors[NUM_OUTPUTS] = {nullptr};
 
             auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
             Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, m_fpInputOnnxRuntime, m_InputTorchTensorSize, input_node_dims.data(), 4);
@@ -235,6 +241,10 @@ namespace aiProductionReady
 
             //m_viNumberOfBoundingBox[0]=(22743,80)
             //m_viNumberOfBoundingBox[1]=(22743,4)
+
+            bool noDetection = true;
+            bool noDetectionNms = true;
+
             for (int index = 0; index < m_viNumberOfBoundingBox[0]; index++)
             {
                 float classProbability = 0.0;
@@ -270,65 +280,184 @@ namespace aiProductionReady
                     vector<float> tmpbox{x, y, w, h, (float)indexClassMaxValue, classProbability};
 
                     bboxValues.push_back(tmpbox);
+
+                    noDetection = false;
                 }
             }
 
-            //NMS
-
-            vector<int> indexAfterNms;
-
-            for (int i = 0; i < bboxValues.size(); i++)
+            if (noDetection)
             {
 
-                for (int j = i + 1; j < bboxValues.size(); j++)
+                cout << "NO DETECTION " << noDetection << endl;
+                cout << "0Detection" << endl;
+                auto tensor = torch::ones({0});
+
+                return tensor;
+            }
+
+            else
+            {
+
+                //NMS
+
+                vector<int> indexAfterNms;
+
+                for (int i = 0; i < bboxValues.size(); i++)
                 {
 
-                    if (std::get<1>(bboxIndex[i]) == std::get<1>(bboxIndex[j]))
+                    for (int j = i + 1; j < bboxValues.size(); j++)
                     {
 
-                        //calcolo iou
-
-                        float ar1[4] = {bboxValues[i][0], bboxValues[i][1], bboxValues[i][2], bboxValues[i][3]};
-                        float ar2[4] = {bboxValues[j][0], bboxValues[j][1], bboxValues[j][2], bboxValues[j][3]};
-
-                        float area1 = ((bboxValues[i][2] + bboxValues[i][0] - bboxValues[i][0]) * (bboxValues[i][3] + bboxValues[i][1] - bboxValues[i][1])) / 2;
-                        float area2 = ((bboxValues[j][2] + bboxValues[j][0] - bboxValues[j][0]) * (bboxValues[j][3] + bboxValues[j][1] - bboxValues[j][1])) / 2;
-
-                        float iouValue = iou(ar1, ar2);
-
-                        //confronto intersezione bbox
-                        if (iouValue > 0.6)
+                        if (std::get<1>(bboxIndex[i]) == std::get<1>(bboxIndex[j]))
                         {
 
-                            if (std::get<2>(bboxIndex[i]) > std::get<2>(bboxIndex[j]))
-                            {
-                                //ritorno gli indici del vettore dei bounding box
-                                // indexAfterNms.push_back(std::get<0>(bboxIndex[i]));
-                                indexAfterNms.push_back(j);
-                            }
-                            else
+                            //calcolo iou
+
+                            float ar1[4] = {bboxValues[i][0], bboxValues[i][1], bboxValues[i][2], bboxValues[i][3]};
+                            float ar2[4] = {bboxValues[j][0], bboxValues[j][1], bboxValues[j][2], bboxValues[j][3]};
+
+                            float area1 = ((bboxValues[i][2] + bboxValues[i][0] - bboxValues[i][0]) * (bboxValues[i][3] + bboxValues[i][1] - bboxValues[i][1])) / 2;
+                            float area2 = ((bboxValues[j][2] + bboxValues[j][0] - bboxValues[j][0]) * (bboxValues[j][3] + bboxValues[j][1] - bboxValues[j][1])) / 2;
+
+                            float iouValue = iou(ar1, ar2);
+
+                            //confronto intersezione bbox
+                            if (iouValue > 0.6)
                             {
 
-                                indexAfterNms.push_back(i);
-                                break;
+                                if (std::get<2>(bboxIndex[i]) > std::get<2>(bboxIndex[j]))
+                                {
+                                    //ritorno gli indici del vettore dei bounding box
+                                    // indexAfterNms.push_back(std::get<0>(bboxIndex[i]));
+                                    indexAfterNms.push_back(j);
+                                    noDetectionNms = false;
+                                }
+                                else
+                                {
+
+                                    indexAfterNms.push_back(i);
+                                    noDetectionNms = false;
+                                    break;
+                                }
                             }
                         }
+                        //calcolo iou
                     }
-                    //calcolo iou
+                }
+
+                if (noDetectionNms)
+                {
+                    cout << "NO DETECTION " << noDetection << endl;
+                    cout << "0Detection" << endl;
+
+                    auto tensor = torch::ones({0});
+
+                    return tensor;
+                }
+
+                else
+                {
+
+                    // for (int i = 0; i < indexAfterNms.size(); i++)
+                    // {
+
+                    //     //devo aggiungere -i perchè tutte le volte che elimino un elemento si riduce la dimensione
+                    //     //dell'array quindi gli indici calcolati prima devono essere scalati
+                    //     bboxValues.erase(bboxValues.begin() + indexAfterNms[i] - i);
+                    // }
+
+                    vector<vector<float>> bboxValuesNms;
+                    
+                    for (int i = 0; i < bboxValues.size(); i++)
+                    {
+
+                        if (std::find(indexAfterNms.begin(), indexAfterNms.end(), i) != indexAfterNms.end())
+                        {
+                            
+                        }
+                        else
+                        {
+                            
+                            bboxValuesNms.push_back(bboxValues[i]);
+                        }
+                    }
+                   
+
+                    // for (int i = 0; i < indexAfterNms.size(); i++)
+                    // {
+
+                    //     bboxValuesNms.push_back(bboxValues[indexAfterNms[i]]);
+                    // }
+
+#ifdef EVAL_ACCURACY
+
+                    //for every image
+
+                    string image_id = m_sAccurayFolderPath;
+
+                    const size_t last_slash_idx = image_id.find_last_of("\\/");
+                    if (std::string::npos != last_slash_idx)
+                    {
+                        image_id.erase(0, last_slash_idx + 1);
+                    }
+
+                    // Remove extension if present.
+                    const size_t period_idx = image_id.rfind('.');
+                    if (std::string::npos != period_idx)
+                    {
+                        image_id.erase(period_idx);
+                    }
+
+                    image_id.erase(0, image_id.find_first_not_of('0'));
+
+                    cout << image_id << endl;
+
+                    //for every detection
+
+                    for (int i = 0; i < bboxValues.size(); i++)
+                    {
+
+                        Json::Value imageIdJson;
+                        Json::Value categoryIdJson;
+                        Json::Value bboxJson;
+                        Json::Value score;
+
+                        Json::Value valueBBoxjson(Json::arrayValue);
+
+                        valueBBoxjson.append(bboxValues[i][0]).append(bboxValues[i][1]).append(bboxValues[i][2]).append(bboxValues[i][3]);
+
+                        root["image_id"] = image_id;
+                        categoryIdJson["category_id"] = bboxValues[i][4];
+                        bboxJson["bbox"] = bboxJson;
+                        score["score"] = bboxValues[i][5];
+
+                        Json::StreamWriterBuilder builder;
+                        const std::string json_file = Json::writeString(builder, root);
+                        std::cout << json_file << std::endl;
+
+                        ofstream myfile;
+                        myfile.open("example.txt", std::ios::in | std::ios::out | std::ios::app);
+                        myfile << json_file + "\n";
+                        myfile.close();
+                    }
+
+                    getchar();
+
+#endif
+
+                    // delete [] m_fpOutOnnxRuntime;
+                    // delete m_fpInputOnnxRuntime;
+                    // m_fpOutOnnxRuntime[0]=nullptr;
+                    // m_fpOutOnnxRuntime[1]=nullptr;
+                    // m_fpInputOnnxRuntime=nullptr;
+
+                    cout << bboxValuesNms.size() << endl;
+
+                    torch::Tensor Output = aut.convert2dVectorToTensor(bboxValuesNms);
+
+                    return Output;
                 }
             }
-
-            for (int i = 0; i < indexAfterNms.size(); i++)
-            {
-
-                //devo aggiungere -i perchè tutte le volte che elimino un elemento si riduce la dimensione
-                //dell'array quindi gli indici calcolati prima devono essere scalati
-                bboxValues.erase(bboxValues.begin() + indexAfterNms[i] - i);
-            }
-
-            torch::Tensor Output = aut.convert2dVectorToTensor(bboxValues);
-
-            return Output;
         }
 
         //get rect coordinate in Yolo Format with padding as preprocessing

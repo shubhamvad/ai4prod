@@ -95,6 +95,18 @@ verify if 2 Mat are equal
 
  torch::Tensor aiutils::convert2dVectorToTensor(std::vector<std::vector<float>>& input){
 
+
+    if(input[0].size()==0){
+        
+        cout<<"empty value"<<endl;
+        auto tensor = torch::empty(   { 200, 200, 3 });
+        return tensor; 
+
+    }
+    
+    else{
+    
+
     cv::Mat NewSamples(0, input[0].size(), cv::DataType<float>::type);
 
     for (unsigned int i = 0; i < input.size(); ++i)
@@ -108,8 +120,11 @@ verify if 2 Mat are equal
 
     torch::Tensor Output=torch::from_blob(NewSamples.data,{(long int)input.size(),(long int)input[0].size()}).contiguous().clone();
 
-    
     return Output;
+    
+    }
+    
+    
 
  }
 

@@ -16,8 +16,11 @@ using namespace classification;
 
 using namespace std::chrono;
 
+#include <experimental/filesystem>
 
+namespace fs = std::experimental::filesystem;
 
+using namespace std;
 
 // #pragma comment(lib, "onnxruntime.lib")
 // #pragma comment(lib, "user32.lib")
@@ -29,7 +32,6 @@ using namespace std::chrono;
 //#pragma comment(lib, "onnxruntime_mlas.lib")
 //#pragma comment(lib, "onnxruntime_graph.lib")
 //#pragma comment(lib, "onnxruntime_common.lib")
-
 
 //classe Custom posso cambiare solo il preprocessing lasciando invariato il resto
 //Link lista funzioni che possono essere usate
@@ -50,82 +52,163 @@ using namespace std::chrono;
 //     }
 // };
 
+cv::Mat padding(cv::Mat &img, int width, int height)
+{
 
+    int w, h, x, y;
+    float r_w = width / (img.cols * 1.0);
+    float r_h = height / (img.rows * 1.0);
+    if (r_h > r_w)
+    {
+        w = width;
+        h = r_w * img.rows;
+        x = 0;
+        y = (height - h) / 2;
+    }
+    else
+    {
+        w = r_h * img.cols;
+        h = height;
+        x = (width - w) / 2;
+        y = 0;
+    }
+    cv::Mat re(h, w, CV_8UC3);
+    cv::resize(img, re, re.size(), 0, 0, cv::INTER_CUBIC);
+    cv::Mat out(height, width, CV_8UC3, cv::Scalar(128, 128, 128));
+    re.copyTo(out(cv::Rect(x, y, re.cols, re.rows)));
+    return out;
+}
 
 int main()
-{   
+{
 
 
 
-    cout<<"programma inizializato"<<endl;
-   
-    
-	Yolov3 *yolov3;
+    string testImage = "";
 
-	auto start1 = high_resolution_clock::now();
-	//linux
-    yolov3= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,Cpu,"/home/aistudios/1");
+    std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017";
+
+    cout << "programma inizializato" << endl;
+
+    Yolov3 *yolov3;
+
+    auto start1 = high_resolution_clock::now();
+    //linux
+    yolov3 = new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx", 608, 608, TensorRT, "/home/aistudios/1");
 
     auto stop1 = high_resolution_clock::now();
-    
-    auto duration1 = duration_cast<microseconds>(stop1 - start1); 
-    
-    cout<<"tempo costruttore 1" << duration1.count()/(1000000) <<endl;
-	//windows
 
-	//C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
+    auto duration1 = duration_cast<microseconds>(stop1 - start1);
 
-	//yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
-    
-	//yolov3 = new Yolov3();
-	Mat img;
-    //linux
-	img=imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
+    cout << "tempo costruttore " << duration1.count() / (1000000) << endl;
+    //windows
 
-	//windows
+    //C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
 
+    //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
 
-	//img = imread("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/test/objectDetection/dog.jpg");
-    //torch::Tensor test;
+    for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
+    {
+        std::cout << entry.path() << std::endl;
 
+        string image_id = entry.path();
 
-    auto start = high_resolution_clock::now();
-    
-    //for(int i=0;i<100;i++){
-    yolov3->preprocessing(img);
-    yolov3->runmodel();
-    
-    
-    torch::Tensor result = yolov3->postprocessing();
-    
-    //}
+        cout << image_id << endl;
 
-     auto stop = high_resolution_clock::now(); 
-    //cout << "Class " << std::get<0>(prediction)[0] << endl;
+        Mat img;
+        //linux
+        //img = imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
 
-    auto duration = duration_cast<microseconds>(stop - start); 
-    
-    cout << "SINGLE TIME INFERENCE "<< (double)duration.count()/(1000000*100) << "Sec"<<endl;
+        //CRASH
+        //img = imread("/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017/000000411754.jpg");
 
+        //
 
-       for (int i=0; i<result.sizes()[0];i++)
-       {
+        //img = imread("/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017/000000460494.jpg");
 
-           cv::Rect brect;
-           cout << result << endl;
+        //CICLO
+        img = imread(image_id.c_str());
 
-           float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+        //resize(img,img,Size(608,608),0.5,0.5,cv::INTER_LANCZOS4);
 
-           
-           brect = yolov3->get_rect(img, tmp);
+        //img=padding(img,608,608);
 
-           cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
-           
-           //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
-       }
+        //imshow("test", img);
 
-       imshow("immagine", img);
-       waitKey(0);
+        //waitKey(500);
+
+        //yolov3 = new Yolov3();
+
+        //windows
+
+        //img = imread("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/test/objectDetection/dog.jpg");
+        //torch::Tensor test;
+
+        auto start = high_resolution_clock::now();
+
+        //for(int i=0;i<100;i++){
+        yolov3->preprocessing(img);
+        yolov3->runmodel();
+
+        torch::Tensor result = yolov3->postprocessing();
+
+        cout << "immagine preprocessata correttamente" << endl;
+        //getchar();
+
+        if (!result.numel())
+        {
+            std::cout << "tensor is empty!" << std::endl;
+            // do other checks you wish to do
+        }
+        else
+        {
+
+            for (int i = 0; i < result.sizes()[0]; i++)
+            {
+
+                cv::Rect brect;
+                cout << result << endl;
+
+                float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+
+                brect = yolov3->get_rect(img, tmp);
+
+                cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+
+                //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+            }
+
+            imshow("immagine", img);
+            waitKey(500);
+        }
+    }
+
+    // //}
+
+    // auto stop = high_resolution_clock::now();
+    // //cout << "Class " << std::get<0>(prediction)[0] << endl;
+
+    // auto duration = duration_cast<microseconds>(stop - start);
+
+    // cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000 * 100) << "Sec" << endl;
+
+    // for (int i = 0; i < result.sizes()[0]; i++)
+    // {
+
+    //     cv::Rect brect;
+    //     cout << result << endl;
+
+    //     float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+
+    //     brect = yolov3->get_rect(img, tmp);
+
+    //     cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+
+    //     //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+    // }
+
+    // imshow("immagine", img);
+    // waitKey(0);
     // yolov3->runmodel(test);
 
     // ResNet50 *resnet;
@@ -134,31 +217,24 @@ int main()
     // Mat img;
     // img = imread("/home/aistudios/Develop/aiproductionready/test/classification/dog.jpeg");
 
-    // auto start = high_resolution_clock::now(); 
-
-    
+    // auto start = high_resolution_clock::now();
 
     // for (int i=0; i<100;i++){
 
-
     // resnet->preprocessing(img);
-    
+
     // resnet->runmodel();
 
     // std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
     // }
 
-    // auto stop = high_resolution_clock::now(); 
+    // auto stop = high_resolution_clock::now();
     // //cout << "Class " << std::get<0>(prediction)[0] << endl;
 
-    // auto duration = duration_cast<microseconds>(stop - start); 
-    
+    // auto duration = duration_cast<microseconds>(stop - start);
+
     // cout << "SINGLE TIME INFERENCE "<< (double)duration.count()/(1000000*100) << "Sec"<<endl;
 
-    
-    
-    
-    
     // ResNet50 *resnet2;
 
     // resnet2 = new ResNet50("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/resnet.onnx","/home/aistudios/2");
@@ -236,29 +312,26 @@ int main()
     //torch::Tensor tensor = torch::rand({2, 3});
     //std::cout << tensor << std::endl;
 
+    // cout << "pre-delete-1" << endl;
+    // //delete yolov3;
 
-    cout<<"pre-delete-1"<<endl;
-    //delete yolov3;
+    // cout << "post-delete" << endl;
 
-    cout<<"post-delete"<<endl;
+    // auto start2 = high_resolution_clock::now();
 
+    // Yolov3 *yolov3_2;
+    // yolov3_2 = new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx", 608, 608, TensorRT, "/home/aistudios/3");
 
-    auto start2 = high_resolution_clock::now();
+    // auto stop2 = high_resolution_clock::now();
 
-    Yolov3 *yolov3_2;
-    yolov3_2= new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx",608,608,TensorRT,"/home/aistudios/3");
+    // auto duration2 = duration_cast<microseconds>(stop2 - start2);
 
-    auto stop2 = high_resolution_clock::now();
-    
-    auto duration2 = duration_cast<microseconds>(stop2 - start2); 
-    
-    cout<<"tempo costruttore 2" << duration2.count()/(1000000) <<endl;
-    
-    cout<<"pre-delet2"<<endl;
+    // cout << "tempo costruttore 2" << duration2.count() / (1000000) << endl;
 
-    delete yolov3;
+    // cout << "pre-delet2" << endl;
 
+    // delete yolov3;
 
-    cout <<"exit"<<endl;
+    // cout << "exit" << endl;
     return 0;
 }

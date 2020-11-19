@@ -25,13 +25,13 @@ namespace objectDetection
 
        size_t num_input_nodes;
        std::vector<const char *> input_node_names;
-       std::vector<int64_t> input_node_dims;
+       //std::vector<int64_t> input_node_dims;
 
        //OnnxRuntimeModelloOutput
 
        size_t num_out_nodes;
-       std::vector<const char *> out_node_names;
-       std::vector<int64_t> out_node_dims;
+       //std::vector<const char *> out_node_names;
+       //std::vector<int64_t> out_node_dims;
 
        //Dimensione del tensore di input modello .onnx
        size_t m_InputTorchTensorSize;
@@ -54,7 +54,7 @@ namespace objectDetection
        //inizializzazione nel file .cpp
        //in fase di compilazione il compilatore ricompilerà solo il file cpp e non anche .h in caso di
        //di modifiche
-       static cv::Mat padding(cv::Mat &img, int width, int weight);
+       cv::Mat padding(cv::Mat &img, int width, int weight);
 
        aiProductionReady::aiutils aut;
 
@@ -70,6 +70,11 @@ namespace objectDetection
         //Config
         YAML::Node m_ymlConfig;
 
+        //Accuracy detection Json
+
+        Json::Value root;
+        
+
        //intersection over unit 
        //float iou(float lbox[4], float rbox[4]);
 
@@ -79,6 +84,11 @@ namespace objectDetection
        
 
     public:
+
+       //public path for accuracy measurement
+
+       string m_sAccurayFolderPath;
+
        Yolov3();
 
        virtual ~Yolov3();
