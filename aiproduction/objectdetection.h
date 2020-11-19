@@ -3,6 +3,7 @@
 namespace aiProductionReady{
 
 
+
 namespace objectDetection
 {
 
@@ -87,7 +88,7 @@ namespace objectDetection
 
        //public path for accuracy measurement
 
-       string m_sAccurayFolderPath;
+       string m_sAccurayImagePath;
 
        Yolov3();
 

@@ -253,7 +253,7 @@ namespace aiProductionReady
                 for (int classes = 0; classes < m_viNumberOfBoundingBox[1]; classes++)
                 {
                     //i*num_classes +j
-                    if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > 0.7)
+                    if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > 0.5)
                     {
                         //serve per trovare il massimo per singolo bbox
                         if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > classProbability)
@@ -322,7 +322,7 @@ namespace aiProductionReady
                             float iouValue = iou(ar1, ar2);
 
                             //confronto intersezione bbox
-                            if (iouValue > 0.6)
+                            if (iouValue > 0.5)
                             {
 
                                 if (std::get<2>(bboxIndex[i]) > std::get<2>(bboxIndex[j]))
@@ -367,21 +367,19 @@ namespace aiProductionReady
                     // }
 
                     vector<vector<float>> bboxValuesNms;
-                    
+
                     for (int i = 0; i < bboxValues.size(); i++)
                     {
 
                         if (std::find(indexAfterNms.begin(), indexAfterNms.end(), i) != indexAfterNms.end())
                         {
-                            
                         }
                         else
                         {
-                            
+
                             bboxValuesNms.push_back(bboxValues[i]);
                         }
                     }
-                   
 
                     // for (int i = 0; i < indexAfterNms.size(); i++)
                     // {
@@ -393,7 +391,7 @@ namespace aiProductionReady
 
                     //for every image
 
-                    string image_id = m_sAccurayFolderPath;
+                    string image_id = m_sAccurayImagePath;
 
                     const size_t last_slash_idx = image_id.find_last_of("\\/");
                     if (std::string::npos != last_slash_idx)
@@ -413,35 +411,41 @@ namespace aiProductionReady
                     cout << image_id << endl;
 
                     //for every detection
+                    Json::Value rootArray(Json::arrayValue);
 
                     for (int i = 0; i < bboxValues.size(); i++)
                     {
 
-                        Json::Value imageIdJson;
-                        Json::Value categoryIdJson;
-                        Json::Value bboxJson;
-                        Json::Value score;
+                        Json::Value root;
+                        // Json::Value categoryIdJson;
+                        // Json::Value bboxJson;
+                        // Json::Value score;
 
                         Json::Value valueBBoxjson(Json::arrayValue);
 
-                        valueBBoxjson.append(bboxValues[i][0]).append(bboxValues[i][1]).append(bboxValues[i][2]).append(bboxValues[i][3]);
+                        valueBBoxjson.append(bboxValues[i][0]);
+                        valueBBoxjson.append(bboxValues[i][1]);
+                        valueBBoxjson.append(bboxValues[i][2]);
+                        valueBBoxjson.append(bboxValues[i][3]);
 
                         root["image_id"] = image_id;
-                        categoryIdJson["category_id"] = bboxValues[i][4];
-                        bboxJson["bbox"] = bboxJson;
-                        score["score"] = bboxValues[i][5];
+                        root["category_id"] = bboxValues[i][4];
+                        root["bbox"] = valueBBoxjson;
+                        root["score"] = bboxValues[i][5];
 
-                        Json::StreamWriterBuilder builder;
-                        const std::string json_file = Json::writeString(builder, root);
-                        std::cout << json_file << std::endl;
-
-                        ofstream myfile;
-                        myfile.open("example.txt", std::ios::in | std::ios::out | std::ios::app);
-                        myfile << json_file + "\n";
-                        myfile.close();
+                        rootArray.append(root);
                     }
 
-                    getchar();
+                    Json::StreamWriterBuilder builder;
+                    const std::string json_file = Json::writeString(builder, rootArray);
+                    std::cout << json_file << std::endl;
+
+                    ofstream myfile;
+                    myfile.open("yoloVal.json", std::ios::in | std::ios::out | std::ios::app);
+                    myfile << json_file + "\n";
+                    myfile.close();
+                    
+                    
 
 #endif
 

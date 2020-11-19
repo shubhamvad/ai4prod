@@ -127,8 +127,10 @@ int main()
         //img = imread("/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017/000000460494.jpg");
 
         //CICLO
-        img = imread(image_id.c_str());
+        img = imread(image_id.c_str()); 
 
+        yolov3->m_sAccurayImagePath=image_id.c_str();
+         
         //resize(img,img,Size(608,608),0.5,0.5,cv::INTER_LANCZOS4);
 
         //img=padding(img,608,608);
@@ -178,8 +180,8 @@ int main()
                 //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
             }
 
-            imshow("immagine", img);
-            waitKey(500);
+            //imshow("immagine", img);
+            //waitKey(100);
         }
     }
 

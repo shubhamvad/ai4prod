@@ -12,6 +12,10 @@ Rebuild ai4prod with new Cmake in order to include this library only with find_p
 Retrocompatibility break.
 Change SOVERSION to 1 
 
+#19/11/2020 Version 1.0.1
+
+Solved Bug on NMS for images with no detection. 
+
 
 
 
