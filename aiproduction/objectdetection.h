@@ -1,5 +1,8 @@
 #include "modelInterface.h"
 
+
+#define EVAL_ACCURACY
+
 namespace aiProductionReady{
 
 
@@ -73,7 +76,9 @@ namespace objectDetection
 
         //Accuracy detection Json
 
-        Json::Value root;
+        
+        //array with all detection
+        Json::Value m_JsonRootArray;
         
 
        //intersection over unit 
@@ -82,7 +87,9 @@ namespace objectDetection
        //non max suppression
        //void nms(std::vector<Detection>& res, float *output, float nms_thresh = 0.9);
 
-       
+        int m_iMrows;
+        int m_iMcols;
+       cv::Rect get_RectMap(float bbox[4]); 
 
     public:
 
@@ -100,6 +107,7 @@ namespace objectDetection
        torch::Tensor postprocessing();
        void runmodel();
 
+       void createAccuracyFile();
        //return width of input image
        int getWidth(){
 

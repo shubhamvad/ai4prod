@@ -57,6 +57,8 @@ namespace aiProductionReady
          //il distruttore virtual permette di avere una migliore gestione della memoria evitando memory leak
          virtual ~ResNet50();
 
+         string m_sAccurayImagePath;
+
          void preprocessing(Mat &Image);
          std::tuple<torch::Tensor, torch::Tensor> postprocessing();
          void runmodel();

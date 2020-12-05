@@ -6,6 +6,8 @@
 using namespace std;
 
 using namespace onnxruntime;
+
+#define EVAL_ACCURACY
 namespace aiProductionReady
 {
     namespace classification
@@ -102,7 +104,16 @@ namespace aiProductionReady
         {
 
             //ResNet50::model=data;
-            resize(Image, Image, Size(224, 224), 0.5, 0.5, cv::INTER_LANCZOS4);
+
+
+            //resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
+            resize(Image, Image, Size(256, 256), 0, 0, cv::INTER_LINEAR);
+            const int cropSize = 224;
+            const int offsetW = (Image.cols - cropSize) / 2;
+            const int offsetH = (Image.rows - cropSize) / 2;
+            const Rect roi(offsetW, offsetH, cropSize, cropSize);
+            
+            Image = Image(roi).clone();
             inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
             //definisco la dimensione di input
@@ -239,13 +250,35 @@ namespace aiProductionReady
 
             std::tuple<torch::Tensor, torch::Tensor> topPrediction = {indeces, value};
 
+#ifdef EVAL_ACCURACY
+
+            ofstream myfile;
+            myfile.open("/home/aistudios/Desktop/classification-Detection.csv", std::ios::in | std::ios::out | std::ios::app);
+
+            //remove file extension
+            // size_t lastindex = m_sAccurayImagePath.find_last_of(".");
+            // string imagePath_WithoutExt = m_sAccurayImagePath.substr(0, lastindex);
+
+            //get only name file withot all path and extension
+            std::string base_filename = m_sAccurayImagePath.substr(m_sAccurayImagePath.find_last_of("/\\") + 1);
+            std::string::size_type const p(base_filename.find_last_of('.'));
+            std::string file_without_extension = base_filename.substr(0, p);
+
+            string stringToWrite = file_without_extension + "," + std::to_string(std::get<0>(topPrediction)[0].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[1].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[2].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[3].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[4].item<long>()) + "\n";
+
+            myfile << stringToWrite.c_str();
+
+            myfile.close();
+
+#endif
+
             return topPrediction;
         }
 
         ResNet50::~ResNet50()
         {
-           m_OrtSession.reset();
-           m_OrtEnv.reset(); 
+            m_OrtSession.reset();
+            m_OrtEnv.reset();
         }
 
     } // namespace classification

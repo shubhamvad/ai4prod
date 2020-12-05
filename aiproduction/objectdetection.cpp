@@ -145,6 +145,9 @@ namespace aiProductionReady
         void Yolov3::preprocessing(Mat &Image)
         {
 
+            m_iMcols = Image.cols;
+            m_iMrows = Image.rows;
+
             //free all resources allocated
 
             m_viNumberOfBoundingBox.clear();
@@ -253,14 +256,15 @@ namespace aiProductionReady
                 for (int classes = 0; classes < m_viNumberOfBoundingBox[1]; classes++)
                 {
                     //i*num_classes +j
-                    if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > 0.5)
+                    if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > 0.09)
                     {
                         //serve per trovare il massimo per singolo bbox
                         if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > classProbability)
                         {
 
                             classProbability = m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes];
-                            indexClassMaxValue = classes;
+                            //aggiungo +1 perchè nel Map il valore delle classi parte da 1 e non da 0.Così come nel foglio dei nomi
+                            indexClassMaxValue = classes + 1;
                         }
                     }
                 }
@@ -288,7 +292,7 @@ namespace aiProductionReady
             if (noDetection)
             {
 
-                cout << "NO DETECTION " << noDetection << endl;
+                //cout << "NO DETECTION " << noDetection << endl;
                 cout << "0Detection" << endl;
                 auto tensor = torch::ones({0});
 
@@ -347,8 +351,8 @@ namespace aiProductionReady
 
                 if (noDetectionNms)
                 {
-                    cout << "NO DETECTION " << noDetection << endl;
-                    cout << "0Detection" << endl;
+                    //cout << "NO DETECTION " << noDetection << endl;
+                    //cout << "0Detection" << endl;
 
                     auto tensor = torch::ones({0});
 
@@ -408,44 +412,97 @@ namespace aiProductionReady
 
                     image_id.erase(0, image_id.find_first_not_of('0'));
 
-                    cout << image_id << endl;
+                    //cout << image_id << endl;
+                    cv::Rect brect;
 
-                    //for every detection
-                    Json::Value rootArray(Json::arrayValue);
-
-                    for (int i = 0; i < bboxValues.size(); i++)
+                    for (int i = 0; i < bboxValuesNms.size(); i++)
                     {
 
                         Json::Value root;
                         // Json::Value categoryIdJson;
                         // Json::Value bboxJson;
                         // Json::Value score;
+                        root["image_id"] = std::stoi(image_id);
+
+                        int cocoCategory = 0;
+                        //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
+                        //1
+                        if ((int)bboxValuesNms[i][4] > 0 && (int)bboxValuesNms[i][4] <= 11)
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4];
+                        }
+
+                        //2
+                        if ((int)bboxValuesNms[i][4] > 11 && (int)bboxValuesNms[i][4] <= 24)
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4]+1;
+                        }
+                        //3
+                        if ((int)bboxValuesNms[i][4] > 24 && (int)bboxValuesNms[i][4] <= 26)
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4]+2;
+                        }
+                        //4
+                        if ((int)bboxValuesNms[i][4] > 26 && (int)bboxValuesNms[i][4] <= 40)
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4]+4;
+                        }
+                        //5
+                        if ((int)bboxValuesNms[i][4] > 40 && (int)bboxValuesNms[i][4] <= 60)
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4]+5;
+                        }
+                        //6
+                        if ((int)bboxValuesNms[i][4] ==61)
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4]+6;
+                        }
+                        //7
+                        if ((int)bboxValuesNms[i][4]==62) 
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4]+8;
+                        }
+                        //8
+                        if ((int)bboxValuesNms[i][4] > 62 && (int)bboxValuesNms[i][4] <= 73)
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4]+9;
+                        }
+                        //9
+                        if ((int)bboxValuesNms[i][4] > 73 && (int)bboxValuesNms[i][4] <= 80)
+                        {
+
+                            cocoCategory = (int)bboxValuesNms[i][4]+10;
+                        }
+                       
+
+                        root["category_id"] = cocoCategory;
 
                         Json::Value valueBBoxjson(Json::arrayValue);
 
-                        valueBBoxjson.append(bboxValues[i][0]);
-                        valueBBoxjson.append(bboxValues[i][1]);
-                        valueBBoxjson.append(bboxValues[i][2]);
-                        valueBBoxjson.append(bboxValues[i][3]);
+                        float tmp[4] = {bboxValuesNms[i][0], bboxValuesNms[i][1], bboxValuesNms[i][2], bboxValuesNms[i][3]};
 
-                        root["image_id"] = image_id;
-                        root["category_id"] = bboxValues[i][4];
+                        cv::Rect brect;
+                        brect = get_RectMap(tmp);
+
+                        valueBBoxjson.append(brect.x);
+                        valueBBoxjson.append(brect.y);
+                        valueBBoxjson.append(brect.width);
+                        valueBBoxjson.append(brect.height);
+
                         root["bbox"] = valueBBoxjson;
-                        root["score"] = bboxValues[i][5];
+                        root["score"] = bboxValuesNms[i][5];
 
-                        rootArray.append(root);
+                        m_JsonRootArray.append(root);
+                    
                     }
-
-                    Json::StreamWriterBuilder builder;
-                    const std::string json_file = Json::writeString(builder, rootArray);
-                    std::cout << json_file << std::endl;
-
-                    ofstream myfile;
-                    myfile.open("yoloVal.json", std::ios::in | std::ios::out | std::ios::app);
-                    myfile << json_file + "\n";
-                    myfile.close();
-                    
-                    
 
 #endif
 
@@ -455,7 +512,7 @@ namespace aiProductionReady
                     // m_fpOutOnnxRuntime[1]=nullptr;
                     // m_fpInputOnnxRuntime=nullptr;
 
-                    cout << bboxValuesNms.size() << endl;
+                    //cout << bboxValuesNms.size() << endl;
 
                     torch::Tensor Output = aut.convert2dVectorToTensor(bboxValuesNms);
 
@@ -511,6 +568,52 @@ namespace aiProductionReady
 
             float interBoxS = (interBox[1] - interBox[0]) * (interBox[3] - interBox[2]);
             return interBoxS / (lbox[2] * lbox[3] + rbox[2] * rbox[3] - interBoxS);
+        }
+
+        cv::Rect Yolov3::get_RectMap(float bbox[4])
+        {
+
+            int l, r, t, b;
+            float r_w = m_iInput_w / (m_iMcols * 1.0);
+            float r_h = m_iInput_h / (m_iMrows * 1.0);
+            if (r_h > r_w)
+            {
+                l = bbox[0] - bbox[2] / 2.f;
+                r = bbox[0] + bbox[2] / 2.f;
+                t = bbox[1] - bbox[3] / 2.f - (m_iInput_h - r_w * m_iMrows) / 2;
+                b = bbox[1] + bbox[3] / 2.f - (m_iInput_h - r_w * m_iMrows) / 2;
+                l = l / r_w;
+                r = r / r_w;
+                t = t / r_w;
+                b = b / r_w;
+            }
+            else
+            {
+                l = bbox[0] - bbox[2] / 2.f - (m_iInput_w - r_h * m_iMcols) / 2;
+                r = bbox[0] + bbox[2] / 2.f - (m_iInput_w - r_h * m_iMcols) / 2;
+                t = bbox[1] - bbox[3] / 2.f;
+                b = bbox[1] + bbox[3] / 2.f;
+                l = l / r_h;
+                r = r / r_h;
+                t = t / r_h;
+                b = b / r_h;
+            }
+            return cv::Rect(l, t, r - l, b - t);
+        }
+
+        //we need to create this function because all detection need to be saved all together
+        //detection are saved in an array in memory
+        void Yolov3::createAccuracyFile()
+        {
+
+            Json::StreamWriterBuilder builder;
+            const std::string json_file = Json::writeString(builder, m_JsonRootArray);
+            //std::cout << json_file << std::endl;
+
+            ofstream myfile;
+            myfile.open("yoloVal.json", std::ios::in | std::ios::out | std::ios::app);
+            myfile << json_file + "\n";
+            myfile.close();
         }
 
         Yolov3::~Yolov3()

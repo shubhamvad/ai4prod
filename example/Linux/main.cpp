@@ -82,108 +82,121 @@ cv::Mat padding(cv::Mat &img, int width, int height)
 int main()
 {
 
+//YOLO MAP ---------------------------------------------------------------------
+    // string testImage = "";
+
+    // std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017";
+
+    // cout << "programma inizializato" << endl;
+
+    // Yolov3 *yolov3;
+
+    // auto start1 = high_resolution_clock::now();
+    // //linux
+    // yolov3 = new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx", 608, 608, TensorRT, "/home/aistudios/1");
+
+    // auto stop1 = high_resolution_clock::now();
+
+    // auto duration1 = duration_cast<microseconds>(stop1 - start1);
+
+    // cout << "tempo costruttore " << duration1.count() / (1000000) << endl;
+    // //windows
+
+    // //C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
+
+    // //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
+
+    // for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
+    // {
+    //     std::cout << entry.path() << std::endl;
+
+    //     string image_id = entry.path();
+
+    //     cout << image_id << endl;
+
+    //     Mat img;
+    //     //linux
+    //     //img = imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
+
+    //     //CRASH
+    //     //img = imread("/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017/000000411754.jpg");
+
+    //     //
+
+    //     //img = imread("/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017/000000460494.jpg");
+
+    //     //CICLO
+    //     img = imread(image_id.c_str());
+
+    //     yolov3->m_sAccurayImagePath = image_id.c_str();
+
+    //     //resize(img,img,Size(608,608),0.5,0.5,cv::INTER_LANCZOS4);
+
+    //     //img=padding(img,608,608);
+
+    //     //imshow("test", img);
+
+    //     //waitKey(500);
+
+    //     //yolov3 = new Yolov3();
+
+    //     //windows 
+
+    //     //img = imread("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/test/objectDetection/dog.jpg");
+    //     //torch::Tensor test;
+
+    //     auto start = high_resolution_clock::now();
+
+    //     //for(int i=0;i<100;i++){
+    //     yolov3->preprocessing(img);
+    //     yolov3->runmodel();
+
+    //     torch::Tensor result = yolov3->postprocessing();
+
+    //     cout << "immagine preprocessata correttamente" << endl;
+    //     //getchar();
+
+    //     if (!result.numel())
+    //     {
+    //         std::cout << "tensor is empty!" << std::endl;
+    //         // do other checks you wish to do
+    //     }
+    //     else
+    //     {
+
+    //         for (int i = 0; i < result.sizes()[0]; i++)
+    //         {
+
+    //             cv::Rect brect;
+    //             //cout << result << endl;
+
+    //             float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+
+    //             brect = yolov3->get_rect(img, tmp);
+                
+    //             string category= to_string(result[i][4].item<float>());
+    //             cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+    //             cv::putText(img,                         //target image
+    //                         category.c_str(),            //text
+    //                         cv::Point(brect.x, brect.y), //top-left position
+    //                         cv::FONT_HERSHEY_DUPLEX,
+    //                         1.0,
+    //                         CV_RGB(118, 185, 0), //font color
+    //                         2);
+    //             //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+    //         }
+
+    //         // imshow("immagine", img);
+    //         // waitKey(0);
+    //     }
+    // }
+
+    // //creo il file Json
+    // yolov3->createAccuracyFile();
 
 
-    string testImage = "";
+//YOLO MAP --------------------------------------------------------------------------------------------------
 
-    std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017";
-
-    cout << "programma inizializato" << endl;
-
-    Yolov3 *yolov3;
-
-    auto start1 = high_resolution_clock::now();
-    //linux
-    yolov3 = new Yolov3("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx", 608, 608, TensorRT, "/home/aistudios/1");
-
-    auto stop1 = high_resolution_clock::now();
-
-    auto duration1 = duration_cast<microseconds>(stop1 - start1);
-
-    cout << "tempo costruttore " << duration1.count() / (1000000) << endl;
-    //windows
-
-    //C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
-
-    //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
-
-    for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
-    {
-        std::cout << entry.path() << std::endl;
-
-        string image_id = entry.path();
-
-        cout << image_id << endl;
-
-        Mat img;
-        //linux
-        //img = imread("/home/aistudios/Develop/aiproductionready/test/objectDetection/dog.jpg");
-
-        //CRASH
-        //img = imread("/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017/000000411754.jpg");
-
-        //
-
-        //img = imread("/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017/000000460494.jpg");
-
-        //CICLO
-        img = imread(image_id.c_str()); 
-
-        yolov3->m_sAccurayImagePath=image_id.c_str();
-         
-        //resize(img,img,Size(608,608),0.5,0.5,cv::INTER_LANCZOS4);
-
-        //img=padding(img,608,608);
-
-        //imshow("test", img);
-
-        //waitKey(500);
-
-        //yolov3 = new Yolov3();
-
-        //windows
-
-        //img = imread("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/test/objectDetection/dog.jpg");
-        //torch::Tensor test;
-
-        auto start = high_resolution_clock::now();
-
-        //for(int i=0;i<100;i++){
-        yolov3->preprocessing(img);
-        yolov3->runmodel();
-
-        torch::Tensor result = yolov3->postprocessing();
-
-        cout << "immagine preprocessata correttamente" << endl;
-        //getchar();
-
-        if (!result.numel())
-        {
-            std::cout << "tensor is empty!" << std::endl;
-            // do other checks you wish to do
-        }
-        else
-        {
-
-            for (int i = 0; i < result.sizes()[0]; i++)
-            {
-
-                cv::Rect brect;
-                cout << result << endl;
-
-                float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
-
-                brect = yolov3->get_rect(img, tmp);
-
-                cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
-
-                //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
-            }
-
-            //imshow("immagine", img);
-            //waitKey(100);
-        }
-    }
 
     // //}
 
@@ -335,5 +348,89 @@ int main()
     // delete yolov3;
 
     // cout << "exit" << endl;
+
+
+//CLASSIFICATION ACCURACY------------------------------------------------------------------------
+
+    ResNet50 *resnet;
+
+    resnet = new ResNet50("/home/aistudios/Develop/ai4prod/deps/onnxruntime/model/cpu/resnet50.onnx", 1000, 5, TensorRT, "/home/aistudios/resnetNew");
+    
+
+    std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/imagenet/Val/ILSVRC2012_img_val";
+
+
+    for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
+     {
+    
+    string image_id = entry.path();
+    Mat img;
+
+
+
+   
+    img = imread(image_id.c_str());
+    
+    resnet->m_sAccurayImagePath=image_id.c_str();
+
+    resnet->preprocessing(img);
+
+    resnet->runmodel();
+
+    std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
+
+    
+// //TEST CROP
+//             cv::Mat Image;
+//             Image=imread("/home/aistudios/Develop/ai4prod/test/classification/dog.jpeg");
+
+//             resize(Image, Image, Size(256, 256), 0.0, 0.0, INTER_LINEAR);
+//             const int cropSize = 224;
+//             const int offsetW = (Image.cols - cropSize) / 2;
+//             const int offsetH = (Image.rows - cropSize) / 2;
+//             const Rect roi(offsetW, offsetH, cropSize, cropSize);
+            
+//             Image = Image(roi).clone();
+
+//             cv::imshow("test",Image);
+//             cv::imwrite("dog-crop-3.jpeg",Image);
+//             cv::waitKey(0);
+
+
+
+
+
+
+
+
+// //TEST CROP
+
+
+
+
+
+
+
+
+
+
+    //cout << "Class " << std::get<0>(prediction)[0].item<long>() << endl;
+
+
+    }
+
+
+    // for (int i=0; i<100;i++){
+
+    // resnet->preprocessing(img);
+
+    // resnet->runmodel();
+
+    // std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
+    // }
+
+
+//CLASSIFICATION ACCURACY------------------------------------------------------------------------
+
     return 0;
 }
