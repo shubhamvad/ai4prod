@@ -6,4 +6,13 @@ example/Linux/install-Lib
 example/Linux/build
 example/Windows/install-Lib
 example/Windows/build
-
+testAccuracy/classification/Imagenet/Cpp/build
+testAccuracy/classification/Imagenet/Cpp/Install
+testAccuracy/classification/Imagenet/TestDifferentThreshold
+testAccuracy/objectDetection/TestCoco/Cpp/build
+testAccuracy/objectDetection/TestCoco/Cpp/Install
+testAccuracy/objectDetection/TestCoco/python/instances_val2017.json
+testAccuracy/objectDetection/TestCoco/python/yoloVal.json
+testAccuracy/objectDetection/TestCoco/python/TestDifferentThreshold
+classes/
+aiproduction/aiproduction_export.h
