@@ -1,7 +1,12 @@
-cmake_minimum_required(VERSION 3.13)
 
+
+#set(VCPKG_TARGET_TRIPLET "x64-linux")
 #vcpg set before project
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+
+cmake_minimum_required(VERSION 3.13)
+
+
 
 
 project(aiprod)
@@ -23,7 +28,8 @@ if(${X86_64})
     
 
     if(UNIX)
-        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/install-Lib")
+        #set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/install-Lib")
+        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/classification/Imagenet/Cpp/Install")
     endif()
     if (MSVC)
         set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/install-Lib")

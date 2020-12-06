@@ -64,8 +64,10 @@ namespace aiProductionReady
 
 #elif _WIN32
 
-            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", "1");
-            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", modelTr_path.c_str());
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_ymlConfig["engine_cache"].as<std::string>().c_str());
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_ymlConfig["engine_path"].as<std::string>().c_str());
+            _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_ymlConfig["fp16"].as<std::string>().c_str());
+
 
 #endif
             m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
@@ -112,7 +114,7 @@ namespace aiProductionReady
             num_out_nodes = m_OrtSession->GetOutputCount();
             //out_node_names = std::vector<const char *>(num_out_nodes);
 
-            cout << "sessione inizializzata" << endl;
+            cout << "sessione init correctly" << endl;
         }
 
         cv::Mat Yolov3::padding(cv::Mat &img, int width, int height)
@@ -256,7 +258,8 @@ namespace aiProductionReady
                 for (int classes = 0; classes < m_viNumberOfBoundingBox[1]; classes++)
                 {
                     //i*num_classes +j
-                    if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > 0.09)
+                    //Detection threshold
+                    if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > 0.0)
                     {
                         //serve per trovare il massimo per singolo bbox
                         if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > classProbability)

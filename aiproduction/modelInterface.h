@@ -1,3 +1,7 @@
+#pragma once
+
+//#define EVAL_ACCURACY
+
 #include "yaml-cpp/yaml.h"
 #include <iostream>
 #include "torch/torch.h"
@@ -5,7 +9,7 @@
 #include <onnxruntime_cxx_api.h>
 #include <fstream>
 #include "utils.h"
-//generato a runtime da Cmake
+//Cmake generated
 #include "aiproduction_export.h"
 
 #include <json/json.h>
@@ -15,7 +19,7 @@
 
 namespace fs = std::experimental::filesystem;
 
-#pragma once
+
 using namespace cv;
 
 namespace aiProductionReady

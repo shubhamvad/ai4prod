@@ -7,7 +7,7 @@ using namespace std;
 
 using namespace onnxruntime;
 
-#define EVAL_ACCURACY
+
 namespace aiProductionReady
 {
     namespace classification
@@ -27,24 +27,55 @@ namespace aiProductionReady
         }
 
         ResNet50::ResNet50(std::string path, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
-        {
+        {   
+
+             if (aut.checkFileExists(modelTr_path + "/config.yaml"))
+            {
+                cout << "file1" << endl;
+
+                m_ymlConfig = YAML::LoadFile(modelTr_path + "/config.yaml");
+            }
+            else
+            {
+
+                // starts out as null
+                m_ymlConfig["fp16"] = "0"; // it now is a map node
+                m_ymlConfig["engine_cache"] = "1";
+                m_ymlConfig["engine_path"] = modelTr_path;
+                std::ofstream fout(modelTr_path + "/config.yaml");
+                fout << m_ymlConfig;
+            }
+
+
             m_iModelNumberOfClass = ModelNumberOfClass;
             m_iNumberOfReturnedPrediction = NumberOfReturnedPrediction;
 
             //queste variabili devono essere settate prima di inzializzara la sessione
-            char cacheModel[] = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=1";
+            //string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
 
-            m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + modelTr_path;
+            //m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + modelTr_path;
 
             //cout << m_sModelTrPath << endl;
 
 #ifdef __linux__
 
-            putenv(cacheModel);
 
+            string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
+
+            int cacheLenght = cacheModel.length();
+            char cacheModelchar[cacheLenght + 1];
+            strcpy(cacheModelchar, cacheModel.c_str());
+            putenv(cacheModelchar);
+
+            string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_ymlConfig["fp16"].as<std::string>();
+            int fp16Lenght = cacheModel.length();
+            char fp16char[cacheLenght + 1];
+            strcpy(fp16char, fp16.c_str());
+            putenv(fp16char);
+
+            m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_ymlConfig["engine_path"].as<std::string>();
             int n = m_sModelTrPath.length();
             char modelSavePath[n + 1];
-
             strcpy(modelSavePath, m_sModelTrPath.c_str());
             //esporto le path del modello di Tensorrt
             putenv(modelSavePath);
@@ -52,8 +83,9 @@ namespace aiProductionReady
             //test = OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options,0);
 #elif _WIN32
 
-            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", "1");
-            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", modelTr_path.c_str());
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_ymlConfig["engine_cache"].as<std::string>().c_str());
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_ymlConfig["engine_path"].as<std::string>().c_str());
+            _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_ymlConfig["fp16"].as<std::string>().c_str());
 
 #endif
             m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));

@@ -50,6 +50,8 @@ namespace aiProductionReady
          std::string m_sModelTrPath;
 
          aiProductionReady::aiutils aut;
+         //Config
+        YAML::Node m_ymlConfig;
 
       public:
          ResNet50();

@@ -1,8 +1,6 @@
 #include "modelInterface.h"
 
 
-#define EVAL_ACCURACY
-
 namespace aiProductionReady{
 
 
