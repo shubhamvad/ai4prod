@@ -34,36 +34,53 @@ namespace aiProductionReady
          //Dimensione del tensore di input modello .onnx
          size_t input_tensor_size;
 
-         //
+         //INIT Function
+
+         void setOnnxRuntimeEnv();
+         void setOnnxRuntimeModelInputOutput();
+         void createYamlConfig();
+         void setEnvVariable();
+         void setSession();
+
+         //Init variable
 
          int m_iModelNumberOfClass;
          int m_iNumberOfReturnedPrediction;
 
-         //puntatori dati uscita ingresso onnxruntime
+         YAML::Node m_ymlConfig;
+         std::string m_sModelTrPath;
+         std::string m_sModelOnnxPath;
+         MODE m_eMode;
+         int m_iInput_h;
+         int m_iInput_w;
+         int m_iCropImage;
+
+         //onnxruntime data
          float *m_fpOutOnnxRuntime;
          float *m_fpInOnnxRuntime;
 
+         //libtorch data
          torch::Tensor inputTensor;
          torch::Tensor m_TOutputTensor;
 
-         //path del modello di tensorrt
-         std::string m_sModelTrPath;
-
          aiProductionReady::aiutils aut;
-         //Config
-        YAML::Node m_ymlConfig;
+
+         //handle initialization
+         bool m_bInit;
 
       public:
          ResNet50();
-         ResNet50(std::string modelPath, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path = NULL);
-         //il distruttore virtual permette di avere una migliore gestione della memoria evitando memory leak
+
          virtual ~ResNet50();
+
+         bool init(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path = NULL);
 
          string m_sAccurayImagePath;
 
          void preprocessing(Mat &Image);
          std::tuple<torch::Tensor, torch::Tensor> postprocessing();
          void runmodel();
+      
       };
 
    } //namespace classification

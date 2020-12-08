@@ -11,68 +11,16 @@ namespace aiProductionReady
         //costruttore di default
         Yolov3::Yolov3()
         {
+            m_bInit = false;
+           
         }
 
-        Yolov3::Yolov3(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string modelTr_path)
+        void Yolov3::setOnnxRuntimeEnv()
         {
 
-            //verifico se esiste il file di configurazione altrimenti ne creo uno
-
-            if (aut.checkFileExists(modelTr_path + "/config.yaml"))
-            {
-                cout << "file1" << endl;
-
-                m_ymlConfig = YAML::LoadFile(modelTr_path + "/config.yaml");
-            }
-            else
-            {
-
-                // starts out as null
-                m_ymlConfig["fp16"] = "0"; // it now is a map node
-                m_ymlConfig["engine_cache"] = "1";
-                m_ymlConfig["engine_path"] = modelTr_path;
-                std::ofstream fout(modelTr_path + "/config.yaml");
-                fout << m_ymlConfig;
-            }
-
-            //set width height of input image
-
-            m_iInput_h = input_h;
-            m_iInput_w = input_w;
-
-#ifdef __linux__
-
-            string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
-
-            int cacheLenght = cacheModel.length();
-            char cacheModelchar[cacheLenght + 1];
-            strcpy(cacheModelchar, cacheModel.c_str());
-            putenv(cacheModelchar);
-
-            string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_ymlConfig["fp16"].as<std::string>();
-            int fp16Lenght = cacheModel.length();
-            char fp16char[cacheLenght + 1];
-            strcpy(fp16char, fp16.c_str());
-            putenv(fp16char);
-
-            m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_ymlConfig["engine_path"].as<std::string>();
-            int n = m_sModelTrPath.length();
-            char modelSavePath[n + 1];
-            strcpy(modelSavePath, m_sModelTrPath.c_str());
-            //esporto le path del modello di Tensorrt
-            putenv(modelSavePath);
-
-#elif _WIN32
-
-            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_ymlConfig["engine_cache"].as<std::string>().c_str());
-            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_ymlConfig["engine_path"].as<std::string>().c_str());
-            _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_ymlConfig["fp16"].as<std::string>().c_str());
-
-
-#endif
             m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
 
-            if (t == Cpu)
+            if (m_eMode == Cpu)
             {
 
                 m_OrtSessionOptions.SetIntraOpNumThreads(1);
@@ -80,42 +28,242 @@ namespace aiProductionReady
                 m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
             }
 
-            if (t == TensorRT)
+            if (m_eMode == TensorRT)
             {
-
-                //esporto le variabili
-                m_sModelTrPath = modelTr_path;
 
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
             }
+        }
 
+        void Yolov3::setOnnxRuntimeModelInputOutput()
+        {
+
+            num_input_nodes = m_OrtSession->GetInputCount();
+            input_node_names = std::vector<const char *>(num_input_nodes);
+
+            num_out_nodes = m_OrtSession->GetOutputCount();
+        }
+
+        void Yolov3::createYamlConfig()
+        {
+            //exception in creating config file
+
+            //retrive or create config yaml file
+            if (aut.checkFileExists(m_sModelTrPath + "/config.yaml"))
+            {
+                cout << "file1" << endl;
+
+                m_ymlConfig = YAML::LoadFile(m_sModelTrPath + "/config.yaml");
+            }
+            else
+            {
+
+                // starts out as null
+                m_ymlConfig["fp16"] = "0"; // it now is a map node
+                m_ymlConfig["engine_cache"] = "1";
+                m_ymlConfig["engine_path"] = m_sModelTrPath;
+                std::ofstream fout(m_sModelTrPath + "/config.yaml");
+                fout << m_ymlConfig;
+            }
+        }
+
+        void Yolov3::setEnvVariable()
+        {
+
+            if (m_eMode == TensorRT)
+            {
 #ifdef __linux__
 
-            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, modelPathOnnx.c_str(), m_OrtSessionOptions));
+                string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
+
+                int cacheLenght = cacheModel.length();
+                char cacheModelchar[cacheLenght + 1];
+                strcpy(cacheModelchar, cacheModel.c_str());
+                putenv(cacheModelchar);
+
+                string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_ymlConfig["fp16"].as<std::string>();
+                int fp16Lenght = cacheModel.length();
+                char fp16char[cacheLenght + 1];
+                strcpy(fp16char, fp16.c_str());
+                putenv(fp16char);
+
+                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_ymlConfig["engine_path"].as<std::string>();
+                int n = m_sModelTrPath.length();
+                char modelSavePath[n + 1];
+                strcpy(modelSavePath, m_sModelTrPath.c_str());
+                //esporto le path del modello di Tensorrt
+                putenv(modelSavePath);
+
+#elif _WIN32
+
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_ymlConfig["engine_cache"].as<std::string>().c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_ymlConfig["engine_path"].as<std::string>().c_str());
+                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_ymlConfig["fp16"].as<std::string>().c_str());
+
+#endif
+            }
+        }
+
+        void Yolov3::setSession()
+        {
+#ifdef __linux__
+
+            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, m_sModelOnnxPath.c_str(), m_OrtSessionOptions));
 
 #elif _WIN32
 
             //in windows devo inizializzarlo in questo modo
-            std::wstring widestr = std::wstring(modelPathOnnx.begin(), modelPathOnnx.end());
+            std::wstring widestr = std::wstring(m_sModelOnnxPath.begin(), m_sModelOnnxPath.end());
             //session = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
             m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
 
 #endif
-
-            //controlla quanti thread sono utilizzati
-
-            //Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
-
-            //INPUT
-            num_input_nodes = m_OrtSession->GetInputCount();
-            input_node_names = std::vector<const char *>(num_input_nodes);
-
-            //OUTPUT
-            num_out_nodes = m_OrtSession->GetOutputCount();
-            //out_node_names = std::vector<const char *>(num_out_nodes);
-
-            cout << "sessione init correctly" << endl;
         }
+
+        //function to initialize on Linux
+        bool Yolov3::init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
+        {
+            try
+            {   
+                //set variable
+
+                m_sModelTrPath = model_path;
+
+                m_iInput_h = input_h;
+                m_iInput_w = input_w;
+                m_eMode = t;
+                m_sModelOnnxPath = modelPathOnnx;
+
+                createYamlConfig();
+
+                //set enviromental variable
+
+                setEnvVariable();
+
+                //OnnxRuntime set Env
+                setOnnxRuntimeEnv();
+
+                setSession();
+
+                //model input output
+                setOnnxRuntimeModelInputOutput();
+                m_bInit = true;
+                return true;
+            }
+
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+                return false;
+            }
+        }
+
+//         Yolov3::Yolov3(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
+//         {
+
+//             m_sModelTrPath = model_path;
+
+//             m_iInput_h = input_h;
+//             m_iInput_w = input_w;
+//             m_eMode = t;
+//             m_sModelOnnxPath = modelPathOnnx;
+
+//             //verifico se esiste il file di configurazione altrimenti ne creo uno
+
+//             // if (aut.checkFileExists(model_path + "/config.yaml"))
+//             // {
+//             //     cout << "file1" << endl;
+
+//             //     m_ymlConfig = YAML::LoadFile(modelTr_path + "/config.yaml");
+//             // }
+//             // else
+//             // {
+
+//             //     // starts out as null
+//             //     m_ymlConfig["fp16"] = "0"; // it now is a map node
+//             //     m_ymlConfig["engine_cache"] = "1";
+//             //     m_ymlConfig["engine_path"] = modelTr_path;
+//             //     std::ofstream fout(modelTr_path + "/config.yaml");
+//             //     fout << m_ymlConfig;
+//             // }
+
+//             //set width height of input image
+
+// #ifdef __linux__
+
+//             // string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
+
+//             // int cacheLenght = cacheModel.length();
+//             // char cacheModelchar[cacheLenght + 1];
+//             // strcpy(cacheModelchar, cacheModel.c_str());
+//             // putenv(cacheModelchar);
+
+//             // string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_ymlConfig["fp16"].as<std::string>();
+//             // int fp16Lenght = cacheModel.length();
+//             // char fp16char[cacheLenght + 1];
+//             // strcpy(fp16char, fp16.c_str());
+//             // putenv(fp16char);
+
+//             // m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_ymlConfig["engine_path"].as<std::string>();
+//             // int n = m_sModelTrPath.length();
+//             // char modelSavePath[n + 1];
+//             // strcpy(modelSavePath, m_sModelTrPath.c_str());
+//             // //esporto le path del modello di Tensorrt
+//             // putenv(modelSavePath);
+
+// #elif _WIN32
+
+//             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_ymlConfig["engine_cache"].as<std::string>().c_str());
+//             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_ymlConfig["engine_path"].as<std::string>().c_str());
+//             _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_ymlConfig["fp16"].as<std::string>().c_str());
+
+// #endif
+//             // m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
+
+//             // if (t == Cpu)
+//             // {
+
+//             //     m_OrtSessionOptions.SetIntraOpNumThreads(1);
+//             //     //ORT_ENABLE_ALL sembra avere le performance migliori
+//             //     m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+//             // }
+
+//             // if (t == TensorRT)
+//             // {
+
+//             //     //esporto le variabili
+//             //     m_sModelTrPath = modelTr_path;
+
+//             //     Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
+//             // }
+
+// #ifdef __linux__
+
+//             //m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, modelPathOnnx.c_str(), m_OrtSessionOptions));
+
+// #elif _WIN32
+
+//             //in windows devo inizializzarlo in questo modo
+//             std::wstring widestr = std::wstring(modelPathOnnx.begin(), modelPathOnnx.end());
+//             //session = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
+//             m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
+
+// #endif
+
+//             //controlla quanti thread sono utilizzati
+
+//             //Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
+
+//             //INPUT
+//             // num_input_nodes = m_OrtSession->GetInputCount();
+//             // input_node_names = std::vector<const char *>(num_input_nodes);
+
+//             // //OUTPUT
+//             // num_out_nodes = m_OrtSession->GetOutputCount();
+//             // //out_node_names = std::vector<const char *>(num_out_nodes);
+
+//             cout << "sessione init correctly" << endl;
+//         }
 
         cv::Mat Yolov3::padding(cv::Mat &img, int width, int height)
         {
@@ -365,14 +513,6 @@ namespace aiProductionReady
                 else
                 {
 
-                    // for (int i = 0; i < indexAfterNms.size(); i++)
-                    // {
-
-                    //     //devo aggiungere -i perchè tutte le volte che elimino un elemento si riduce la dimensione
-                    //     //dell'array quindi gli indici calcolati prima devono essere scalati
-                    //     bboxValues.erase(bboxValues.begin() + indexAfterNms[i] - i);
-                    // }
-
                     vector<vector<float>> bboxValuesNms;
 
                     for (int i = 0; i < bboxValues.size(); i++)
@@ -387,12 +527,6 @@ namespace aiProductionReady
                             bboxValuesNms.push_back(bboxValues[i]);
                         }
                     }
-
-                    // for (int i = 0; i < indexAfterNms.size(); i++)
-                    // {
-
-                    //     bboxValuesNms.push_back(bboxValues[indexAfterNms[i]]);
-                    // }
 
 #ifdef EVAL_ACCURACY
 
@@ -440,51 +574,50 @@ namespace aiProductionReady
                         if ((int)bboxValuesNms[i][4] > 11 && (int)bboxValuesNms[i][4] <= 24)
                         {
 
-                            cocoCategory = (int)bboxValuesNms[i][4]+1;
+                            cocoCategory = (int)bboxValuesNms[i][4] + 1;
                         }
                         //3
                         if ((int)bboxValuesNms[i][4] > 24 && (int)bboxValuesNms[i][4] <= 26)
                         {
 
-                            cocoCategory = (int)bboxValuesNms[i][4]+2;
+                            cocoCategory = (int)bboxValuesNms[i][4] + 2;
                         }
                         //4
                         if ((int)bboxValuesNms[i][4] > 26 && (int)bboxValuesNms[i][4] <= 40)
                         {
 
-                            cocoCategory = (int)bboxValuesNms[i][4]+4;
+                            cocoCategory = (int)bboxValuesNms[i][4] + 4;
                         }
                         //5
                         if ((int)bboxValuesNms[i][4] > 40 && (int)bboxValuesNms[i][4] <= 60)
                         {
 
-                            cocoCategory = (int)bboxValuesNms[i][4]+5;
+                            cocoCategory = (int)bboxValuesNms[i][4] + 5;
                         }
                         //6
-                        if ((int)bboxValuesNms[i][4] ==61)
+                        if ((int)bboxValuesNms[i][4] == 61)
                         {
 
-                            cocoCategory = (int)bboxValuesNms[i][4]+6;
+                            cocoCategory = (int)bboxValuesNms[i][4] + 6;
                         }
                         //7
-                        if ((int)bboxValuesNms[i][4]==62) 
+                        if ((int)bboxValuesNms[i][4] == 62)
                         {
 
-                            cocoCategory = (int)bboxValuesNms[i][4]+8;
+                            cocoCategory = (int)bboxValuesNms[i][4] + 8;
                         }
                         //8
                         if ((int)bboxValuesNms[i][4] > 62 && (int)bboxValuesNms[i][4] <= 73)
                         {
 
-                            cocoCategory = (int)bboxValuesNms[i][4]+9;
+                            cocoCategory = (int)bboxValuesNms[i][4] + 9;
                         }
                         //9
                         if ((int)bboxValuesNms[i][4] > 73 && (int)bboxValuesNms[i][4] <= 80)
                         {
 
-                            cocoCategory = (int)bboxValuesNms[i][4]+10;
+                            cocoCategory = (int)bboxValuesNms[i][4] + 10;
                         }
-                       
 
                         root["category_id"] = cocoCategory;
 
@@ -504,18 +637,9 @@ namespace aiProductionReady
                         root["score"] = bboxValuesNms[i][5];
 
                         m_JsonRootArray.append(root);
-                    
                     }
 
 #endif
-
-                    // delete [] m_fpOutOnnxRuntime;
-                    // delete m_fpInputOnnxRuntime;
-                    // m_fpOutOnnxRuntime[0]=nullptr;
-                    // m_fpOutOnnxRuntime[1]=nullptr;
-                    // m_fpInputOnnxRuntime=nullptr;
-
-                    //cout << bboxValuesNms.size() << endl;
 
                     torch::Tensor Output = aut.convert2dVectorToTensor(bboxValuesNms);
 
@@ -605,7 +729,6 @@ namespace aiProductionReady
         }
 
         //we need to create this function because all detection need to be saved all together
-        //detection are saved in an array in memory
         void Yolov3::createAccuracyFile()
         {
 

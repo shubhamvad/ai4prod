@@ -1,134 +1,121 @@
 #include "modelInterface.h"
 
-
-namespace aiProductionReady{
-
-
-
-namespace objectDetection
+namespace aiProductionReady
 {
 
-    class AIPRODUCTION_EXPORT Yolov3 : aiProductionReady::modelInterfaceObjectDetection
+    namespace objectDetection
     {
 
-    private:
+        class AIPRODUCTION_EXPORT Yolov3 : aiProductionReady::modelInterfaceObjectDetection
+        {
+
+        private:
+            //ONNX RUNTIME
+            Ort::SessionOptions m_OrtSessionOptions;
+            std::unique_ptr<Ort::Session> m_OrtSession;
+            std::unique_ptr<Ort::Env> m_OrtEnv;
+            Ort::AllocatorWithDefaultOptions allocator;
+
+            //OnnxRuntime Input Model
+
+            size_t num_input_nodes;
+            std::vector<const char *> input_node_names;
+
+            //OnnxRuntime Output Model
+
+            size_t num_out_nodes;
+
+            //onnx model tensor input size
+            size_t m_InputTorchTensorSize;
+
+            float *m_fpInputOnnxRuntime;
+            float *m_fpOutOnnxRuntime[2];
+
+            torch::Tensor m_TInputTorchTensor;
+
+ 
+            //INIT Function
+
+            void setOnnxRuntimeEnv();
+            void setOnnxRuntimeModelInputOutput();
+            void createYamlConfig();
+            void setEnvVariable();
+            void setSession();
+
+            //INIT Variable
+
+            YAML::Node m_ymlConfig;
+            string m_sModelOnnxPath;
+            MODE m_eMode;
+            std::string m_sModelTrPath;
+            int m_iInput_h;
+            int m_iInput_w;
+
+            //handle initialization
+            bool m_bInit;
 
 
-       //ONNX RUNTIME
-       Ort::SessionOptions m_OrtSessionOptions;
-       //la sessione deve essere inizializzata nel costruttore
-       std::unique_ptr<Ort::Session> m_OrtSession;
-       //env inizializzato nel costruttore
-       std::unique_ptr<Ort::Env> m_OrtEnv;
+            //Preprocessing
 
-       Ort::AllocatorWithDefaultOptions allocator;
+            cv::Mat padding(cv::Mat &img, int width, int weight);
 
-       //OnnxRuntimeModelloInput
 
-       size_t num_input_nodes;
-       std::vector<const char *> input_node_names;
-       //std::vector<int64_t> input_node_dims;
+            aiProductionReady::aiutils aut;
 
-       //OnnxRuntimeModelloOutput
 
-       size_t num_out_nodes;
-       //std::vector<const char *> out_node_names;
-       //std::vector<int64_t> out_node_dims;
+            //Post processing
+            std::vector<int64_t> m_viNumberOfBoundingBox;
 
-       //Dimensione del tensore di input modello .onnx
-       size_t m_InputTorchTensorSize;
+            //Accuracy
 
-       float *m_fpInputOnnxRuntime;
-       float *m_fpOutOnnxRuntime[2];
+            //array with all detection accuracy
+            Json::Value m_JsonRootArray;
 
-       torch::Tensor m_TInputTorchTensor;
 
-       //path del modello di tensorrt
-       std::string m_sModelTrPath;
-
-       //funzioni Yolov3
-
-       //dimensione immagine di input Yolo
-       int m_iInput_h;
-       int m_iInput_w;
-
-       //dichiarando la funzione static essendo un membro privato posso scrivere la sua 
-       //inizializzazione nel file .cpp
-       //in fase di compilazione il compilatore ricompilerà solo il file cpp e non anche .h in caso di
-       //di modifiche
-       cv::Mat padding(cv::Mat &img, int width, int weight);
-
-       aiProductionReady::aiutils aut;
-
-       //VARIABILI POST PROCESSING
+            int m_iMrows;
+            int m_iMcols;
+            cv::Rect get_RectMap(float bbox[4]);
 
 
 
-       //funzioni di POST PROCESSING
+        public:
+           
+            //string to save image id for accuracy detection
+            string m_sAccurayImagePath;
 
-       std::vector<int64_t> m_viNumberOfBoundingBox;
+            Yolov3();
 
+            virtual ~Yolov3();
 
-        //Config
-        YAML::Node m_ymlConfig;
+            bool init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path = NULL);
 
-        //Accuracy detection Json
+            void preprocessing(Mat &Image);
+            torch::Tensor postprocessing();
+            void runmodel();
 
-        
-        //array with all detection
-        Json::Value m_JsonRootArray;
-        
+            void createAccuracyFile();
+            //return width of input image
+            int getWidth()
+            {
 
-       //intersection over unit 
-       //float iou(float lbox[4], float rbox[4]);
+                return m_iInput_w;
+            }
 
-       //non max suppression
-       //void nms(std::vector<Detection>& res, float *output, float nms_thresh = 0.9);
+            //return height of input image
+            int getHeight()
+            {
 
-        int m_iMrows;
-        int m_iMcols;
-       cv::Rect get_RectMap(float bbox[4]); 
+                return m_iInput_h;
+            }
 
-    public:
+            //funzione inversa per il preprocessing
+            cv::Rect get_rect(cv::Mat &img, float bbox[4]);
 
-       //public path for accuracy measurement
+            //void nms(vector<float> &detection,float nsm_thres=0.9);
 
-       string m_sAccurayImagePath;
+            float iou(float lbox[4], float rbox[4]);
+        };
 
-       Yolov3();
+    } // namespace objectDetection
 
-       virtual ~Yolov3();
-
-       Yolov3(std::string modelPathOnnx, int input_h,int input_w,MODE t,std::string modelTr_path = NULL);
-
-       void preprocessing(Mat &Image);
-       torch::Tensor postprocessing();
-       void runmodel();
-
-       void createAccuracyFile();
-       //return width of input image
-       int getWidth(){
-
-           return m_iInput_w;
-       }
-
-       //return height of input image
-       int getHeight(){
-
-           return m_iInput_h;
-       }
-
-
-        //funzione inversa per il preprocessing
-       cv::Rect get_rect(cv::Mat& img, float bbox[4]);
-
-       //void nms(vector<float> &detection,float nsm_thres=0.9);
-
-       float iou(float lbox[4], float rbox[4]);
-    };
-
-} // namespace objectDetection
-
-
-}//namespace aiProductionReady
-
+} //namespace aiProductionReady
