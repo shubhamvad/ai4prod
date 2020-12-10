@@ -12,7 +12,10 @@ namespace aiProductionReady
         Yolov3::Yolov3()
         {
             m_bInit = false;
-           
+            m_bCheckInit = false;
+            m_bCheckPre = false;
+            m_bCheckRun = false;
+            m_bCheckPost = false;
         }
 
         void Yolov3::setOnnxRuntimeEnv()
@@ -123,147 +126,155 @@ namespace aiProductionReady
         //function to initialize on Linux
         bool Yolov3::init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
         {
-            try
-            {   
-                //set variable
-
-                m_sModelTrPath = model_path;
-
-                m_iInput_h = input_h;
-                m_iInput_w = input_w;
-                m_eMode = t;
-                m_sModelOnnxPath = modelPathOnnx;
-
-                createYamlConfig();
-
-                //set enviromental variable
-
-                setEnvVariable();
-
-                //OnnxRuntime set Env
-                setOnnxRuntimeEnv();
-
-                setSession();
-
-                //model input output
-                setOnnxRuntimeModelInputOutput();
-                m_bInit = true;
-                return true;
-            }
-
-            catch (const std::exception &e)
+            if (!m_bCheckInit)
             {
-                std::cerr << e.what() << '\n';
-                return false;
+                try
+                {
+                    //set variable
+
+                    m_sModelTrPath = model_path;
+
+                    m_iInput_h = input_h;
+                    m_iInput_w = input_w;
+                    m_eMode = t;
+                    m_sModelOnnxPath = modelPathOnnx;
+
+                    createYamlConfig();
+
+                    //set enviromental variable
+
+                    setEnvVariable();
+
+                    //OnnxRuntime set Env
+                    setOnnxRuntimeEnv();
+
+                    setSession();
+
+                    //model input output
+                    setOnnxRuntimeModelInputOutput();
+                    m_bInit = true;
+                    m_bCheckInit = true;
+                    return true;
+                }
+
+                catch (const std::exception &e)
+                {
+                    std::cerr << e.what() << '\n';
+                    return false;
+                }
+            }
+            else
+            {
+                cout << "Is not possibile to initialize more than one time" << endl;
             }
         }
 
-//         Yolov3::Yolov3(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
-//         {
+        //         Yolov3::Yolov3(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
+        //         {
 
-//             m_sModelTrPath = model_path;
+        //             m_sModelTrPath = model_path;
 
-//             m_iInput_h = input_h;
-//             m_iInput_w = input_w;
-//             m_eMode = t;
-//             m_sModelOnnxPath = modelPathOnnx;
+        //             m_iInput_h = input_h;
+        //             m_iInput_w = input_w;
+        //             m_eMode = t;
+        //             m_sModelOnnxPath = modelPathOnnx;
 
-//             //verifico se esiste il file di configurazione altrimenti ne creo uno
+        //             //verifico se esiste il file di configurazione altrimenti ne creo uno
 
-//             // if (aut.checkFileExists(model_path + "/config.yaml"))
-//             // {
-//             //     cout << "file1" << endl;
+        //             // if (aut.checkFileExists(model_path + "/config.yaml"))
+        //             // {
+        //             //     cout << "file1" << endl;
 
-//             //     m_ymlConfig = YAML::LoadFile(modelTr_path + "/config.yaml");
-//             // }
-//             // else
-//             // {
+        //             //     m_ymlConfig = YAML::LoadFile(modelTr_path + "/config.yaml");
+        //             // }
+        //             // else
+        //             // {
 
-//             //     // starts out as null
-//             //     m_ymlConfig["fp16"] = "0"; // it now is a map node
-//             //     m_ymlConfig["engine_cache"] = "1";
-//             //     m_ymlConfig["engine_path"] = modelTr_path;
-//             //     std::ofstream fout(modelTr_path + "/config.yaml");
-//             //     fout << m_ymlConfig;
-//             // }
+        //             //     // starts out as null
+        //             //     m_ymlConfig["fp16"] = "0"; // it now is a map node
+        //             //     m_ymlConfig["engine_cache"] = "1";
+        //             //     m_ymlConfig["engine_path"] = modelTr_path;
+        //             //     std::ofstream fout(modelTr_path + "/config.yaml");
+        //             //     fout << m_ymlConfig;
+        //             // }
 
-//             //set width height of input image
+        //             //set width height of input image
 
-// #ifdef __linux__
+        // #ifdef __linux__
 
-//             // string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
+        //             // string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
 
-//             // int cacheLenght = cacheModel.length();
-//             // char cacheModelchar[cacheLenght + 1];
-//             // strcpy(cacheModelchar, cacheModel.c_str());
-//             // putenv(cacheModelchar);
+        //             // int cacheLenght = cacheModel.length();
+        //             // char cacheModelchar[cacheLenght + 1];
+        //             // strcpy(cacheModelchar, cacheModel.c_str());
+        //             // putenv(cacheModelchar);
 
-//             // string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_ymlConfig["fp16"].as<std::string>();
-//             // int fp16Lenght = cacheModel.length();
-//             // char fp16char[cacheLenght + 1];
-//             // strcpy(fp16char, fp16.c_str());
-//             // putenv(fp16char);
+        //             // string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_ymlConfig["fp16"].as<std::string>();
+        //             // int fp16Lenght = cacheModel.length();
+        //             // char fp16char[cacheLenght + 1];
+        //             // strcpy(fp16char, fp16.c_str());
+        //             // putenv(fp16char);
 
-//             // m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_ymlConfig["engine_path"].as<std::string>();
-//             // int n = m_sModelTrPath.length();
-//             // char modelSavePath[n + 1];
-//             // strcpy(modelSavePath, m_sModelTrPath.c_str());
-//             // //esporto le path del modello di Tensorrt
-//             // putenv(modelSavePath);
+        //             // m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_ymlConfig["engine_path"].as<std::string>();
+        //             // int n = m_sModelTrPath.length();
+        //             // char modelSavePath[n + 1];
+        //             // strcpy(modelSavePath, m_sModelTrPath.c_str());
+        //             // //esporto le path del modello di Tensorrt
+        //             // putenv(modelSavePath);
 
-// #elif _WIN32
+        // #elif _WIN32
 
-//             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_ymlConfig["engine_cache"].as<std::string>().c_str());
-//             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_ymlConfig["engine_path"].as<std::string>().c_str());
-//             _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_ymlConfig["fp16"].as<std::string>().c_str());
+        //             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_ymlConfig["engine_cache"].as<std::string>().c_str());
+        //             _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_ymlConfig["engine_path"].as<std::string>().c_str());
+        //             _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_ymlConfig["fp16"].as<std::string>().c_str());
 
-// #endif
-//             // m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
+        // #endif
+        //             // m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
 
-//             // if (t == Cpu)
-//             // {
+        //             // if (t == Cpu)
+        //             // {
 
-//             //     m_OrtSessionOptions.SetIntraOpNumThreads(1);
-//             //     //ORT_ENABLE_ALL sembra avere le performance migliori
-//             //     m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-//             // }
+        //             //     m_OrtSessionOptions.SetIntraOpNumThreads(1);
+        //             //     //ORT_ENABLE_ALL sembra avere le performance migliori
+        //             //     m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+        //             // }
 
-//             // if (t == TensorRT)
-//             // {
+        //             // if (t == TensorRT)
+        //             // {
 
-//             //     //esporto le variabili
-//             //     m_sModelTrPath = modelTr_path;
+        //             //     //esporto le variabili
+        //             //     m_sModelTrPath = modelTr_path;
 
-//             //     Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
-//             // }
+        //             //     Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
+        //             // }
 
-// #ifdef __linux__
+        // #ifdef __linux__
 
-//             //m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, modelPathOnnx.c_str(), m_OrtSessionOptions));
+        //             //m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, modelPathOnnx.c_str(), m_OrtSessionOptions));
 
-// #elif _WIN32
+        // #elif _WIN32
 
-//             //in windows devo inizializzarlo in questo modo
-//             std::wstring widestr = std::wstring(modelPathOnnx.begin(), modelPathOnnx.end());
-//             //session = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
-//             m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
+        //             //in windows devo inizializzarlo in questo modo
+        //             std::wstring widestr = std::wstring(modelPathOnnx.begin(), modelPathOnnx.end());
+        //             //session = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
+        //             m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
 
-// #endif
+        // #endif
 
-//             //controlla quanti thread sono utilizzati
+        //             //controlla quanti thread sono utilizzati
 
-//             //Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
+        //             //Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(session_options, 0));
 
-//             //INPUT
-//             // num_input_nodes = m_OrtSession->GetInputCount();
-//             // input_node_names = std::vector<const char *>(num_input_nodes);
+        //             //INPUT
+        //             // num_input_nodes = m_OrtSession->GetInputCount();
+        //             // input_node_names = std::vector<const char *>(num_input_nodes);
 
-//             // //OUTPUT
-//             // num_out_nodes = m_OrtSession->GetOutputCount();
-//             // //out_node_names = std::vector<const char *>(num_out_nodes);
+        //             // //OUTPUT
+        //             // num_out_nodes = m_OrtSession->GetOutputCount();
+        //             // //out_node_names = std::vector<const char *>(num_out_nodes);
 
-//             cout << "sessione init correctly" << endl;
-//         }
+        //             cout << "sessione init correctly" << endl;
+        //         }
 
         cv::Mat Yolov3::padding(cv::Mat &img, int width, int height)
         {
@@ -294,217 +305,179 @@ namespace aiProductionReady
 
         void Yolov3::preprocessing(Mat &Image)
         {
+            if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
+            {
 
-            m_iMcols = Image.cols;
-            m_iMrows = Image.rows;
+                m_iMcols = Image.cols;
+                m_iMrows = Image.rows;
 
-            //free all resources allocated
+                //free all resources allocated
 
-            m_viNumberOfBoundingBox.clear();
+                m_viNumberOfBoundingBox.clear();
 
-            Image = padding(Image, m_iInput_w, m_iInput_h);
+                Image = padding(Image, m_iInput_w, m_iInput_h);
 
-            m_TInputTorchTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
+                m_TInputTorchTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
-            m_InputTorchTensorSize = Image.cols * Image.rows * Image.channels();
+                m_InputTorchTensorSize = Image.cols * Image.rows * Image.channels();
 
-            // imshow("insidePadding", Image);
-            // waitKey(500);
-            // cv::Mat test;
-            // test = aut.convertTensortToMat(m_TInputTorchTensor, 608, 608);
+                m_bCheckPre = true;
+
+                // imshow("insidePadding", Image);
+                // waitKey(500);
+                // cv::Mat test;
+                // test = aut.convertTensortToMat(m_TInputTorchTensor, 608, 608);
+            }
+            else
+            {
+
+                cout << "call init() before" << endl;
+            }
         }
 
         void Yolov3::runmodel()
         {
 
-            //conversione del tensore a onnx runtime
-            m_fpInputOnnxRuntime = static_cast<float *>(m_TInputTorchTensor.storage().data());
-
-            std::vector<int64_t> input_node_dims;
-
-            for (int i = 0; i < num_input_nodes; i++)
+            if (m_TInputTorchTensor.is_contiguous() && m_bCheckPre)
             {
-                // print input node names
-                char *input_name = m_OrtSession->GetInputName(i, allocator);
-                //printf("Input %d : name=%s\n", i, input_name);
-                input_node_names[i] = input_name;
+                //conversione del tensore a onnx runtime
+                m_fpInputOnnxRuntime = static_cast<float *>(m_TInputTorchTensor.storage().data());
 
-                // print input node types
-                Ort::TypeInfo type_info = m_OrtSession->GetInputTypeInfo(i);
-                auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+                std::vector<int64_t> input_node_dims;
 
-                ONNXTensorElementDataType type = tensor_info.GetElementType();
-                //printf("Input %d : type=%d\n", i, type);
-
-                // print input shapes/dims
-
-                input_node_dims = tensor_info.GetShape();
-                //printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
-                //for (int j = 0; j < input_node_dims.size(); j++)
-                //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
-            }
-
-            // for (int i = 0; i < num_out_nodes; i++)
-            // {
-            //     // print input node names
-            //     char *input_name = m_OrtSession->GetOutputName(i, allocator);
-            //     //printf("Output %d : name=%s\n", i, input_name);
-
-            //     Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
-            //     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
-
-            //     ONNXTensorElementDataType type = tensor_info.GetElementType();
-            //     //printf("Output %d : type=%d\n", i, type);
-
-            //     // print input shapes/dims
-            //     //out_node_dims = tensor_info.GetShape();
-            //     //printf("Output %d : num_dims=%zu\n", i, out_node_dims.size());
-            //     //for (int j = 0; j < out_node_dims.size(); j++)
-            //     //printf("Output %d : dim %d=%jd\n", i, j, out_node_dims[j]);
-            // }
-
-            //https://github.com/microsoft/onnxruntime/issues/3170#issuecomment-596613449
-            std::vector<const char *> output_node_names = {"classes", "boxes"};
-
-            static const char *output_names[] = {"classes", "boxes"};
-            static const size_t NUM_OUTPUTS = sizeof(output_names) / sizeof(output_names[0]);
-
-            auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-            Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, m_fpInputOnnxRuntime, m_InputTorchTensorSize, input_node_dims.data(), 4);
-
-            assert(input_tensor.IsTensor());
-
-            std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 2);
-
-            m_fpOutOnnxRuntime[0] = output_tensors[0].GetTensorMutableData<float>();
-            m_fpOutOnnxRuntime[1] = output_tensors[1].GetTensorMutableData<float>();
-
-            m_viNumberOfBoundingBox = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
-
-        } // namespace objectDetection
-
-        torch::Tensor Yolov3::postprocessing()
-        {
-
-            //vettore contenente gli indici con soglia maggiore di 0.7
-            std::vector<std::tuple<int, int, float>> bboxIndex;
-
-            //vettore dei bounding box con soglia milgiore di 0.7
-            vector<vector<float>> bboxValues;
-
-            //m_viNumberOfBoundingBox[0]=(22743,80)
-            //m_viNumberOfBoundingBox[1]=(22743,4)
-
-            bool noDetection = true;
-            bool noDetectionNms = true;
-
-            for (int index = 0; index < m_viNumberOfBoundingBox[0]; index++)
-            {
-                float classProbability = 0.0;
-                int indexClassMaxValue = -1;
-                //numberofBoundingbox rappresenta il numero di classi di training
-                for (int classes = 0; classes < m_viNumberOfBoundingBox[1]; classes++)
+                for (int i = 0; i < num_input_nodes; i++)
                 {
-                    //i*num_classes +j
-                    //Detection threshold
-                    if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > 0.0)
-                    {
-                        //serve per trovare il massimo per singolo bbox
-                        if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > classProbability)
-                        {
+                    // print input node names
+                    char *input_name = m_OrtSession->GetInputName(i, allocator);
+                    //printf("Input %d : name=%s\n", i, input_name);
+                    input_node_names[i] = input_name;
 
-                            classProbability = m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes];
-                            //aggiungo +1 perchè nel Map il valore delle classi parte da 1 e non da 0.Così come nel foglio dei nomi
-                            indexClassMaxValue = classes + 1;
-                        }
-                    }
+                    // print input node types
+                    Ort::TypeInfo type_info = m_OrtSession->GetInputTypeInfo(i);
+                    auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+
+                    ONNXTensorElementDataType type = tensor_info.GetElementType();
+                    //printf("Input %d : type=%d\n", i, type);
+
+                    // print input shapes/dims
+
+                    input_node_dims = tensor_info.GetShape();
+                    //printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
+                    //for (int j = 0; j < input_node_dims.size(); j++)
+                    //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
                 }
 
-                //inserisco elemento solo se è maggiore della soglia
-                if (indexClassMaxValue > -1)
-                {
-                    //il primo valore è l'indice il secondo la classe
-                    bboxIndex.push_back(std::make_tuple(index, indexClassMaxValue, classProbability));
+                // for (int i = 0; i < num_out_nodes; i++)
+                // {
+                //     // print input node names
+                //     char *input_name = m_OrtSession->GetOutputName(i, allocator);
+                //     //printf("Output %d : name=%s\n", i, input_name);
 
-                    // indice
-                    float x = m_fpOutOnnxRuntime[1][index * 4];
-                    float y = m_fpOutOnnxRuntime[1][index * 4 + 1];
-                    float w = m_fpOutOnnxRuntime[1][index * 4 + 2];
-                    float h = m_fpOutOnnxRuntime[1][index * 4 + 3];
+                //     Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
+                //     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
 
-                    vector<float> tmpbox{x, y, w, h, (float)indexClassMaxValue, classProbability};
+                //     ONNXTensorElementDataType type = tensor_info.GetElementType();
+                //     //printf("Output %d : type=%d\n", i, type);
 
-                    bboxValues.push_back(tmpbox);
+                //     // print input shapes/dims
+                //     //out_node_dims = tensor_info.GetShape();
+                //     //printf("Output %d : num_dims=%zu\n", i, out_node_dims.size());
+                //     //for (int j = 0; j < out_node_dims.size(); j++)
+                //     //printf("Output %d : dim %d=%jd\n", i, j, out_node_dims[j]);
+                // }
 
-                    noDetection = false;
-                }
-            }
+                //https://github.com/microsoft/onnxruntime/issues/3170#issuecomment-596613449
+                std::vector<const char *> output_node_names = {"classes", "boxes"};
 
-            if (noDetection)
-            {
+                static const char *output_names[] = {"classes", "boxes"};
+                static const size_t NUM_OUTPUTS = sizeof(output_names) / sizeof(output_names[0]);
 
-                //cout << "NO DETECTION " << noDetection << endl;
-                cout << "0Detection" << endl;
-                auto tensor = torch::ones({0});
+                auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+                Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, m_fpInputOnnxRuntime, m_InputTorchTensorSize, input_node_dims.data(), 4);
 
-                return tensor;
+                assert(input_tensor.IsTensor());
+
+                std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 2);
+
+                m_fpOutOnnxRuntime[0] = output_tensors[0].GetTensorMutableData<float>();
+                m_fpOutOnnxRuntime[1] = output_tensors[1].GetTensorMutableData<float>();
+
+                m_viNumberOfBoundingBox = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
+
+                m_bCheckRun = true;
             }
 
             else
             {
 
-                //NMS
+                cout << "Cannot call run model without preprocessing" << endl;
+            }
+        } // namespace objectDetection
 
-                vector<int> indexAfterNms;
+        torch::Tensor Yolov3::postprocessing()
+        {
+            if (m_bCheckRun)
+            {
 
-                for (int i = 0; i < bboxValues.size(); i++)
+                //vettore contenente gli indici con soglia maggiore di 0.7
+                std::vector<std::tuple<int, int, float>> bboxIndex;
+
+                //vettore dei bounding box con soglia milgiore di 0.7
+                vector<vector<float>> bboxValues;
+
+                //m_viNumberOfBoundingBox[0]=(22743,80)
+                //m_viNumberOfBoundingBox[1]=(22743,4)
+
+                bool noDetection = true;
+                bool noDetectionNms = true;
+
+                for (int index = 0; index < m_viNumberOfBoundingBox[0]; index++)
                 {
-
-                    for (int j = i + 1; j < bboxValues.size(); j++)
+                    float classProbability = 0.0;
+                    int indexClassMaxValue = -1;
+                    //numberofBoundingbox rappresenta il numero di classi di training
+                    for (int classes = 0; classes < m_viNumberOfBoundingBox[1]; classes++)
                     {
-
-                        if (std::get<1>(bboxIndex[i]) == std::get<1>(bboxIndex[j]))
+                        //i*num_classes +j
+                        //Detection threshold
+                        if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > 0.0)
                         {
-
-                            //calcolo iou
-
-                            float ar1[4] = {bboxValues[i][0], bboxValues[i][1], bboxValues[i][2], bboxValues[i][3]};
-                            float ar2[4] = {bboxValues[j][0], bboxValues[j][1], bboxValues[j][2], bboxValues[j][3]};
-
-                            float area1 = ((bboxValues[i][2] + bboxValues[i][0] - bboxValues[i][0]) * (bboxValues[i][3] + bboxValues[i][1] - bboxValues[i][1])) / 2;
-                            float area2 = ((bboxValues[j][2] + bboxValues[j][0] - bboxValues[j][0]) * (bboxValues[j][3] + bboxValues[j][1] - bboxValues[j][1])) / 2;
-
-                            float iouValue = iou(ar1, ar2);
-
-                            //confronto intersezione bbox
-                            if (iouValue > 0.5)
+                            //serve per trovare il massimo per singolo bbox
+                            if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > classProbability)
                             {
 
-                                if (std::get<2>(bboxIndex[i]) > std::get<2>(bboxIndex[j]))
-                                {
-                                    //ritorno gli indici del vettore dei bounding box
-                                    // indexAfterNms.push_back(std::get<0>(bboxIndex[i]));
-                                    indexAfterNms.push_back(j);
-                                    noDetectionNms = false;
-                                }
-                                else
-                                {
-
-                                    indexAfterNms.push_back(i);
-                                    noDetectionNms = false;
-                                    break;
-                                }
+                                classProbability = m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes];
+                                //aggiungo +1 perchè nel Map il valore delle classi parte da 1 e non da 0.Così come nel foglio dei nomi
+                                indexClassMaxValue = classes + 1;
                             }
                         }
-                        //calcolo iou
+                    }
+
+                    //inserisco elemento solo se è maggiore della soglia
+                    if (indexClassMaxValue > -1)
+                    {
+                        //il primo valore è l'indice il secondo la classe
+                        bboxIndex.push_back(std::make_tuple(index, indexClassMaxValue, classProbability));
+
+                        // indice
+                        float x = m_fpOutOnnxRuntime[1][index * 4];
+                        float y = m_fpOutOnnxRuntime[1][index * 4 + 1];
+                        float w = m_fpOutOnnxRuntime[1][index * 4 + 2];
+                        float h = m_fpOutOnnxRuntime[1][index * 4 + 3];
+
+                        vector<float> tmpbox{x, y, w, h, (float)indexClassMaxValue, classProbability};
+
+                        bboxValues.push_back(tmpbox);
+
+                        noDetection = false;
                     }
                 }
 
-                if (noDetectionNms)
+                if (noDetection)
                 {
-                    //cout << "NO DETECTION " << noDetection << endl;
-                    //cout << "0Detection" << endl;
 
+                    //cout << "NO DETECTION " << noDetection << endl;
+                    cout << "0Detection" << endl;
                     auto tensor = torch::ones({0});
 
                     return tensor;
@@ -513,138 +486,212 @@ namespace aiProductionReady
                 else
                 {
 
-                    vector<vector<float>> bboxValuesNms;
+                    //NMS
+
+                    vector<int> indexAfterNms;
 
                     for (int i = 0; i < bboxValues.size(); i++)
                     {
 
-                        if (std::find(indexAfterNms.begin(), indexAfterNms.end(), i) != indexAfterNms.end())
-                        {
-                        }
-                        else
+                        for (int j = i + 1; j < bboxValues.size(); j++)
                         {
 
-                            bboxValuesNms.push_back(bboxValues[i]);
+                            if (std::get<1>(bboxIndex[i]) == std::get<1>(bboxIndex[j]))
+                            {
+
+                                //calcolo iou
+
+                                float ar1[4] = {bboxValues[i][0], bboxValues[i][1], bboxValues[i][2], bboxValues[i][3]};
+                                float ar2[4] = {bboxValues[j][0], bboxValues[j][1], bboxValues[j][2], bboxValues[j][3]};
+
+                                float area1 = ((bboxValues[i][2] + bboxValues[i][0] - bboxValues[i][0]) * (bboxValues[i][3] + bboxValues[i][1] - bboxValues[i][1])) / 2;
+                                float area2 = ((bboxValues[j][2] + bboxValues[j][0] - bboxValues[j][0]) * (bboxValues[j][3] + bboxValues[j][1] - bboxValues[j][1])) / 2;
+
+                                float iouValue = iou(ar1, ar2);
+
+                                //confronto intersezione bbox
+                                if (iouValue > 0.5)
+                                {
+
+                                    if (std::get<2>(bboxIndex[i]) > std::get<2>(bboxIndex[j]))
+                                    {
+                                        //ritorno gli indici del vettore dei bounding box
+                                        // indexAfterNms.push_back(std::get<0>(bboxIndex[i]));
+                                        indexAfterNms.push_back(j);
+                                        noDetectionNms = false;
+                                    }
+                                    else
+                                    {
+
+                                        indexAfterNms.push_back(i);
+                                        noDetectionNms = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            //calcolo iou
                         }
                     }
+
+                    if (noDetectionNms)
+                    {
+                        //cout << "NO DETECTION " << noDetection << endl;
+                        //cout << "0Detection" << endl;
+
+                        auto tensor = torch::ones({0});
+
+                        return tensor;
+                    }
+
+                    else
+                    {
+
+                        vector<vector<float>> bboxValuesNms;
+
+                        for (int i = 0; i < bboxValues.size(); i++)
+                        {
+
+                            if (std::find(indexAfterNms.begin(), indexAfterNms.end(), i) != indexAfterNms.end())
+                            {
+                            }
+                            else
+                            {
+
+                                bboxValuesNms.push_back(bboxValues[i]);
+                            }
+                        }
 
 #ifdef EVAL_ACCURACY
 
-                    //for every image
+                        //for every image
 
-                    string image_id = m_sAccurayImagePath;
+                        string image_id = m_sAccurayImagePath;
 
-                    const size_t last_slash_idx = image_id.find_last_of("\\/");
-                    if (std::string::npos != last_slash_idx)
-                    {
-                        image_id.erase(0, last_slash_idx + 1);
-                    }
-
-                    // Remove extension if present.
-                    const size_t period_idx = image_id.rfind('.');
-                    if (std::string::npos != period_idx)
-                    {
-                        image_id.erase(period_idx);
-                    }
-
-                    image_id.erase(0, image_id.find_first_not_of('0'));
-
-                    //cout << image_id << endl;
-                    cv::Rect brect;
-
-                    for (int i = 0; i < bboxValuesNms.size(); i++)
-                    {
-
-                        Json::Value root;
-                        // Json::Value categoryIdJson;
-                        // Json::Value bboxJson;
-                        // Json::Value score;
-                        root["image_id"] = std::stoi(image_id);
-
-                        int cocoCategory = 0;
-                        //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
-                        //1
-                        if ((int)bboxValuesNms[i][4] > 0 && (int)bboxValuesNms[i][4] <= 11)
+                        const size_t last_slash_idx = image_id.find_last_of("\\/");
+                        if (std::string::npos != last_slash_idx)
                         {
-
-                            cocoCategory = (int)bboxValuesNms[i][4];
+                            image_id.erase(0, last_slash_idx + 1);
                         }
 
-                        //2
-                        if ((int)bboxValuesNms[i][4] > 11 && (int)bboxValuesNms[i][4] <= 24)
+                        // Remove extension if present.
+                        const size_t period_idx = image_id.rfind('.');
+                        if (std::string::npos != period_idx)
                         {
-
-                            cocoCategory = (int)bboxValuesNms[i][4] + 1;
-                        }
-                        //3
-                        if ((int)bboxValuesNms[i][4] > 24 && (int)bboxValuesNms[i][4] <= 26)
-                        {
-
-                            cocoCategory = (int)bboxValuesNms[i][4] + 2;
-                        }
-                        //4
-                        if ((int)bboxValuesNms[i][4] > 26 && (int)bboxValuesNms[i][4] <= 40)
-                        {
-
-                            cocoCategory = (int)bboxValuesNms[i][4] + 4;
-                        }
-                        //5
-                        if ((int)bboxValuesNms[i][4] > 40 && (int)bboxValuesNms[i][4] <= 60)
-                        {
-
-                            cocoCategory = (int)bboxValuesNms[i][4] + 5;
-                        }
-                        //6
-                        if ((int)bboxValuesNms[i][4] == 61)
-                        {
-
-                            cocoCategory = (int)bboxValuesNms[i][4] + 6;
-                        }
-                        //7
-                        if ((int)bboxValuesNms[i][4] == 62)
-                        {
-
-                            cocoCategory = (int)bboxValuesNms[i][4] + 8;
-                        }
-                        //8
-                        if ((int)bboxValuesNms[i][4] > 62 && (int)bboxValuesNms[i][4] <= 73)
-                        {
-
-                            cocoCategory = (int)bboxValuesNms[i][4] + 9;
-                        }
-                        //9
-                        if ((int)bboxValuesNms[i][4] > 73 && (int)bboxValuesNms[i][4] <= 80)
-                        {
-
-                            cocoCategory = (int)bboxValuesNms[i][4] + 10;
+                            image_id.erase(period_idx);
                         }
 
-                        root["category_id"] = cocoCategory;
+                        image_id.erase(0, image_id.find_first_not_of('0'));
 
-                        Json::Value valueBBoxjson(Json::arrayValue);
-
-                        float tmp[4] = {bboxValuesNms[i][0], bboxValuesNms[i][1], bboxValuesNms[i][2], bboxValuesNms[i][3]};
-
+                        //cout << image_id << endl;
                         cv::Rect brect;
-                        brect = get_RectMap(tmp);
 
-                        valueBBoxjson.append(brect.x);
-                        valueBBoxjson.append(brect.y);
-                        valueBBoxjson.append(brect.width);
-                        valueBBoxjson.append(brect.height);
+                        for (int i = 0; i < bboxValuesNms.size(); i++)
+                        {
 
-                        root["bbox"] = valueBBoxjson;
-                        root["score"] = bboxValuesNms[i][5];
+                            Json::Value root;
+                            // Json::Value categoryIdJson;
+                            // Json::Value bboxJson;
+                            // Json::Value score;
+                            root["image_id"] = std::stoi(image_id);
 
-                        m_JsonRootArray.append(root);
-                    }
+                            int cocoCategory = 0;
+                            //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
+                            //1
+                            if ((int)bboxValuesNms[i][4] > 0 && (int)bboxValuesNms[i][4] <= 11)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4];
+                            }
+
+                            //2
+                            if ((int)bboxValuesNms[i][4] > 11 && (int)bboxValuesNms[i][4] <= 24)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4] + 1;
+                            }
+                            //3
+                            if ((int)bboxValuesNms[i][4] > 24 && (int)bboxValuesNms[i][4] <= 26)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4] + 2;
+                            }
+                            //4
+                            if ((int)bboxValuesNms[i][4] > 26 && (int)bboxValuesNms[i][4] <= 40)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4] + 4;
+                            }
+                            //5
+                            if ((int)bboxValuesNms[i][4] > 40 && (int)bboxValuesNms[i][4] <= 60)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4] + 5;
+                            }
+                            //6
+                            if ((int)bboxValuesNms[i][4] == 61)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4] + 6;
+                            }
+                            //7
+                            if ((int)bboxValuesNms[i][4] == 62)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4] + 8;
+                            }
+                            //8
+                            if ((int)bboxValuesNms[i][4] > 62 && (int)bboxValuesNms[i][4] <= 73)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4] + 9;
+                            }
+                            //9
+                            if ((int)bboxValuesNms[i][4] > 73 && (int)bboxValuesNms[i][4] <= 80)
+                            {
+
+                                cocoCategory = (int)bboxValuesNms[i][4] + 10;
+                            }
+
+                            root["category_id"] = cocoCategory;
+
+                            Json::Value valueBBoxjson(Json::arrayValue);
+
+                            float tmp[4] = {bboxValuesNms[i][0], bboxValuesNms[i][1], bboxValuesNms[i][2], bboxValuesNms[i][3]};
+
+                            cv::Rect brect;
+                            brect = get_RectMap(tmp);
+
+                            valueBBoxjson.append(brect.x);
+                            valueBBoxjson.append(brect.y);
+                            valueBBoxjson.append(brect.width);
+                            valueBBoxjson.append(brect.height);
+
+                            root["bbox"] = valueBBoxjson;
+                            root["score"] = bboxValuesNms[i][5];
+
+                            m_JsonRootArray.append(root);
+                        }
 
 #endif
 
-                    torch::Tensor Output = aut.convert2dVectorToTensor(bboxValuesNms);
+                        torch::Tensor Output = aut.convert2dVectorToTensor(bboxValuesNms);
 
-                    return Output;
+                        //this verify that you can only run pre run e post once for each new data
+                        m_bCheckRun = false;
+                        m_bCheckPre = false;
+                        m_bCheckPost = true;
+
+                        return Output;
+                    }
                 }
+            }
+            else
+            {
+
+                torch::Tensor nullTensor;
+
+                cout << "call run model before preporcessing" << endl;
+                return nullTensor;
             }
         }
 

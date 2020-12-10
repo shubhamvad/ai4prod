@@ -33,7 +33,6 @@ namespace aiProductionReady
 
             torch::Tensor m_TInputTorchTensor;
 
- 
             //INIT Function
 
             void setOnnxRuntimeEnv();
@@ -51,17 +50,13 @@ namespace aiProductionReady
             int m_iInput_h;
             int m_iInput_w;
 
-            //handle initialization
-            bool m_bInit;
-
+         
 
             //Preprocessing
 
             cv::Mat padding(cv::Mat &img, int width, int weight);
 
-
             aiProductionReady::aiutils aut;
-
 
             //Post processing
             std::vector<int64_t> m_viNumberOfBoundingBox;
@@ -71,15 +66,22 @@ namespace aiProductionReady
             //array with all detection accuracy
             Json::Value m_JsonRootArray;
 
-
             int m_iMrows;
             int m_iMcols;
             cv::Rect get_RectMap(float bbox[4]);
 
-
+            //handle initialization
+            bool m_bInit;
+            //used to call init only one time per instances
+            bool m_bCheckInit;
+            //used to verify if preprocess is called on the same run
+            bool m_bCheckPre;
+            //used to verify if run model is called on the same run
+            bool m_bCheckRun;
+            //used to verify id post process is called
+            bool m_bCheckPost;
 
         public:
-           
             //string to save image id for accuracy detection
             string m_sAccurayImagePath;
 

@@ -67,6 +67,15 @@ namespace aiProductionReady
 
          //handle initialization
          bool m_bInit;
+         //used to call init only one time per instances
+         bool m_bCheckInit;
+         //used to verify if preprocess is called on the same run
+         bool m_bCheckPre;
+         //used to verify if run model is called on the same run
+         bool m_bCheckRun;
+         //used to verify id post process is called
+         bool m_bCheckPost;
+      
 
       public:
          ResNet50();

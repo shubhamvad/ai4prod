@@ -16,6 +16,10 @@ namespace aiProductionReady
         {
 
             m_bInit = false;
+            m_bCheckInit = false;
+            m_bCheckPre = false;
+            m_bCheckRun = false;
+            m_bCheckPost = false;
         }
 
         void ResNet50::createYamlConfig()
@@ -127,89 +131,105 @@ namespace aiProductionReady
 
         bool ResNet50::init(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
         {
-            try
+            if (!m_bCheckInit)
             {
+                try
+                {
 
-                m_sModelOnnxPath = modelPath;
-                //size at which image is resised
-                m_iInput_w = width;
-                m_iInput_h = height;
-                //by default input of neural network is 224 same as imagenet
-                m_iCropImage = 224;
-                m_iModelNumberOfClass = ModelNumberOfClass;
-                m_iNumberOfReturnedPrediction = NumberOfReturnedPrediction;
-                m_sModelTrPath = modelTr_path;
-                m_eMode = t;
+                    m_sModelOnnxPath = modelPath;
+                    //size at which image is resised
+                    m_iInput_w = width;
+                    m_iInput_h = height;
+                    //by default input of neural network is 224 same as imagenet
+                    m_iCropImage = 224;
+                    m_iModelNumberOfClass = ModelNumberOfClass;
+                    m_iNumberOfReturnedPrediction = NumberOfReturnedPrediction;
+                    m_sModelTrPath = modelTr_path;
+                    m_eMode = t;
 
-                createYamlConfig();
+                    createYamlConfig();
 
-                //set enviromental variable
+                    //set enviromental variable
 
-                setEnvVariable();
+                    setEnvVariable();
 
-                //OnnxRuntime set Env
-                setOnnxRuntimeEnv();
+                    //OnnxRuntime set Env
+                    setOnnxRuntimeEnv();
 
-                setSession();
+                    setSession();
 
-                //model input output
-                setOnnxRuntimeModelInputOutput();
-                m_bInit = true;
-                return true;
+                    //model input output
+                    setOnnxRuntimeModelInputOutput();
+                    m_bInit = true;
+                    m_bCheckInit = true;
+                    return true;
+                }
+                catch (const std::exception &e)
+                {
+                    std::cerr << e.what() << '\n';
+                    m_bInit = true;
+                    return false;
+                }
             }
-            catch (const std::exception &e)
+            else
             {
-                std::cerr << e.what() << '\n';
-                m_bInit = true;
-                return false;
+                cout << "Is not possibile to initialize more than one time" << endl;
             }
         }
 
- 
         void ResNet50::preprocessing(Mat &Image)
         {
 
             //ResNet50::model=data;
+            if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
+            {
+                //resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
+                resize(Image, Image, Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
+                const int cropSize = m_iCropImage;
+                const int offsetW = (Image.cols - cropSize) / 2;
+                const int offsetH = (Image.rows - cropSize) / 2;
+                const Rect roi(offsetW, offsetH, cropSize, cropSize);
 
-            //resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
-            resize(Image, Image, Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
-            const int cropSize = m_iCropImage;
-            const int offsetW = (Image.cols - cropSize) / 2;
-            const int offsetH = (Image.rows - cropSize) / 2;
-            const Rect roi(offsetW, offsetH, cropSize, cropSize);
+                Image = Image(roi).clone();
+                inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
-            Image = Image(roi).clone();
-            inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
+                //definisco la dimensione di input
 
-            //definisco la dimensione di input
+                input_tensor_size = Image.cols * Image.rows * Image.channels();
 
-            input_tensor_size = Image.cols * Image.rows * Image.channels();
+                //Mat testImage;
 
-            //Mat testImage;
+                //testImage = convertTensortToMat(inputTensor, 224, 224);
 
-            //testImage = convertTensortToMat(inputTensor, 224, 224);
+                //imshow("test image", testImage);
+                //imshow("original", Image);
+                //waitKey(0);
 
-            //imshow("test image", testImage);
-            //imshow("original", Image);
-            //waitKey(0);
+                //verifico che immagine sia la stessa
+                //equalImage(Image, testImage);
 
-            //verifico che immagine sia la stessa
-            //equalImage(Image, testImage);
+                //se le 2 immagini sono uguali allora noramlizzo il tensore
+                //questi sono i valori di ImageNet
 
-            //se le 2 immagini sono uguali allora noramlizzo il tensore
-            //questi sono i valori di ImageNet
+                inputTensor[0][0] = inputTensor[0][0].sub_(0.485).div_(0.229);
+                inputTensor[0][1] = inputTensor[0][1].sub_(0.456).div_(0.224);
+                inputTensor[0][2] = inputTensor[0][2].sub_(0.406).div_(0.225);
 
-            inputTensor[0][0] = inputTensor[0][0].sub_(0.485).div_(0.229);
-            inputTensor[0][1] = inputTensor[0][1].sub_(0.456).div_(0.224);
-            inputTensor[0][2] = inputTensor[0][2].sub_(0.406).div_(0.225);
+                m_bCheckPre = true;
 
-            //cout << "preprocessing" << endl;
+                //cout << "preprocessing" << endl;
 
-            //cout<<session->GetInputCount()<<endl;
+                //cout<<session->GetInputCount()<<endl;
 
-            //cout<<session.GetInputCount()<<endl;
+                //cout<<session.GetInputCount()<<endl;
 
-            //Preprocessig Image
+                //Preprocessig Image
+            }
+            else
+            {
+
+                cout << "call init() before" << endl;
+            }
         }
 
         void ResNet50::runmodel()
@@ -217,7 +237,7 @@ namespace aiProductionReady
 
             //verifico che il tensore sia contiguous()
 
-            if (inputTensor.is_contiguous())
+            if (inputTensor.is_contiguous() && m_bCheckPre)
             {
 
                 //conversione del tensore a onnx runtime
@@ -293,17 +313,20 @@ namespace aiProductionReady
                 float label;
 
                 int cls;
+
+                m_bCheckRun = true;
             }
 
             else
             {
 
-                cout << "Il tensore non è contiguous non possibile eseguire inferenza" << endl;
+                cout << "Cannot call run model without preprocessing" << endl;
             }
         }
 
         std::tuple<torch::Tensor, torch::Tensor> ResNet50::postprocessing()
-        {
+        {   
+            if(m_bCheckRun){
 
             //https://discuss.pytorch.org/t/can-i-initialize-tensor-from-std-vector-in-libtorch/33236/4
             m_TOutputTensor = torch::from_blob(m_fpOutOnnxRuntime, {m_iModelNumberOfClass}).clone();
@@ -337,13 +360,33 @@ namespace aiProductionReady
 
 #endif
 
+            //this verify that you can only run pre run e post once for each new data
+            m_bCheckRun=false;
+            m_bCheckPre=false;
+            m_bCheckPost=true;
+
             return topPrediction;
+
+            }else{
+                
+                torch::Tensor m;
+                torch::Tensor n;
+                std::tuple<torch::Tensor, torch::Tensor> nullTensor = {n, m};
+                cout<< "call run model before preporcessing"<<endl;
+                return nullTensor;
+
+
+
+            }
         }
 
         ResNet50::~ResNet50()
-        {
-            m_OrtSession.reset();
-            m_OrtEnv.reset();
+        {   //deallocate resources only if were allocated
+            if (m_bCheckInit)
+            {
+                m_OrtSession.reset();
+                m_OrtEnv.reset();
+            }
         }
 
     } // namespace classification
