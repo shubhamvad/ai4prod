@@ -88,52 +88,76 @@ verify if 2 Mat are equal
         Scalar s = sum(a - b);
 
         std::cout << s << std::endl;
-        
+
         return (s[0] == 0) && (s[1] == 0) && (s[2] == 0);
     }
 
-
- torch::Tensor aiutils::convert2dVectorToTensor(std::vector<std::vector<float>>& input){
-
-
-    if(input[0].size()==0){
-        
-        cout<<"empty value"<<endl;
-        auto tensor = torch::empty(   { 200, 200, 3 });
-        return tensor; 
-
-    }
-    
-    else{
-    
-
-    cv::Mat NewSamples(0, input[0].size(), cv::DataType<float>::type);
-
-    for (unsigned int i = 0; i < input.size(); ++i)
+    torch::Tensor aiutils::convert2dVectorToTensor(std::vector<std::vector<float>> &input)
     {
-        // Make a temporary cv::Mat row and add to NewSamples _without_ data copy
-        cv::Mat Sample(1, input[0].size(), cv::DataType<float>::type, input[i].data());
 
-        NewSamples.push_back(Sample);
+        if (input[0].size() == 0)
+        {
+
+            cout << "empty value" << endl;
+            auto tensor = torch::empty({200, 200, 3});
+            return tensor;
+        }
+
+        else
+        {
+
+            cv::Mat NewSamples(0, input[0].size(), cv::DataType<float>::type);
+
+            for (unsigned int i = 0; i < input.size(); ++i)
+            {
+                // Make a temporary cv::Mat row and add to NewSamples _without_ data copy
+                cv::Mat Sample(1, input[0].size(), cv::DataType<float>::type, input[i].data());
+
+                NewSamples.push_back(Sample);
+            }
+
+            torch::Tensor Output = torch::from_blob(NewSamples.data, {(long int)input.size(), (long int)input[0].size()}).contiguous().clone();
+
+            return Output;
+        }
     }
 
-
-    torch::Tensor Output=torch::from_blob(NewSamples.data,{(long int)input.size(),(long int)input[0].size()}).contiguous().clone();
-
-    return Output;
-    
+    bool aiutils::checkFileExists(std::string Filename)
+    {
+        return access(Filename.c_str(), 0) == 0;
     }
-    
-    
 
- }
+    MODE aiutils::setMode(string Mode)
+    {
 
-bool aiutils::checkFileExists(std::string Filename )
-{
-    return access( Filename.c_str(), 0 ) == 0;
-}
+        if (Mode == "TensorRT")
+        {
+            cout<<"setMode" << endl;
+            return TensorRT;
+        }
 
+        if (Mode == "Cpu")
+        {
 
+            return Cpu;
+        }
+    }
 
+    string aiutils::setYamlMode(MODE t)
+    {
+
+        cout<<"setYamMode "<< t <<endl;
+        if (t == TensorRT)
+        {
+
+            return "TensorRT";
+        }
+
+        if (t == Cpu)
+        {
+
+            return "Cpu";
+        }
+    }
 
 } // namespace aiProductionReady

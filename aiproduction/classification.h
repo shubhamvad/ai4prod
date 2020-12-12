@@ -38,9 +38,11 @@ namespace aiProductionReady
 
          void setOnnxRuntimeEnv();
          void setOnnxRuntimeModelInputOutput();
-         void createYamlConfig();
+         void createYamlConfig(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path);
          void setEnvVariable();
          void setSession();
+
+ 
 
          //Init variable
 
@@ -50,10 +52,14 @@ namespace aiProductionReady
          YAML::Node m_ymlConfig;
          std::string m_sModelTrPath;
          std::string m_sModelOnnxPath;
+         std::string m_sEngineFp;
+         std::string m_sEngineCache;
+         
          MODE m_eMode;
          int m_iInput_h;
          int m_iInput_w;
          int m_iCropImage;
+
 
          //onnxruntime data
          float *m_fpOutOnnxRuntime;

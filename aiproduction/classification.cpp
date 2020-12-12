@@ -19,26 +19,64 @@ namespace aiProductionReady
             m_bCheckInit = false;
             m_bCheckPre = false;
             m_bCheckRun = false;
-            m_bCheckPost = false;
+            m_bCheckPost = true;
         }
 
-        void ResNet50::createYamlConfig()
+        void ResNet50::createYamlConfig(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
         {
 
             //retrive or create config yaml file
             if (aut.checkFileExists(m_sModelTrPath + "/config.yaml"))
             {
-                cout << "file1" << endl;
 
                 m_ymlConfig = YAML::LoadFile(m_sModelTrPath + "/config.yaml");
+
+                m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
+                //size at which image is resised
+                m_iInput_w = m_ymlConfig["width"].as<int>();
+                m_iInput_h = m_ymlConfig["width"].as<int>();
+                //by default input of neural network is 224 same as imagenet
+                m_iCropImage = m_ymlConfig["crop"].as<int>();
+                m_iModelNumberOfClass = m_ymlConfig["modelNumberOfClass"].as<int>();
+                m_iNumberOfReturnedPrediction = m_ymlConfig["outputClass"].as<int>();
+                ;
+                m_sModelTrPath = m_ymlConfig["engine_path"].as<std::string>();
+
+                m_eMode = aut.setMode(m_ymlConfig["Mode"].as<std::string>());
+
+                m_sEngineFp = m_ymlConfig["engine_path"].as<std::string>();
             }
             else
             {
 
+                cout << "INIT" << endl;
+
+                m_sModelOnnxPath = modelPath;
+                //size at which image is resised
+                m_iInput_w = width;
+                m_iInput_h = height;
+                //by default input of neural network is 224 same as imagenet
+                m_iCropImage = 224;
+                m_iModelNumberOfClass = ModelNumberOfClass;
+                m_iNumberOfReturnedPrediction = NumberOfReturnedPrediction;
+                m_sModelTrPath = modelTr_path;
+                m_eMode = t;
+                m_sEngineFp = "0";
+                m_sEngineCache = "1";
+
                 // starts out as null
-                m_ymlConfig["fp16"] = "0"; // it now is a map node
-                m_ymlConfig["engine_cache"] = "1";
+                m_ymlConfig["fp16"] = m_sEngineFp; // it now is a map node
+                m_ymlConfig["engine_cache"] = m_sEngineCache;
                 m_ymlConfig["engine_path"] = m_sModelTrPath;
+                m_ymlConfig["outputClass"] = m_iNumberOfReturnedPrediction;
+                m_ymlConfig["modelNumberOfClass"] = m_iModelNumberOfClass;
+                m_ymlConfig["width"] = m_iInput_w;
+                m_ymlConfig["height"] = m_iInput_h;
+                m_ymlConfig["crop"] = m_iCropImage;
+                m_ymlConfig["modelOnnxPath"] = m_sModelOnnxPath;
+
+                m_ymlConfig["Mode"] = aut.setYamlMode(m_eMode);
+
                 std::ofstream fout(m_sModelTrPath + "/config.yaml");
                 fout << m_ymlConfig;
             }
@@ -46,35 +84,47 @@ namespace aiProductionReady
 
         void ResNet50::setEnvVariable()
         {
+            cout << "MODE Variable " << m_eMode << endl;
             if (m_eMode == TensorRT)
             {
 #ifdef __linux__
 
-                string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_ymlConfig["engine_cache"].as<std::string>();
+                cout << "CAHCE " << m_sEngineCache << endl;
+                cout << "CAHCE YAML" <<  m_ymlConfig["engine_cache"].as<std::string>() << endl;
+                cout << "MOdel Path " << m_sModelTrPath <<endl;
+                string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=1";
 
                 int cacheLenght = cacheModel.length();
                 char cacheModelchar[cacheLenght + 1];
                 strcpy(cacheModelchar, cacheModel.c_str());
                 putenv(cacheModelchar);
 
-                string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_ymlConfig["fp16"].as<std::string>();
-                int fp16Lenght = cacheModel.length();
-                char fp16char[cacheLenght + 1];
-                strcpy(fp16char, fp16.c_str());
-                putenv(fp16char);
+                // string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                // int fp16Lenght = cacheModel.length();
+                // char fp16char[cacheLenght + 1];
+                // strcpy(fp16char, fp16.c_str());
+                // putenv(fp16char);
+                
+                string modelTrTmp;
 
-                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_ymlConfig["engine_path"].as<std::string>();
-                int n = m_sModelTrPath.length();
+                modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=/home/aistudios/6";
+                int n = modelTrTmp.length();
                 char modelSavePath[n + 1];
-                strcpy(modelSavePath, m_sModelTrPath.c_str());
+                strcpy(modelSavePath, modelTrTmp.c_str());
                 //esporto le path del modello di Tensorrt
+
+
                 putenv(modelSavePath);
+
+
+                cout << " ENV PATH "<<getenv("ORT_TENSORRT_ENGINE_CACHE_PATH")<<endl; 
+                cout <<"ENV PATH "<<getenv("ORT_TENSORRT_ENGINE_CACHE_ENABLE")<<endl;
 
 #elif _WIN32
 
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_ymlConfig["engine_cache"].as<std::string>().c_str());
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_ymlConfig["engine_path"].as<std::string>().c_str());
-                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_ymlConfig["fp16"].as<std::string>().c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sEngineFp.c_str());
+                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sModelTrPath.c_str());
 
 #endif
             }
@@ -93,9 +143,11 @@ namespace aiProductionReady
                 m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
             }
 
+            cout << "MODE " << m_eMode << endl;
+
             if (m_eMode == TensorRT)
             {
-
+                cout<<"CREATE SESSION TENSORRT"<<endl;
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
             }
         }
@@ -135,19 +187,9 @@ namespace aiProductionReady
             {
                 try
                 {
+                    cout << "INIT MODE " << t << endl;
 
-                    m_sModelOnnxPath = modelPath;
-                    //size at which image is resised
-                    m_iInput_w = width;
-                    m_iInput_h = height;
-                    //by default input of neural network is 224 same as imagenet
-                    m_iCropImage = 224;
-                    m_iModelNumberOfClass = ModelNumberOfClass;
-                    m_iNumberOfReturnedPrediction = NumberOfReturnedPrediction;
-                    m_sModelTrPath = modelTr_path;
-                    m_eMode = t;
-
-                    createYamlConfig();
+                    createYamlConfig(modelPath, width, height, ModelNumberOfClass, NumberOfReturnedPrediction, t, modelTr_path);
 
                     //set enviromental variable
 
@@ -325,63 +367,62 @@ namespace aiProductionReady
         }
 
         std::tuple<torch::Tensor, torch::Tensor> ResNet50::postprocessing()
-        {   
-            if(m_bCheckRun){
+        {
+            if (m_bCheckRun)
+            {
 
-            //https://discuss.pytorch.org/t/can-i-initialize-tensor-from-std-vector-in-libtorch/33236/4
-            m_TOutputTensor = torch::from_blob(m_fpOutOnnxRuntime, {m_iModelNumberOfClass}).clone();
+                //https://discuss.pytorch.org/t/can-i-initialize-tensor-from-std-vector-in-libtorch/33236/4
+                m_TOutputTensor = torch::from_blob(m_fpOutOnnxRuntime, {m_iModelNumberOfClass}).clone();
 
-            std::tuple<torch::Tensor, torch::Tensor> bestTopPrediction = torch::sort(m_TOutputTensor, 0, true);
+                std::tuple<torch::Tensor, torch::Tensor> bestTopPrediction = torch::sort(m_TOutputTensor, 0, true);
 
-            torch::Tensor indeces = torch::slice(std::get<1>(bestTopPrediction), 0, 0, m_iNumberOfReturnedPrediction, 1);
-            torch::Tensor value = torch::slice(std::get<0>(bestTopPrediction), 0, 0, m_iNumberOfReturnedPrediction, 1);
+                torch::Tensor indeces = torch::slice(std::get<1>(bestTopPrediction), 0, 0, m_iNumberOfReturnedPrediction, 1);
+                torch::Tensor value = torch::slice(std::get<0>(bestTopPrediction), 0, 0, m_iNumberOfReturnedPrediction, 1);
 
-            std::tuple<torch::Tensor, torch::Tensor> topPrediction = {indeces, value};
+                std::tuple<torch::Tensor, torch::Tensor> topPrediction = {indeces, value};
 
 #ifdef EVAL_ACCURACY
 
-            ofstream myfile;
-            myfile.open("/home/aistudios/Desktop/classification-Detection.csv", std::ios::in | std::ios::out | std::ios::app);
+                ofstream myfile;
+                myfile.open("classification-Detection.csv", std::ios::in | std::ios::out | std::ios::app);
 
-            //remove file extension
-            // size_t lastindex = m_sAccurayImagePath.find_last_of(".");
-            // string imagePath_WithoutExt = m_sAccurayImagePath.substr(0, lastindex);
+                //remove file extension
+                // size_t lastindex = m_sAccurayImagePath.find_last_of(".");
+                // string imagePath_WithoutExt = m_sAccurayImagePath.substr(0, lastindex);
 
-            //get only name file withot all path and extension
-            std::string base_filename = m_sAccurayImagePath.substr(m_sAccurayImagePath.find_last_of("/\\") + 1);
-            std::string::size_type const p(base_filename.find_last_of('.'));
-            std::string file_without_extension = base_filename.substr(0, p);
+                //get only name file withot all path and extension
+                std::string base_filename = m_sAccurayImagePath.substr(m_sAccurayImagePath.find_last_of("/\\") + 1);
+                std::string::size_type const p(base_filename.find_last_of('.'));
+                std::string file_without_extension = base_filename.substr(0, p);
 
-            string stringToWrite = file_without_extension + "," + std::to_string(std::get<0>(topPrediction)[0].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[1].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[2].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[3].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[4].item<long>()) + "\n";
+                string stringToWrite = file_without_extension + "," + std::to_string(std::get<0>(topPrediction)[0].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[1].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[2].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[3].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[4].item<long>()) + "\n";
 
-            myfile << stringToWrite.c_str();
+                myfile << stringToWrite.c_str();
 
-            myfile.close();
+                myfile.close();
 
 #endif
 
-            //this verify that you can only run pre run e post once for each new data
-            m_bCheckRun=false;
-            m_bCheckPre=false;
-            m_bCheckPost=true;
+                //this verify that you can only run pre run e post once for each new data
+                m_bCheckRun = false;
+                m_bCheckPre = false;
+                m_bCheckPost = true;
 
-            return topPrediction;
+                return topPrediction;
+            }
+            else
+            {
 
-            }else{
-                
                 torch::Tensor m;
                 torch::Tensor n;
                 std::tuple<torch::Tensor, torch::Tensor> nullTensor = {n, m};
-                cout<< "call run model before preporcessing"<<endl;
+                cout << "call run model before preporcessing" << endl;
                 return nullTensor;
-
-
-
             }
         }
 
         ResNet50::~ResNet50()
-        {   //deallocate resources only if were allocated
+        { //deallocate resources only if were allocated
             if (m_bCheckInit)
             {
                 m_OrtSession.reset();

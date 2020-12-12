@@ -37,21 +37,27 @@ namespace aiProductionReady
 
             void setOnnxRuntimeEnv();
             void setOnnxRuntimeModelInputOutput();
-            void createYamlConfig();
+            void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
             void setEnvVariable();
             void setSession();
+
+
 
             //INIT Variable
 
             YAML::Node m_ymlConfig;
-            string m_sModelOnnxPath;
-            MODE m_eMode;
+            
+            std::string m_sModelOnnxPath;
+            std::string m_sEngineFp;
+            std::string m_sEngineCache;
             std::string m_sModelTrPath;
+            
             int m_iInput_h;
             int m_iInput_w;
-
-         
-
+            float m_fNmsThresh;
+            float m_fDetectionThresh;
+            
+            MODE m_eMode;
             //Preprocessing
 
             cv::Mat padding(cv::Mat &img, int width, int weight);
@@ -80,6 +86,8 @@ namespace aiProductionReady
             bool m_bCheckRun;
             //used to verify id post process is called
             bool m_bCheckPost;
+
+            //model parameter
 
         public:
             //string to save image id for accuracy detection

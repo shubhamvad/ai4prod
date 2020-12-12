@@ -29,8 +29,13 @@ int main()
     ResNet50 *resnet;
 
     //See our example classification for full description of parameters
-    resnet = new ResNet50("/home/aistudios/Develop/ai4prod/deps/onnxruntime/model/cpu/resnet50.onnx", 1000, 5, TensorRT, "/home/aistudios/resnetNew");
+    int i=0;
+    resnet= new ResNet50();
 
+    resnet->init("/home/aistudios/Develop/ai4prod/deps/onnxruntime/model/cpu/resnet50.onnx",256,256, 1000, 5, TensorRT, "/home/aistudios/6");
+    //resnet = new ResNet50();
+
+     
     std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/imagenet/Val/ILSVRC2012_img_val";
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
@@ -38,7 +43,7 @@ int main()
 
         string image_id = entry.path();
         Mat img;
-
+        cout<<i<<endl;
         img = imread(image_id.c_str());
 
         //this is needed to make image_id matching with the one that is currently processed in the csv file
@@ -49,6 +54,8 @@ int main()
         resnet->runmodel();
 
         std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
+
+        i=i+1;
     }
 
 }
