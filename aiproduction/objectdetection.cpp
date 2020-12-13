@@ -31,11 +31,9 @@ namespace aiProductionReady
                 m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
             }
 
-          
             if (m_eMode == TensorRT)
-            {   
-             
-                
+            {
+
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
             }
         }
@@ -56,7 +54,6 @@ namespace aiProductionReady
             //retrive or create config yaml file
             if (aut.checkFileExists(m_sModelTrPath + "/config.yaml"))
             {
-               
 
                 m_ymlConfig = YAML::LoadFile(m_sModelTrPath + "/config.yaml");
 
@@ -64,14 +61,13 @@ namespace aiProductionReady
                 m_sEngineCache = m_ymlConfig["engine_cache"].as<std::string>();
                 m_sModelTrPath = m_ymlConfig["engine_path"].as<std::string>();
                 m_fNmsThresh = m_ymlConfig["Nms"].as<float>();
-                m_fDetectionThresh =  m_ymlConfig["DetectionThresh"].as<float>();
-                m_iInput_w =  m_ymlConfig["width"].as<int>();
-                m_iInput_h =  m_ymlConfig["height"].as<int>();
-                m_eMode =  aut.setMode(m_ymlConfig["Mode"].as<std::string>());
-                m_sModelOnnxPath =  m_ymlConfig["modelOnnxPath"].as<std::string>();
-            
+                m_fDetectionThresh = m_ymlConfig["DetectionThresh"].as<float>();
+                m_iInput_w = m_ymlConfig["width"].as<int>();
+                m_iInput_h = m_ymlConfig["height"].as<int>();
+                m_eMode = aut.setMode(m_ymlConfig["Mode"].as<std::string>());
+                m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
             }
-            
+
             else
             {
 
@@ -79,7 +75,7 @@ namespace aiProductionReady
                 m_sEngineCache = "1";
                 m_sModelTrPath = model_path;
                 m_fNmsThresh = 0.5;
-                m_fDetectionThresh = 0.1;
+                m_fDetectionThresh = 0.01;
                 m_iInput_w = input_w;
                 m_iInput_h = input_h;
                 m_eMode = t;
@@ -97,14 +93,13 @@ namespace aiProductionReady
                 m_ymlConfig["modelOnnxPath"] = m_sModelOnnxPath;
 
                 std::ofstream fout(m_sModelTrPath + "/config.yaml");
-                fout << m_ymlConfig; 
+                fout << m_ymlConfig;
             }
         }
 
         void Yolov3::setEnvVariable()
         {
-            
-           
+
             if (m_eMode == TensorRT)
             {
 #ifdef __linux__
@@ -168,8 +163,37 @@ namespace aiProductionReady
 
                     //set enviromental variable
 
-                    setEnvVariable();
+                    //setEnvVariable();
 
+#ifdef __linux__
+
+                    string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+
+                    int cacheLenght = cacheModel.length();
+                    char cacheModelchar[cacheLenght + 1];
+                    strcpy(cacheModelchar, cacheModel.c_str());
+                    putenv(cacheModelchar);
+
+                    string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                    int fp16Lenght = cacheModel.length();
+                    char fp16char[cacheLenght + 1];
+                    strcpy(fp16char, fp16.c_str());
+                    putenv(fp16char);
+
+                    m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+                    int n = m_sModelTrPath.length();
+                    char modelSavePath[n + 1];
+                    strcpy(modelSavePath, m_sModelTrPath.c_str());
+                    //esporto le path del modello di Tensorrt
+                    putenv(modelSavePath);
+
+#elif _WIN32
+
+                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+                    _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
+
+#endif
                     //OnnxRuntime set Env
                     setOnnxRuntimeEnv();
 
@@ -194,7 +218,6 @@ namespace aiProductionReady
             }
         }
 
-       
         cv::Mat Yolov3::padding(cv::Mat &img, int width, int height)
         {
 
@@ -712,8 +735,6 @@ namespace aiProductionReady
             myfile << json_file + "\n";
             myfile.close();
         }
-
-    
 
         Yolov3::~Yolov3()
         {

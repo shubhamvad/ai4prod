@@ -84,14 +84,11 @@ namespace aiProductionReady
 
         void ResNet50::setEnvVariable()
         {
-            cout << "MODE Variable " << m_eMode << endl;
+
             if (m_eMode == TensorRT)
             {
 #ifdef __linux__
 
-                cout << "CAHCE " << m_sEngineCache << endl;
-                cout << "CAHCE YAML" <<  m_ymlConfig["engine_cache"].as<std::string>() << endl;
-                cout << "MOdel Path " << m_sModelTrPath <<endl;
                 string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=1";
 
                 int cacheLenght = cacheModel.length();
@@ -104,7 +101,7 @@ namespace aiProductionReady
                 // char fp16char[cacheLenght + 1];
                 // strcpy(fp16char, fp16.c_str());
                 // putenv(fp16char);
-                
+
                 string modelTrTmp;
 
                 modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=/home/aistudios/6";
@@ -113,12 +110,10 @@ namespace aiProductionReady
                 strcpy(modelSavePath, modelTrTmp.c_str());
                 //esporto le path del modello di Tensorrt
 
-
                 putenv(modelSavePath);
 
-
-                cout << " ENV PATH "<<getenv("ORT_TENSORRT_ENGINE_CACHE_PATH")<<endl; 
-                cout <<"ENV PATH "<<getenv("ORT_TENSORRT_ENGINE_CACHE_ENABLE")<<endl;
+                cout << " ENV PATH " << getenv("ORT_TENSORRT_ENGINE_CACHE_PATH") << endl;
+                cout << "ENV PATH " << getenv("ORT_TENSORRT_ENGINE_CACHE_ENABLE") << endl;
 
 #elif _WIN32
 
@@ -147,7 +142,7 @@ namespace aiProductionReady
 
             if (m_eMode == TensorRT)
             {
-                cout<<"CREATE SESSION TENSORRT"<<endl;
+                cout << "CREATE SESSION TENSORRT" << endl;
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
             }
         }
@@ -191,9 +186,46 @@ namespace aiProductionReady
 
                     createYamlConfig(modelPath, width, height, ModelNumberOfClass, NumberOfReturnedPrediction, t, modelTr_path);
 
-                    //set enviromental variable
+//set enviromental variable
 
-                    setEnvVariable();
+//setEnvVariable();
+
+//ENV VARIABLE CANNOT BE SET INTO FUNCTION MUST BE ON MAIN THREAD
+//I cannot set this code into a function
+#ifdef __linux__
+
+                    string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+
+                    int cacheLenght = cacheModel.length();
+                    char cacheModelchar[cacheLenght + 1];
+                    strcpy(cacheModelchar, cacheModel.c_str());
+                    putenv(cacheModelchar);
+
+                    string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                    int fp16Lenght = cacheModel.length();
+                    char fp16char[cacheLenght + 1];
+                    strcpy(fp16char, fp16.c_str());
+                    putenv(fp16char);
+
+                    string modelTrTmp;
+
+                    modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+                    int n = modelTrTmp.length();
+                    char modelSavePath[n + 1];
+                    strcpy(modelSavePath, modelTrTmp.c_str());
+                    //esporto le path del modello di Tensorrt
+
+                    putenv(modelSavePath);
+
+                    
+
+#elif _WIN32
+
+                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sEngineFp.c_str());
+                    _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sModelTrPath.c_str());
+
+#endif
 
                     //OnnxRuntime set Env
                     setOnnxRuntimeEnv();

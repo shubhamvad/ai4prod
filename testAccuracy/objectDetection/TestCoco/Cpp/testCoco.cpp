@@ -42,7 +42,7 @@ int main(){
     // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
     yolov3 = new Yolov3();
 
-    yolov3->init("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx", 608, 608, TensorRT, "/home/aistudios/1");
+    yolov3->init("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx", 608, 608, TensorRT, "/home/aistudios/Yolov3");
     //windows
 
     //C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
