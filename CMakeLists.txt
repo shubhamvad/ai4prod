@@ -115,8 +115,8 @@ generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}
 
 set_target_properties(
   aiproduction PROPERTIES
-    SOVERSION 1
-    VERSION 1.1.1
+    SOVERSION 0
+    VERSION 0.1.0
 )
 
 #Installing
