@@ -87,6 +87,10 @@ namespace aiProductionReady
             //used to verify id post process is called
             bool m_bCheckPost;
 
+
+            //MESSAGE/ERROR HANDLING
+
+            string m_sMessage;
             //model parameter
 
         public:

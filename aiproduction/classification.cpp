@@ -176,6 +176,7 @@ namespace aiProductionReady
             out_node_names = std::vector<const char *>(num_out_nodes);
         }
 
+       
         bool ResNet50::init(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
         {
             if (!m_bCheckInit)
@@ -186,6 +187,13 @@ namespace aiProductionReady
 
                     createYamlConfig(modelPath, width, height, ModelNumberOfClass, NumberOfReturnedPrediction, t, modelTr_path);
 
+                    
+                    
+                    if(aut.checkMode(m_eMode,m_sMessage)){
+
+                        cout<<m_sMessage<<endl;
+                        return false;
+                    }
 //set enviromental variable
 
 //setEnvVariable();
@@ -216,8 +224,6 @@ namespace aiProductionReady
                     //esporto le path del modello di Tensorrt
 
                     putenv(modelSavePath);
-
-                    
 
 #elif _WIN32
 

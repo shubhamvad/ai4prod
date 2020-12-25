@@ -81,8 +81,8 @@ namespace aiProductionReady
                 m_eMode = t;
                 m_sModelOnnxPath = modelPathOnnx;
 
-                // starts out as null
-                m_ymlConfig["fp16"] = m_sEngineFp; // it now is a map node
+                
+                m_ymlConfig["fp16"] = m_sEngineFp; 
                 m_ymlConfig["engine_cache"] = m_sEngineCache;
                 m_ymlConfig["engine_path"] = m_sModelTrPath;
                 m_ymlConfig["Nms"] = m_fNmsThresh;
@@ -160,7 +160,14 @@ namespace aiProductionReady
                     //set variable
 
                     createYamlConfig(modelPathOnnx, input_h, input_w, t, model_path);
+                    
 
+                    if(aut.checkMode(m_eMode,m_sMessage)){
+
+                        cout<<m_sMessage<<endl;
+                        return false;
+                    }
+                    
                     //set enviromental variable
 
                     //setEnvVariable();
@@ -415,6 +422,7 @@ namespace aiProductionReady
                     }
                 }
 
+                //no detection return empty tensor
                 if (noDetection)
                 {
 

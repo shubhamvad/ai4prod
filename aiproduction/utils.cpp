@@ -127,6 +127,7 @@ verify if 2 Mat are equal
         return access(Filename.c_str(), 0) == 0;
     }
 
+    //convert string to enum
     MODE aiutils::setMode(string Mode)
     {
 
@@ -142,7 +143,7 @@ verify if 2 Mat are equal
             return Cpu;
         }
     }
-
+//convert enum to string
     string aiutils::setYamlMode(MODE t)
     {
 
@@ -159,5 +160,24 @@ verify if 2 Mat are equal
             return "Cpu";
         }
     }
+
+//This fuction check if Mode is implementend before instantiate onnxruntime Session
+bool aiutils::checkMode(MODE m, string &Message){
+
+    switch (m)
+    {
+
+    case TensorRT:
+        Message="Mode selected TensorRT";
+        break;
+    case Cpu:
+        Message="Mode selected Cpu";
+        break;
+    default:
+        Message= "Mode NOT IMPLEMENTED cannot continue";
+        break;
+    }
+
+}
 
 } // namespace aiProductionReady

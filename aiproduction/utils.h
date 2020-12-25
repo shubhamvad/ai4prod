@@ -45,6 +45,8 @@ namespace aiProductionReady
 
       bool checkFileExists(std::string Filename);
 
+      bool checkMode(MODE m, string &Message);
+
       //#endif
    };
 

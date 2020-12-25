@@ -29,7 +29,7 @@ if(${X86_64})
 
     if(UNIX)
         #set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/install-Lib")
-        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/objectDetection/TestCoco/Cpp/Install")
+        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/classification/Imagenet/Cpp/Install")
     endif()
     if (MSVC)
         set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/install-Lib")
