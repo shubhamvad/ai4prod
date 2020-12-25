@@ -252,8 +252,9 @@ namespace aiProductionReady
                 }
             }
             else
-            {
-                cout << "Is not possibile to initialize more than one time" << endl;
+            {   
+                m_sMessage="Is not possibile to call init() twice. Class already initialized";
+                cout << "Is not possibile to call init() twice. Class already initialized" << endl;
             }
         }
 
@@ -307,7 +308,7 @@ namespace aiProductionReady
             }
             else
             {
-
+                m_sMessage="call init() before";
                 cout << "call init() before" << endl;
             }
         }
@@ -399,7 +400,7 @@ namespace aiProductionReady
 
             else
             {
-
+                m_sMessage="Cannot call run model without preprocessing";
                 cout << "Cannot call run model without preprocessing" << endl;
             }
         }
@@ -454,7 +455,8 @@ namespace aiProductionReady
                 torch::Tensor m;
                 torch::Tensor n;
                 std::tuple<torch::Tensor, torch::Tensor> nullTensor = {n, m};
-                cout << "call run model before preporcessing" << endl;
+                m_sMessage="call run model before postprocessing";
+                cout << "call run model before postprocessing" << endl;
                 return nullTensor;
             }
         }

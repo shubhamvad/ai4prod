@@ -70,7 +70,7 @@ namespace aiProductionReady
 
             else
             {
-
+                //first time parameter are initialized by default
                 m_sEngineFp = "0";
                 m_sEngineCache = "1";
                 m_sModelTrPath = model_path;
@@ -81,8 +81,7 @@ namespace aiProductionReady
                 m_eMode = t;
                 m_sModelOnnxPath = modelPathOnnx;
 
-                
-                m_ymlConfig["fp16"] = m_sEngineFp; 
+                m_ymlConfig["fp16"] = m_sEngineFp;
                 m_ymlConfig["engine_cache"] = m_sEngineCache;
                 m_ymlConfig["engine_path"] = m_sModelTrPath;
                 m_ymlConfig["Nms"] = m_fNmsThresh;
@@ -160,14 +159,14 @@ namespace aiProductionReady
                     //set variable
 
                     createYamlConfig(modelPathOnnx, input_h, input_w, t, model_path);
-                    
 
-                    if(aut.checkMode(m_eMode,m_sMessage)){
+                    if (aut.checkMode(m_eMode, m_sMessage))
+                    {
 
-                        cout<<m_sMessage<<endl;
+                        cout << m_sMessage << endl;
                         return false;
                     }
-                    
+
                     //set enviromental variable
 
                     //setEnvVariable();
@@ -221,7 +220,8 @@ namespace aiProductionReady
             }
             else
             {
-                cout << "Is not possibile to initialize more than one time" << endl;
+                m_sMessage = "Is not possibile to call init() twice. Class already initialized";
+                cout << "Is not possibile to call init() twice. Class already initialized" << endl;
             }
         }
 
@@ -279,7 +279,7 @@ namespace aiProductionReady
             }
             else
             {
-
+                m_sMessage = "call init() before";
                 cout << "call init() before" << endl;
             }
         }
@@ -359,6 +359,7 @@ namespace aiProductionReady
             else
             {
 
+                m_sMessage = "Cannot call run model without preprocessing";
                 cout << "Cannot call run model without preprocessing" << endl;
             }
         } // namespace objectDetection
@@ -629,14 +630,14 @@ namespace aiProductionReady
 
 #endif
 
-                        torch::Tensor Output = aut.convert2dVectorToTensor(bboxValuesNms);
+                        m_TOutputTensor = aut.convert2dVectorToTensor(bboxValuesNms);
 
                         //this verify that you can only run pre run e post once for each new data
                         m_bCheckRun = false;
                         m_bCheckPre = false;
                         m_bCheckPost = true;
 
-                        return Output;
+                        return m_TOutputTensor;
                     }
                 }
             }
@@ -645,7 +646,8 @@ namespace aiProductionReady
 
                 torch::Tensor nullTensor;
 
-                cout << "call run model before preporcessing" << endl;
+                m_sMessage = "call run model before postprocessing";
+                cout << "call run model before postprocessing" << endl;
                 return nullTensor;
             }
         }
@@ -746,9 +748,12 @@ namespace aiProductionReady
 
         Yolov3::~Yolov3()
         {
+            if (m_bCheckInit)
+            {
 
-            m_OrtSession.reset();
-            m_OrtEnv.reset();
+                m_OrtSession.reset();
+                m_OrtEnv.reset();
+            }
         }
 
     } // namespace objectDetection

@@ -10,11 +10,33 @@ namespace aiProductionReady
         {
 
         private:
+            //INIT VARIABLE
+
+            YAML::Node m_ymlConfig;
+            std::string m_sModelTrPath;
+            std::string m_sModelOnnxPath;
+            std::string m_sEngineFp;
+            std::string m_sEngineCache;
+
+            MODE m_eMode;
+
+            //neural network input dimension
+            int m_iInput_h;
+            int m_iInput_w;
+            //original image width and height
+            int m_iMrows;
+            int m_iMcols;
+
+            float m_fNmsThresh;
+            float m_fDetectionThresh;
+
             //ONNX RUNTIME
+
             Ort::SessionOptions m_OrtSessionOptions;
+            Ort::AllocatorWithDefaultOptions allocator;
+
             std::unique_ptr<Ort::Session> m_OrtSession;
             std::unique_ptr<Ort::Env> m_OrtEnv;
-            Ort::AllocatorWithDefaultOptions allocator;
 
             //OnnxRuntime Input Model
 
@@ -25,56 +47,21 @@ namespace aiProductionReady
 
             size_t num_out_nodes;
 
-            //onnx model tensor input size
-            size_t m_InputTorchTensorSize;
-
+            // onnx runtime data
             float *m_fpInputOnnxRuntime;
             float *m_fpOutOnnxRuntime[2];
 
-            torch::Tensor m_TInputTorchTensor;
-
-            //INIT Function
-
-            void setOnnxRuntimeEnv();
-            void setOnnxRuntimeModelInputOutput();
-            void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
-            void setEnvVariable();
-            void setSession();
-
-
-
-            //INIT Variable
-
-            YAML::Node m_ymlConfig;
-            
-            std::string m_sModelOnnxPath;
-            std::string m_sEngineFp;
-            std::string m_sEngineCache;
-            std::string m_sModelTrPath;
-            
-            int m_iInput_h;
-            int m_iInput_w;
-            float m_fNmsThresh;
-            float m_fDetectionThresh;
-            
-            MODE m_eMode;
-            //Preprocessing
-
-            cv::Mat padding(cv::Mat &img, int width, int weight);
-
-            aiProductionReady::aiutils aut;
-
-            //Post processing
+            //Model Out
             std::vector<int64_t> m_viNumberOfBoundingBox;
 
-            //Accuracy
+            //Input dimension onnx model
+            size_t m_InputTorchTensorSize;
 
-            //array with all detection accuracy
-            Json::Value m_JsonRootArray;
+            //LIBTORCH
+            torch::Tensor m_TInputTorchTensor;
+            torch::Tensor m_TOutputTensor;
 
-            int m_iMrows;
-            int m_iMcols;
-            cv::Rect get_RectMap(float bbox[4]);
+            //THREAD SAFE
 
             //handle initialization
             bool m_bInit;
@@ -87,11 +74,35 @@ namespace aiProductionReady
             //used to verify id post process is called
             bool m_bCheckPost;
 
+            //UTILS
+
+            aiProductionReady::aiutils aut;
 
             //MESSAGE/ERROR HANDLING
 
             string m_sMessage;
-            //model parameter
+
+            //FUNCTION
+
+            //init
+
+            void setOnnxRuntimeEnv();
+            void setOnnxRuntimeModelInputOutput();
+            void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
+            void setEnvVariable();
+            void setSession();
+
+            //Preprocessing
+            //to preserve aspect ratio of image
+            cv::Mat padding(cv::Mat &img, int width, int weight);
+
+            //Accuracy
+
+            //array with all detection accuracy
+            Json::Value m_JsonRootArray;
+
+            //use internally for detection accuracy
+            cv::Rect get_RectMap(float bbox[4]);
 
         public:
             //string to save image id for accuracy detection
@@ -122,7 +133,13 @@ namespace aiProductionReady
                 return m_iInput_h;
             }
 
-            //funzione inversa per il preprocessing
+            string getMessage()
+            {
+
+                return m_sMessage;
+            }
+
+            //call from outside class to draw rectangle given image
             cv::Rect get_rect(cv::Mat &img, float bbox[4]);
 
             //void nms(vector<float> &detection,float nsm_thres=0.9);

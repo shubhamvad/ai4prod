@@ -23,6 +23,7 @@ namespace aiProductionReady
          std::string m_sEngineCache;
 
          MODE m_eMode;
+         
          int m_iInput_h;
          int m_iInput_w;
          int m_iCropImage;
@@ -76,12 +77,13 @@ namespace aiProductionReady
          //used to verify id post process is called
          bool m_bCheckPost;
 
+         //Utils
          aiProductionReady::aiutils aut;
 
       
          //ERROR HANDLING
 
-         //error message
+         // message
          string m_sMessage;
 
 
@@ -110,6 +112,12 @@ namespace aiProductionReady
          void preprocessing(Mat &Image);
          std::tuple<torch::Tensor, torch::Tensor> postprocessing();
          void runmodel();
+
+         string getMessage(){
+
+            return m_sMessage;
+
+         }
       };
 
    } //namespace classification
