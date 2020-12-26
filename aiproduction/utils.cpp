@@ -133,7 +133,7 @@ verify if 2 Mat are equal
 
         if (Mode == "TensorRT")
         {
-            cout<<"setMode" << endl;
+            cout << "setMode" << endl;
             return TensorRT;
         }
 
@@ -143,11 +143,11 @@ verify if 2 Mat are equal
             return Cpu;
         }
     }
-//convert enum to string
+    //convert enum to string
     string aiutils::setYamlMode(MODE t)
     {
 
-        cout<<"setYamMode "<< t <<endl;
+        cout << "setYamMode " << t << endl;
         if (t == TensorRT)
         {
 
@@ -161,23 +161,30 @@ verify if 2 Mat are equal
         }
     }
 
-//This fuction check if Mode is implementend before instantiate onnxruntime Session
-bool aiutils::checkMode(MODE m, string &Message){
-
-    switch (m)
+    //This fuction check if Mode is implementend before instantiate onnxruntime Session
+    bool aiutils::checkMode(MODE m, string &Message)
     {
 
-    case TensorRT:
-        Message="Mode selected TensorRT";
-        break;
-    case Cpu:
-        Message="Mode selected Cpu";
-        break;
-    default:
-        Message= "Mode NOT IMPLEMENTED cannot continue";
-        break;
-    }
+        bool value;
+        switch (m)
+        {
 
-}
+        case TensorRT:
+            Message = "Mode selected TensorRT";
+
+            value = true;
+            break;
+        case Cpu:
+            Message = "Mode selected Cpu";
+            value = true;
+            break;
+        default:
+            Message = "Mode NOT IMPLEMENTED cannot continue";
+            value = false;
+            break;
+        }
+
+        return value;
+    }
 
 } // namespace aiProductionReady

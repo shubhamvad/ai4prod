@@ -160,7 +160,7 @@ namespace aiProductionReady
 
                     createYamlConfig(modelPathOnnx, input_h, input_w, t, model_path);
 
-                    if (aut.checkMode(m_eMode, m_sMessage))
+                    if (!aut.checkMode(m_eMode, m_sMessage))
                     {
 
                         cout << m_sMessage << endl;

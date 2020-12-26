@@ -189,7 +189,7 @@ namespace aiProductionReady
 
                     
                     
-                    if(aut.checkMode(m_eMode,m_sMessage)){
+                    if(!aut.checkMode(m_eMode,m_sMessage)){
 
                         cout<<m_sMessage<<endl;
                         return false;
@@ -260,10 +260,13 @@ namespace aiProductionReady
 
         void ResNet50::preprocessing(Mat &Image)
         {
+            
 
             //ResNet50::model=data;
             if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
-            {
+            {   
+
+                
                 //resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
                 resize(Image, Image, Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
                 const int cropSize = m_iCropImage;

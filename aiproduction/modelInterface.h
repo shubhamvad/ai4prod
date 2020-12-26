@@ -37,7 +37,7 @@ namespace aiProductionReady
 
         virtual void runmodel() = 0;
 
-        virtual std::tuple<torch::Tensor,torch::Tensor> postprocessing()=0;
+        virtual std::tuple<torch::Tensor,torch::Tensor> postprocessing()=0; 
     };
 
 

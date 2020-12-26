@@ -34,8 +34,6 @@ int main()
 
     resnet->init("/home/aistudios/Develop/ai4prod/deps/onnxruntime/model/cpu/resnet50.onnx",256,256, 1000, 5, TensorRT, "/home/aistudios/6");
     //resnet = new ResNet50();
-
-     
     std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/imagenet/Val/ILSVRC2012_img_val";
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
