@@ -42,12 +42,18 @@ int main(){
     // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
     yolov3 = new Yolov3();
 
-    yolov3->init("/home/aistudios/Develop/aiproductionready/onnxruntime/model/cpu/yolov3-spp-darknet.onnx", 608, 608, TensorRT, "/home/aistudios/Yolov3");
+    yolov3->init("../Install/deps/onnxruntime/model/cpu/yolov3-spp.onnx", 608, 608, TensorRT, "/home/aistudios/darknet-onnx/Yolov3-Ne");
     //windows
 
     //C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
 
     //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
+    
+    cout<<"START PROCESSING"<<endl;
+
+    //auto start = high_resolution_clock::now();
+
+    double numDetection=0;
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
     {
@@ -62,14 +68,28 @@ int main(){
               
         img = imread(image_id.c_str());
 
+        // auto start1 = high_resolution_clock::now();
+
         yolov3->m_sAccurayImagePath = image_id.c_str();
 
+        
      
         yolov3->preprocessing(img);
+       
         yolov3->runmodel();
+        
+
+         
 
         torch::Tensor result = yolov3->postprocessing();
 
+        // auto stop1 = high_resolution_clock::now();
+
+        // auto duration1 = duration_cast<microseconds>(stop1 - start1);
+
+        // cout << "SINGLE TIME INFERENCE " << (double)duration1.count() / (1000000) << "Sec" << endl;
+
+        numDetection++; 
 
         if (!result.numel())
         {
@@ -107,6 +127,11 @@ int main(){
             // waitKey(0);
         }
     }
+
+    // auto stop = high_resolution_clock::now();
+    // auto duration = duration_cast<microseconds>(stop - start);
+
+    // cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000 * numDetection) << "Sec" << endl;
 
     //create yoloVal.json
     yolov3->createAccuracyFile();

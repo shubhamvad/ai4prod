@@ -3,6 +3,8 @@
 #include "../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
 
 using namespace std;
+using namespace std::chrono;
+
 namespace aiProductionReady
 {
     namespace objectDetection
@@ -49,13 +51,12 @@ namespace aiProductionReady
 
         void Yolov3::createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
         {
-            //exception in creating config file
 
             //retrive or create config yaml file
-            if (aut.checkFileExists(m_sModelTrPath + "/config.yaml"))
+            if (aut.checkFileExists(model_path + "/config.yaml"))
             {
 
-                m_ymlConfig = YAML::LoadFile(m_sModelTrPath + "/config.yaml");
+                m_ymlConfig = YAML::LoadFile(model_path + "/config.yaml");
 
                 m_sEngineFp = m_ymlConfig["fp16"].as<std::string>();
                 m_sEngineCache = m_ymlConfig["engine_cache"].as<std::string>();
@@ -381,6 +382,8 @@ namespace aiProductionReady
                 bool noDetection = true;
                 bool noDetectionNms = true;
 
+                auto start = high_resolution_clock::now();
+
                 for (int index = 0; index < m_viNumberOfBoundingBox[0]; index++)
                 {
                     float classProbability = 0.0;
@@ -390,7 +393,7 @@ namespace aiProductionReady
                     {
                         //i*num_classes +j
                         //Detection threshold
-                        if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > m_ymlConfig["DetectionThresh"].as<float>())
+                        if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > m_fDetectionThresh)
                         {
                             //serve per trovare il massimo per singolo bbox
                             if (m_fpOutOnnxRuntime[0][index * m_viNumberOfBoundingBox[1] + classes] > classProbability)
@@ -423,6 +426,12 @@ namespace aiProductionReady
                     }
                 }
 
+                auto stop = high_resolution_clock::now();
+
+                auto duration = duration_cast<microseconds>(stop - start);
+
+                //cout << "SINGLE TIME INFERENCE 1 " << (double)duration.count() / (1000000) << "Sec" << endl;
+
                 //no detection return empty tensor
                 if (noDetection)
                 {
@@ -440,6 +449,7 @@ namespace aiProductionReady
                 {
 
                     //NMS
+                    auto start1 = high_resolution_clock::now();
 
                     vector<int> indexAfterNms;
 
@@ -486,6 +496,12 @@ namespace aiProductionReady
                         }
                     }
 
+                    auto stop1 = high_resolution_clock::now();
+
+                    auto duration1 = duration_cast<microseconds>(stop1 - start1);
+
+                    //cout << "SINGLE TIME INFERENCE 2 " << (double)duration1.count() / (1000000) << "Sec" << endl;
+
                     if (noDetectionNms)
                     {
                         //cout << "NO DETECTION " << noDetection << endl;
@@ -501,6 +517,8 @@ namespace aiProductionReady
 
                     else
                     {
+
+                        auto start2 = high_resolution_clock::now();
 
                         vector<vector<float>> bboxValuesNms;
 
@@ -636,6 +654,12 @@ namespace aiProductionReady
                         m_bCheckRun = false;
                         m_bCheckPre = false;
                         m_bCheckPost = true;
+
+                        auto stop2 = high_resolution_clock::now();
+
+                        auto duration2 = duration_cast<microseconds>(stop2 - start2);
+
+                        //cout << "SINGLE TIME INFERENCE 2 " << (double)duration2.count() / (1000000) << "Sec" << endl;
 
                         return m_TOutputTensor;
                     }

@@ -39,6 +39,7 @@ elseif(${AARCH64})
 endif()
 
 
+
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/deps/opencv/lib")
 
 # library to generate export header

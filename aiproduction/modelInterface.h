@@ -1,6 +1,6 @@
 #pragma once
 
-#define EVAL_ACCURACY
+//#define EVAL_ACCURACY
 
 #include "yaml-cpp/yaml.h"
 #include <iostream>

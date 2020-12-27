@@ -38,12 +38,17 @@ namespace aiProductionReady
       bool equalImage(const Mat &a, const Mat &b);
       torch::Tensor convert2dVectorToTensor(std::vector<std::vector<float>> &input);
 
-      //handle Mode for YamlCpp 
+      //handle Mode for YamlCpp
       MODE setMode(string Mode);
       string setYamlMode(MODE t);
       //utils file handling
 
-      bool checkFileExists(std::string Filename);
+      // bool checkFileExists(std::string Filename);
+
+      inline bool checkFileExists(const std::string &name)
+      {
+         return (access(name.c_str(), F_OK) != -1);
+      }
 
       bool checkMode(MODE m, string &Message);
 

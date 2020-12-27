@@ -29,10 +29,10 @@ int main()
     ResNet50 *resnet;
 
     //See our example classification for full description of parameters
-    int i=0;
-    resnet= new ResNet50();
+    int i = 0;
+    resnet = new ResNet50();
 
-    resnet->init("/home/aistudios/Develop/ai4prod/deps/onnxruntime/model/cpu/resnet50.onnx",256,256, 1000, 5, TensorRT, "/home/aistudios/6");
+    resnet->init("/home/aistudios/Develop/ai4prod/deps/onnxruntime/model/cpu/resnet50.onnx", 256, 256, 1000, 5, Cpu, "/home/aistudios/7");
     //resnet = new ResNet50();
     std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/imagenet/Val/ILSVRC2012_img_val";
 
@@ -41,8 +41,11 @@ int main()
 
         string image_id = entry.path();
         Mat img;
-        cout<<i<<endl;
+        cout << i << endl;
         img = imread(image_id.c_str());
+
+        // auto start = high_resolution_clock::now();
+
 
         //this is needed to make image_id matching with the one that is currently processed in the csv file
         resnet->m_sAccurayImagePath = image_id.c_str();
@@ -53,7 +56,12 @@ int main()
 
         std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
 
-        i=i+1;
-    }
+        // auto stop = high_resolution_clock::now();
 
+        // auto duration = duration_cast<microseconds>(stop - start);
+
+        // cout << "SINGLE TIME INFERENCE 1 " << (double)duration.count() / (1000000) << "Sec" << endl;
+
+        i = i + 1;
+    }
 }

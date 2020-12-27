@@ -26,25 +26,23 @@ namespace aiProductionReady
         {
 
             //retrive or create config yaml file
-            if (aut.checkFileExists(m_sModelTrPath + "/config.yaml"))
+            if (aut.checkFileExists(modelTr_path + "/config.yaml"))
             {
 
-                m_ymlConfig = YAML::LoadFile(m_sModelTrPath + "/config.yaml");
+                m_ymlConfig = YAML::LoadFile(modelTr_path + "/config.yaml");  
 
-                m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
-                //size at which image is resised
+                m_sEngineFp = m_ymlConfig["fp16"].as<std::string>();
+                m_sEngineCache = m_ymlConfig["engine_cache"].as<std::string>();
+                m_sModelTrPath = m_ymlConfig["engine_path"].as<std::string>();
+                m_iNumberOfReturnedPrediction = m_ymlConfig["outputClass"].as<int>();
+                m_iModelNumberOfClass = m_ymlConfig["modelNumberOfClass"].as<int>();
                 m_iInput_w = m_ymlConfig["width"].as<int>();
                 m_iInput_h = m_ymlConfig["width"].as<int>();
-                //by default input of neural network is 224 same as imagenet
                 m_iCropImage = m_ymlConfig["crop"].as<int>();
-                m_iModelNumberOfClass = m_ymlConfig["modelNumberOfClass"].as<int>();
-                m_iNumberOfReturnedPrediction = m_ymlConfig["outputClass"].as<int>();
-                ;
-                m_sModelTrPath = m_ymlConfig["engine_path"].as<std::string>();
-
+                m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
                 m_eMode = aut.setMode(m_ymlConfig["Mode"].as<std::string>());
 
-                m_sEngineFp = m_ymlConfig["engine_path"].as<std::string>();
+                
             }
             else
             {
@@ -89,22 +87,22 @@ namespace aiProductionReady
             {
 #ifdef __linux__
 
-                string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=1";
+                string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
                 int cacheLenght = cacheModel.length();
                 char cacheModelchar[cacheLenght + 1];
                 strcpy(cacheModelchar, cacheModel.c_str());
                 putenv(cacheModelchar);
 
-                // string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-                // int fp16Lenght = cacheModel.length();
-                // char fp16char[cacheLenght + 1];
-                // strcpy(fp16char, fp16.c_str());
-                // putenv(fp16char);
+                string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                int fp16Lenght = cacheModel.length();
+                char fp16char[cacheLenght + 1];
+                strcpy(fp16char, fp16.c_str());
+                putenv(fp16char);
 
                 string modelTrTmp;
 
-                modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=/home/aistudios/6";
+                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
                 int n = modelTrTmp.length();
                 char modelSavePath[n + 1];
                 strcpy(modelSavePath, modelTrTmp.c_str());
@@ -176,7 +174,6 @@ namespace aiProductionReady
             out_node_names = std::vector<const char *>(num_out_nodes);
         }
 
-       
         bool ResNet50::init(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
         {
             if (!m_bCheckInit)
@@ -187,11 +184,10 @@ namespace aiProductionReady
 
                     createYamlConfig(modelPath, width, height, ModelNumberOfClass, NumberOfReturnedPrediction, t, modelTr_path);
 
-                    
-                    
-                    if(!aut.checkMode(m_eMode,m_sMessage)){
+                    if (!aut.checkMode(m_eMode, m_sMessage))
+                    {
 
-                        cout<<m_sMessage<<endl;
+                        cout << m_sMessage << endl;
                         return false;
                     }
 //set enviromental variable
@@ -252,21 +248,19 @@ namespace aiProductionReady
                 }
             }
             else
-            {   
-                m_sMessage="Is not possibile to call init() twice. Class already initialized";
+            {
+                m_sMessage = "Is not possibile to call init() twice. Class already initialized";
                 cout << "Is not possibile to call init() twice. Class already initialized" << endl;
             }
         }
 
         void ResNet50::preprocessing(Mat &Image)
         {
-            
 
             //ResNet50::model=data;
             if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
-            {   
+            {
 
-                
                 //resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
                 resize(Image, Image, Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
                 const int cropSize = m_iCropImage;
@@ -311,7 +305,7 @@ namespace aiProductionReady
             }
             else
             {
-                m_sMessage="call init() before";
+                m_sMessage = "call init() before";
                 cout << "call init() before" << endl;
             }
         }
@@ -390,8 +384,6 @@ namespace aiProductionReady
 
                 assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
 
-                assert(output_tensors.size() == 1 && output_tensors.front().IsTensor());
-
                 m_fpOutOnnxRuntime = output_tensors.front().GetTensorMutableData<float>();
 
                 float label;
@@ -403,7 +395,7 @@ namespace aiProductionReady
 
             else
             {
-                m_sMessage="Cannot call run model without preprocessing";
+                m_sMessage = "Cannot call run model without preprocessing";
                 cout << "Cannot call run model without preprocessing" << endl;
             }
         }
@@ -458,7 +450,7 @@ namespace aiProductionReady
                 torch::Tensor m;
                 torch::Tensor n;
                 std::tuple<torch::Tensor, torch::Tensor> nullTensor = {n, m};
-                m_sMessage="call run model before postprocessing";
+                m_sMessage = "call run model before postprocessing";
                 cout << "call run model before postprocessing" << endl;
                 return nullTensor;
             }
