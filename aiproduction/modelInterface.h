@@ -1,17 +1,3 @@
-#pragma once
-
-//#define EVAL_ACCURACY
-
-#include "yaml-cpp/yaml.h"
-#include <iostream>
-#include "torch/torch.h"
-#include <opencv2/opencv.hpp>
-#include <onnxruntime_cxx_api.h>
-#include <fstream>
-#include "utils.h"
-//Cmake generated
-#include "aiproduction_export.h"
-
 /*
 
 GNU GPL V3 License
@@ -34,6 +20,25 @@ You should have received a copy of the GNU General Public License
 along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 */
+
+
+
+
+#pragma once
+
+//#define EVAL_ACCURACY
+
+#include "yaml-cpp/yaml.h"
+#include <iostream>
+#include "torch/torch.h"
+#include <opencv2/opencv.hpp>
+#include <onnxruntime_cxx_api.h>
+#include <fstream>
+#include "utils.h"
+//Cmake generated
+#include "aiproduction_export.h"
+
+
 
 #include <json/json.h>
 

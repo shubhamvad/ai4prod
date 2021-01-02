@@ -16,3 +16,9 @@ testAccuracy/objectDetection/TestCoco/python/yoloVal.json
 testAccuracy/objectDetection/TestCoco/python/TestDifferentThreshold
 classes/
 aiproduction/aiproduction_export.h
+example/Windows/classification/build/*
+example/Windows/classification/Install/*
+example/Windows/classification/tensorrtModel/*
+example/Windows/objectdetection/build/*
+example/Windows/objectdetection/Install/*
+example/Windows/objectdetection/tensorrtModel/*

@@ -67,12 +67,21 @@ namespace aiProductionReady
       //utils file handling
 
       // bool checkFileExists(std::string Filename);
-
+#ifdef __linux__
       inline bool checkFileExists(const std::string &name)
       {
          return (access(name.c_str(), F_OK) != -1);
       }
+#elif _WIN32
 
+
+	  inline bool checkFileExists(const std::string& name) {
+		  ifstream f(name.c_str());
+		  return f.good();
+	  }
+
+
+#endif
       bool checkMode(MODE m, string &Message);
 
       //#endif

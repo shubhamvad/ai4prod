@@ -24,21 +24,29 @@ endif()
 
 #Where to install the library
 
-if(${X86_64})
+string(COMPARE EQUAL "${DEFAULT_PATH}" 1 result)
+
+# user not specified installation path
+
+if(result)
+
+
+	if(${X86_64})
     
 
-    if(UNIX)
-        #set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/install-Lib")
-        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/classification/Imagenet/Cpp/Install")
-    endif()
-    if (MSVC)
-        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/install-Lib")
-    endif()
-elseif(${AARCH64})
-        set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Aarch64/install-Lib")
+		if(UNIX)
+			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/install-Lib")
+			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/classification/Install")
+		endif()
+		if (MSVC)
+			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/objectdetection/Install")
+		endif()
+
+	elseif(${AARCH64})
+			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Aarch64/install-Lib")
+	endif()
+
 endif()
-
-
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/deps/opencv/lib")
 
@@ -105,8 +113,15 @@ aiproduction/utils.cpp
 aiproduction/aiproduction_export.h 
 aiproduction/modelInterface.h)
 
+if(UNIX)
+        
+        target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp_static stdc++fs)
+    endif()
+    if (MSVC)
+    target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp )
+endif()
 
-target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp_static stdc++fs)
+
 
 #need for symbol visibility
 generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/aiproduction_export.h)
@@ -117,7 +132,7 @@ generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}
 set_target_properties(
   aiproduction PROPERTIES
     SOVERSION 0
-    VERSION 0.2.2
+    VERSION 0.2.3
 )
 
 #Installing

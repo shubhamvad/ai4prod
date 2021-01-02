@@ -129,16 +129,13 @@ namespace aiProductionReady
                 strcpy(modelSavePath, modelTrTmp.c_str());
                 //esporto le path del modello di Tensorrt
 
-                putenv(modelSavePath);
-
-                cout << " ENV PATH " << getenv("ORT_TENSORRT_ENGINE_CACHE_PATH") << endl;
-                cout << "ENV PATH " << getenv("ORT_TENSORRT_ENGINE_CACHE_ENABLE") << endl;
+                putenv(modelSavePath);               
 
 #elif _WIN32
-
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sEngineFp.c_str());
-                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sModelTrPath.c_str());
+				int Cache = stoi(m_sEngineCache);
+				_putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", to_string(Cache).c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH",m_sModelTrPath.c_str());
+                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
             }
@@ -163,9 +160,10 @@ namespace aiProductionReady
             {
                 cout << "CREATE SESSION TENSORRT" << endl;
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
-            }
+				
+			}
         }
-
+		 
         void ResNet50::setSession()
         {
 
@@ -174,12 +172,17 @@ namespace aiProductionReady
             m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, m_sModelOnnxPath.c_str(), m_OrtSessionOptions));
 
 #elif _WIN32
-
+		
             //in windows devo inizializzarlo in questo modo
+			
+			cout << "MODEL PATH " << m_sModelOnnxPath.c_str() << endl;
             std::wstring widestr = std::wstring(m_sModelOnnxPath.begin(), m_sModelOnnxPath.end());
             //session = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
-            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
+		
+				
 
+            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
+		
 #endif
         }
 
@@ -244,9 +247,9 @@ namespace aiProductionReady
 
 #elif _WIN32
 
-                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sEngineFp.c_str());
-                    _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sModelTrPath.c_str());
+                   _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                   _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+                   _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str()); 
 
 #endif
 
@@ -257,6 +260,7 @@ namespace aiProductionReady
 
                     //model input output
                     setOnnxRuntimeModelInputOutput();
+					
                     m_bInit = true;
                     m_bCheckInit = true;
                     return true;
@@ -281,7 +285,7 @@ namespace aiProductionReady
             //ResNet50::model=data;
             if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
             {
-
+				
                 //resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
                 resize(Image, Image, Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
                 const int cropSize = m_iCropImage;
@@ -292,6 +296,7 @@ namespace aiProductionReady
                 Image = Image(roi).clone();
                 inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
+				
                 //definisco la dimensione di input
 
                 input_tensor_size = Image.cols * Image.rows * Image.channels();
@@ -314,6 +319,7 @@ namespace aiProductionReady
                 inputTensor[0][1] = inputTensor[0][1].sub_(0.456).div_(0.224);
                 inputTensor[0][2] = inputTensor[0][2].sub_(0.406).div_(0.225);
 
+				
                 m_bCheckPre = true;
 
                 //cout << "preprocessing" << endl;
