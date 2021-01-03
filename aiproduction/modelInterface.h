@@ -22,6 +22,11 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 
+#ifdef _WIN32
+
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+
+#endif // _WIN32
 
 
 #pragma once
