@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project (testimagenet)
+project (testcocomap)
 
 #serve per compilare LibTorch
 set(CMAKE_CXX_STANDARD 17)
@@ -14,9 +14,9 @@ find_package(aiproduction REQUIRED)
 
 #link_directories(inference install-Lib/lib)
 
-add_executable(testimagenet testImagenet.cpp)
+add_executable(testcocomap testCoco.cpp)
 
-target_link_libraries(testimagenet ${AIPRODUCTION_LIBS} stdc++fs)
+target_link_libraries(testcocomap ${AIPRODUCTION_LIBS} stdc++fs)
 
 
-target_include_directories(testimagenet PRIVATE ${AIPRODUCTION_INCLUDE_DIRS} )
+target_include_directories(testcocomap PRIVATE ${AIPRODUCTION_INCLUDE_DIRS} )

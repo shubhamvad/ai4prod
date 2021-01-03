@@ -42,7 +42,7 @@ if(result)
 			#example
 			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/objectdetection/Install")
 			#accuracy
-			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/objectDetection/TestCoco/Cpp/Windows/Install")
+			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/objectDetection/TestCoco/Cpp/Windows/Install")
 		endif()
 
 	elseif(${AARCH64})

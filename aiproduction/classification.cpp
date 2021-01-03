@@ -456,7 +456,7 @@ namespace aiProductionReady
                 std::string::size_type const p(base_filename.find_last_of('.'));
                 std::string file_without_extension = base_filename.substr(0, p);
 
-                string stringToWrite = file_without_extension + "," + std::to_string(std::get<0>(topPrediction)[0].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[1].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[2].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[3].item<long>()) + "," + std::to_string(std::get<0>(topPrediction)[4].item<long>()) + "\n";
+                string stringToWrite = file_without_extension + "," + std::to_string(std::get<0>(topPrediction)[0].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[1].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[2].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[3].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[4].item<int>()) + "\n";
 
                 myfile << stringToWrite.c_str();
 
