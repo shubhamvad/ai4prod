@@ -39,7 +39,10 @@ if(result)
 			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/classification/Install")
 		endif()
 		if (MSVC)
-			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/objectdetection/Install")
+			#example
+			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/objectdetection/Install")
+			#accuracy
+			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/objectDetection/TestCoco/Cpp/Windows/Install")
 		endif()
 
 	elseif(${AARCH64})
