@@ -21,6 +21,9 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
+//inference time detection
+#define TIME_EVAL
+
 #include <iostream>
 
 #include "torch/torch.h"
@@ -45,38 +48,36 @@ namespace fs = std::experimental::filesystem;
 
 using namespace std;
 
-
-int main(){
+int main()
+{
 
     //YOLO MAP ---------------------------------------------------------------------
-    
+
     //setup image folder of Coco dataset
 
-    std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/Coco/Val/val2017";
-
-    
+    std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/Dataset/Coco2017/val2017";
 
     Yolov3 *yolov3;
 
-    
-    
     //linux
-    // Check our api for full description 
+    // Check our api for full description
     // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
     yolov3 = new Yolov3();
 
-    yolov3->init("../Install/deps/onnxruntime/model/cpu/yolov3-spp.onnx", 608, 608, TensorRT, "/home/aistudios/darknet-onnx/Yolov3-Ne");
+    yolov3->init("/home/aistudios/Develop/ai4prod/Model/Yolov3/yolov3-spp.onnx", 608, 608, TensorRT, "tensorrtModel");
     //windows
 
     //C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
 
     //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
-    
-    cout<<"START PROCESSING"<<endl;
+
+    cout << "START PROCESSING" << endl;
 
     //auto start = high_resolution_clock::now();
 
-    double numDetection=0;
+    double numDetection = 0;
+
+    vector<double> infTime;
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
     {
@@ -88,21 +89,27 @@ int main(){
         //cout << image_id << endl;
 
         Mat img;
-              
+
         img = imread(image_id.c_str());
 
         // auto start1 = high_resolution_clock::now();
 
         yolov3->m_sAccurayImagePath = image_id.c_str();
 
-        
-     
         yolov3->preprocessing(img);
-       
-        yolov3->runmodel();
-        
+#ifdef TIME_EVAL
 
-         
+        auto start = high_resolution_clock::now();
+
+#endif
+        yolov3->runmodel();
+#ifdef TIME_EVAL
+        auto stop = high_resolution_clock::now();
+
+        auto duration = duration_cast<microseconds>(stop - start);
+
+        infTime.push_back((double)duration.count());
+#endif
 
         torch::Tensor result = yolov3->postprocessing();
 
@@ -111,13 +118,16 @@ int main(){
         // auto duration1 = duration_cast<microseconds>(stop1 - start1);
 
         // cout << "SINGLE TIME INFERENCE " << (double)duration1.count() / (1000000) << "Sec" << endl;
+#ifdef TIME_EVAL
+        if (numDetection == 1000)
+            break;
+#endif
+        numDetection++;
 
-        numDetection++; 
-
+        // cout<<numDetection<<endl;
         if (!result.numel())
         {
             std::cout << "tensor is empty! No detection Found" << std::endl;
-            
         }
         else
         {
@@ -133,7 +143,7 @@ int main(){
             //     float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
 
             //     brect = yolov3->get_rect(img, tmp);
-                
+
             //     string category= to_string(result[i][4].item<float>());
             //     cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
             //     cv::putText(img,                         //target image
@@ -155,12 +165,17 @@ int main(){
     // auto duration = duration_cast<microseconds>(stop - start);
 
     // cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000 * numDetection) << "Sec" << endl;
+#ifdef TIME_EVAL
 
+    double sum_of_elems = 0;
+    sum_of_elems = std::accumulate(infTime.begin(), infTime.end(), 0);
+
+    cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000 * 1000) << "Sec" << endl;
+
+#endif
     //create yoloVal.json
     yolov3->createAccuracyFile();
 
-    cout<<"program end"<<endl;
+    cout << "program end" << endl;
     return 0;
-
-
 }

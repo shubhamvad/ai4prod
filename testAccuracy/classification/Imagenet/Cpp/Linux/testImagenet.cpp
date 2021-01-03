@@ -21,6 +21,9 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
+//inference time detection
+#define TIME_EVAL
+
 #include <iostream>
 #include <iostream>
 
@@ -55,9 +58,12 @@ int main()
     int i = 0;
     resnet = new ResNet50();
 
-    resnet->init("/home/aistudios/Develop/ai4prod/deps/onnxruntime/model/cpu/resnet50.onnx", 256, 256, 1000, 5, Cpu, "/home/aistudios/7");
+    cout << "INIT SESSION: Could take some time if TensorRT Mode selected" << endl;
+    resnet->init("../../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "tensorrtModel");
     //resnet = new ResNet50();
-    std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/classes/imagenet/Val/ILSVRC2012_img_val";
+    std::string AccurayFolderPath = "../../../../../Dataset/Imagenet2012/val2012";
+
+    vector<double> infTime;
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
     {
@@ -69,22 +75,49 @@ int main()
 
         // auto start = high_resolution_clock::now();
 
-
         //this is needed to make image_id matching with the one that is currently processed in the csv file
         resnet->m_sAccurayImagePath = image_id.c_str();
 
         resnet->preprocessing(img);
+#ifdef TIME_EVAL
+
+        auto start = high_resolution_clock::now();
+
+#endif
 
         resnet->runmodel();
 
+#ifdef TIME_EVAL
+        auto stop = high_resolution_clock::now();
+
+        auto duration = duration_cast<microseconds>(stop - start);
+
+        infTime.push_back((double)duration.count());
+#endif
+
         std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
+
+
 
         // auto stop = high_resolution_clock::now();
 
         // auto duration = duration_cast<microseconds>(stop - start);
 
         // cout << "SINGLE TIME INFERENCE 1 " << (double)duration.count() / (1000000) << "Sec" << endl;
+#ifdef TIME_EVAL
+        if (i == 1000)
+            break;
+#endif
 
         i = i + 1;
     }
+
+#ifdef TIME_EVAL
+
+    double sum_of_elems = 0;
+    sum_of_elems = std::accumulate(infTime.begin(), infTime.end(), 0);
+
+    cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000 * 1000) << "Sec" << endl;
+
+#endif
 }
