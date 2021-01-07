@@ -3,7 +3,7 @@
 Install ai4prod library in this folder under Install directory. If you don't know how have a look 
 at this tutorial https://www.ai4prod.ai/build-ai4prod-inference-for-windows/
 
-#How to compile
+# How to compile
 
 Open a terminal and execute from this folder
 
@@ -13,7 +13,7 @@ Open a terminal and execute from this folder
 	$ cmake --build . --config Release
 
 
-#How to run
+# How to run
 
 Before run the program you need to copy from {Ai4prod_HOME}/build/vcpkg_installed/x64-windows/bin/*.dll all dll file
 

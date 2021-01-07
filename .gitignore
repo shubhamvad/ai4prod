@@ -30,6 +30,9 @@ example/Windows/classification/tensorrtModel/*
 example/Windows/objectdetection/build/*
 example/Windows/objectdetection/Install/*
 example/Windows/objectdetection/tensorrtModel/*
+example/Linux/classification/build
+example/Linux/classification/Install
+example/Linux/classification/tensorrtModel
 Model/
 testAccuracy/Dataset
 onnxConversion/Yolov3/models

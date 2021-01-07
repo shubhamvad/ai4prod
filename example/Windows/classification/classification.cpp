@@ -35,7 +35,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include <opencv2/highgui.hpp>
 
 // include namespace 
-using namespace aiProductionReady;
+using namespace ai4prod;
 using namespace objectDetection;
 using namespace classification;
 using namespace cv;
@@ -75,12 +75,13 @@ int main()
 	//resnet = new ResNet50();
 	cout << "test" << endl;
 	//PATH TO FOLDER 
-    std::string AccurayFolderPath = "../../../Images/classification/";
-
+    std::string AccurayFolderPath = "../../../../Images/classification/";
+    cout << "Start Classification" << endl;
+	
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
     {
 		
-		cout << "Start Classification" << endl;
+		
 	
         string image_id = entry.path().string();
         
@@ -98,7 +99,7 @@ int main()
         resnet->runmodel();
 
 		//return a tuple<Tensor,Tensor>: <ClassId,Probability>
-		//This output is without software
+		//This output is without softmax
         std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
 
 		cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();

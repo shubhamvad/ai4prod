@@ -23,13 +23,13 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "modelInterface.h"
 
-namespace aiProductionReady
+namespace ai4prod
 {
 
    namespace classification
    {
 
-      class AIPRODUCTION_EXPORT ResNet50 : aiProductionReady::modelInterfaceClassification
+      class AIPRODUCTION_EXPORT ResNet50 : ai4prod::modelInterfaceClassification
       {
 
       private:
@@ -101,7 +101,7 @@ namespace aiProductionReady
          bool m_bCheckPost;
 
          //Utils
-         aiProductionReady::aiutils aut;
+         ai4prod::aiutils aut;
 
       
          //ERROR HANDLING
@@ -145,4 +145,4 @@ namespace aiProductionReady
 
    } //namespace classification
 
-} // namespace aiProductionReady
+} // namespace ai4prod

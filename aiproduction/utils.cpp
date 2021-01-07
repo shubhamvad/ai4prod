@@ -54,7 +54,7 @@ return: torch::Tensor with the right order of input dimension(B,C,W,H)
 2) https://discuss.pytorch.org/t/libtorch-c-convert-a-tensor-to-cv-mat-single-channel/47701/7
 */
 
-namespace aiProductionReady
+namespace ai4prod
 {
 
     torch::Tensor aiutils::convertMatToTensor(Mat ImageBGR, int width, int height, int channel, int batch, bool gpu)
@@ -210,4 +210,4 @@ verify if 2 Mat are equal
         return value;
     }
 
-} // namespace aiProductionReady
+} // namespace ai4prod

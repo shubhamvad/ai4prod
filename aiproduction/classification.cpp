@@ -30,7 +30,7 @@ using namespace std;
 
 using namespace onnxruntime;
 
-namespace aiProductionReady
+namespace ai4prod
 {
     namespace classification
     {
@@ -494,4 +494,4 @@ namespace aiProductionReady
 
     } // namespace classification
 
-} // namespace aiProductionReady
+} // namespace ai4prod

@@ -28,7 +28,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 using namespace std;
 using namespace std::chrono;
 
-namespace aiProductionReady
+namespace ai4prod
 {
     namespace objectDetection
     {
@@ -804,4 +804,4 @@ namespace aiProductionReady
         }
 
     } // namespace objectDetection
-} // namespace aiProductionReady
+} // namespace ai4prod

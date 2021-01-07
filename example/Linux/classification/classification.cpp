@@ -21,12 +21,9 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
-//inference time detection
-//#define TIME_EVAL
+
 
 #include <iostream>
-#include <iostream>
-#include <numeric>
 
 #include "torch/torch.h"
 
@@ -37,13 +34,17 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-using namespace std;
+// include namespace 
 using namespace ai4prod;
 using namespace objectDetection;
 using namespace classification;
-
+using namespace cv;
 using namespace std::chrono;
 
+
+//this is needed if you want to scan and entire folder
+// img1.jpg
+// img2.jpg
 #include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem;
@@ -52,76 +53,65 @@ using namespace std;
 
 int main()
 {
-
+	//initialize resnet
     ResNet50 *resnet;
 
-    //See our example classification for full description of parameters
-    int i = 0;
+   	//create new instance
     resnet = new ResNet50();
-	
-	cout << "INIT SESSION: Could take some time if TensorRT Mode selected" << endl;
-    resnet->init("../../../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel");
-    //resnet = new ResNet50();
-    std::string AccurayFolderPath = "../../../../../Dataset/Imagenet2012/val2012";
 
-	
+	//You need to call init for every new class.
+	//This initizalize class component.
+	//This function return True if everything is initialized correctly
 
-	vector<double> infTime;
+	//parameter Description: 
+	//init(path_to_onnx_model,image_resize_w,image_resize_h,number_of_model_classes, numeber_of_Output_from_model,Mode,path_to_tensorrt_model)
+    
+	//Mode: Cpu, TensorRT
+	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
+	
+	//CHANGE THIS VALUE WITH YOURS
+	resnet->init("../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel"); 
+    
+	//resnet = new ResNet50();
+	cout << "test" << endl;
+	//PATH TO FOLDER 
+    std::string AccurayFolderPath = "../../../Images/classification/";
+
+    cout << "Start Classification" << endl;
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
     {
 		
+		
+	
         string image_id = entry.path().string();
-        Mat img;
-        cout << i << endl;
+        
+		//opencv Mat
+		Mat img;
+		//read image with opencv
         img = imread(image_id.c_str());
 
-        // 
+		//ai4prod To understand how these functions works have look here https://www.ai4prod.ai/c-stack/
 
-
-        //this is needed to make image_id matching with the one that is currently processed in the csv file
-        resnet->m_sAccurayImagePath = image_id.c_str();
-
-		
+		//preprocessing(cv::Mat)
         resnet->preprocessing(img);
-		
-#ifdef TIME_EVAL
 
-		auto start = high_resolution_clock::now();
-
-#endif 
+		//run model on img
         resnet->runmodel();
 
-#ifdef TIME_EVAL
-		auto stop = high_resolution_clock::now();
-
-		auto duration = duration_cast<microseconds>(stop - start);
-
-		infTime.push_back((double)duration.count());
-#endif 
-
-		//cout << "SINGLE TIME INFERENCE 1 " << (double)duration.count() / (1000000) << "Sec" << endl;
-
+		//return a tuple<Tensor,Tensor>: <ClassId,Probability>
+		//This output is without softmax
         std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
 
-#ifdef TIME_EVAL
-		if (i == 1000)
-			break;
-#endif 
-       
+		cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
+		
+		//std::get<0>(prediction)[0].item<float>();
+		//if You need softmax you can use Libtorch softmax
 
-        i = i + 1;
+        
+
+    
     }
-#ifdef TIME_EVAL
 
-	double sum_of_elems = 0;
-	sum_of_elems = std::accumulate(infTime.begin(), infTime.end(), 0);
-
-	cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000*1000) << "Sec" << endl;
-
-#endif 
-
-	cout << "file classification-Detection.csv Saved" << endl;
-
-
+	getchar();
 }

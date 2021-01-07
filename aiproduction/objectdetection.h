@@ -23,13 +23,13 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "modelInterface.h"
 
-namespace aiProductionReady
+namespace ai4prod
 {
 
     namespace objectDetection
     {
 
-        class AIPRODUCTION_EXPORT Yolov3 : aiProductionReady::modelInterfaceObjectDetection
+        class AIPRODUCTION_EXPORT Yolov3 : ai4prod::modelInterfaceObjectDetection
         {
 
         private:
@@ -99,7 +99,7 @@ namespace aiProductionReady
 
             //UTILS
 
-            aiProductionReady::aiutils aut;
+            ai4prod::aiutils aut;
 
             //MESSAGE/ERROR HANDLING
 
@@ -172,4 +172,4 @@ namespace aiProductionReady
 
     } // namespace objectDetection
 
-} //namespace aiProductionReady
+} //namespace ai4prod

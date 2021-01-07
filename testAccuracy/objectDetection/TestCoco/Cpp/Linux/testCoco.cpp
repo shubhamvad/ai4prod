@@ -36,7 +36,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include <opencv2/highgui.hpp>
 
 using namespace std;
-using namespace aiProductionReady;
+using namespace ai4prod;
 using namespace objectDetection;
 using namespace classification;
 
@@ -67,9 +67,9 @@ int main()
     yolov3->init("/home/aistudios/Develop/ai4prod/Model/Yolov3/yolov3-spp.onnx", 608, 608, TensorRT, "tensorrtModel");
     //windows
 
-    //C:\Users\erict\OneDrive\Desktop\Develop\aiproductionready\onnxruntime\models
+    //C:\Users\erict\OneDrive\Desktop\Develop\ai4prod\onnxruntime\models
 
-    //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/aiproductionready/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
+    //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/ai4prod/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
 
     cout << "START PROCESSING" << endl;
 

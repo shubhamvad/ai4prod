@@ -55,7 +55,7 @@ namespace fs = std::experimental::filesystem;
 
 using namespace cv;
 
-namespace aiProductionReady
+namespace ai4prod
 {
 
 //include guards
@@ -87,4 +87,4 @@ namespace aiProductionReady
 
 //#endif
 
-} // namespace aiProductionReady
+} // namespace ai4prod

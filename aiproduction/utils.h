@@ -38,7 +38,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 using namespace cv;
 using namespace std;
 
-namespace aiProductionReady
+namespace ai4prod
 {
 
    enum MODE
@@ -87,4 +87,4 @@ namespace aiProductionReady
       //#endif
    };
 
-} // namespace aiProductionReady
+} // namespace ai4prod

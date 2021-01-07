@@ -36,7 +36,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include <opencv2/highgui.hpp>
 
 using namespace std;
-using namespace aiProductionReady;
+using namespace ai4prod;
 using namespace objectDetection;
 using namespace classification;
 
