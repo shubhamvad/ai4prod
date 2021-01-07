@@ -36,6 +36,6 @@ set(AIPRODUCTION_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/include/ ${TORCH_INCLUDE
 link_directories(${CMAKE_CURRENT_LIST_DIR}/lib)
 link_directories(${CMAKE_CURRENT_LIST_DIR}/deps/onnxruntime/lib/onnxruntime/tensorrt)
 
-set(AIPRODUCTION_LIBS aiproduction ${OpenCV_LIBS} ${TORCH_LIBRARIES} onnxruntime)
+set(AIPRODUCTION_LIBS aiproduction ${OpenCV_LIBS} ${TORCH_LIBRARIES} onnxruntime) 
 
 

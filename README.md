@@ -3,11 +3,13 @@
 
 **Ai4prod is the first ecosystem to make inferece in C++ simple**. 
 
-Ai4prod lets you train your model in python and convert it to C++ while mantaining the same accuracy, but speed up the performance.
+Ai4prod lets you train your model in python and convert it to C++ while mantaining the same accuracy and speeding up the performance.
 
 Ai4prod is working independently on **Windows, Linux, Nvidia Jetson**.
 
 We developed ai4prod with the idea to simplify the entire pipeline in a machine learning project. As a machine learning engineer we know that make something work in an Ai project is not simple. 
+
+ai4prod is built to be easily integrable in your production environment. Have a look at example folder.
 
 We built ai4prod to help us to crete real value in a production environment, so we hope that could also help you.
 
@@ -23,7 +25,7 @@ Ai4prod is built to be as easy as possible to get started.
 2) Download dependencies of the project. You can find all dependencies here 
 https://drive.google.com/drive/u/2/folders/1B4lXyGM2IQmj6IHFThwlJRqnMGQoTjNq
 3) Build https://www.ai4prod.ai/build-ai4prod-inference-library/
-4) See our example 
+4) See our example folder
 
 Note: some dependencies are not build yet. If you need send us an email to info@ai4prod.ai
 
