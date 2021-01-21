@@ -6,9 +6,6 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/vcpkg/scripts/buildsystems/v
 
 cmake_minimum_required(VERSION 3.13)
 
-
-
-
 project(aiprod)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -48,7 +45,9 @@ if(result)
 		endif()
 
 	elseif(${AARCH64})
-			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Aarch64/install-Lib")
+			#accuracy testAccuracy/classification/Imagenet/Cpp/Linux
+			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/objectDetection/TestCoco/Cpp/Linux/Install")
+			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Aarch64/classification/Install")
 	endif()
 
 endif()

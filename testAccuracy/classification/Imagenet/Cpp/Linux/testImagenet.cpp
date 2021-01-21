@@ -59,10 +59,10 @@ int main()
     resnet = new ResNet50();
 
     cout << "INIT SESSION: Could take some time if TensorRT Mode selected" << endl;
-    resnet->init("../../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "tensorrtModel");
+    resnet->init("../../../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "tensorrtModel");
     //resnet = new ResNet50();
-    std::string AccurayFolderPath = "../../../../../Dataset/Imagenet2012/val2012";
-
+    //std::string AccurayFolderPath = "../../../../../Dataset/Imagenet2012/val2012";
+    std::string AccurayFolderPath ="/media/d50f8cb9-a942-4133-ba99-0a298b9dddd5/data/Imagenet/Validation-2012/val2012";
     vector<double> infTime;
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))

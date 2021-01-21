@@ -55,7 +55,7 @@ int main()
 
     //setup image folder of Coco dataset
 
-    std::string AccurayFolderPath = "/home/aistudios/Develop/ai4prod/Dataset/Coco2017/val2017";
+    std::string AccurayFolderPath = "/media/d50f8cb9-a942-4133-ba99-0a298b9dddd5/data/Coco2017/validation/val2017";
 
     Yolov3 *yolov3;
 
@@ -64,7 +64,7 @@ int main()
     // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
     yolov3 = new Yolov3();
 
-    yolov3->init("/home/aistudios/Develop/ai4prod/Model/Yolov3/yolov3-spp.onnx", 608, 608, TensorRT, "tensorrtModel");
+    yolov3->init("../../../../../../Model/Yolov3/yolov3-spp.onnx", 608, 608, TensorRT, "tensorrtModel");
     //windows
 
     //C:\Users\erict\OneDrive\Desktop\Develop\ai4prod\onnxruntime\models
