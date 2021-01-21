@@ -75,7 +75,7 @@ int main()
 	//resnet = new ResNet50();
 	cout << "test" << endl;
 	//PATH TO FOLDER 
-    std::string AccurayFolderPath = "../../../Images/classification/";
+    std::string AccurayFolderPath = "../../../../Images/classification/";
 
     cout << "Start Classification" << endl;
 
@@ -103,10 +103,10 @@ int main()
 		//This output is without softmax
         std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
 
-		cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
+	cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
 		
-		//std::get<0>(prediction)[0].item<float>();
-		//if You need softmax you can use Libtorch softmax
+	//std::get<0>(prediction)[0].item<float>();
+	//if You need softmax you can use Libtorch softmax
 
         
 

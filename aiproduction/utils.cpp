@@ -25,22 +25,12 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 using namespace cv;
 
-/*
-Cose da Fare
-
-1) Creare una funzione per verificare se 2 immagini sono uguali o capire quanto sono diverse
-per il momento dice solo se le 2 immagini sono uguali
-
-2) Funzione per convertire torch::Tensor come input per onnxruntime
-
-3) Compilare TorchVision e aggiungerlo alle librerie. Verificare le trasformazioni con torchVision
-
-
-*/
-
 //LIBTORCH
 
-/*
+namespace ai4prod
+{
+
+    /*
 Convert a cv::Mat to torch::Tensor 
 image: cvMat in BGR format
 width: image_width
@@ -50,13 +40,7 @@ batch: batch size for inference
 
 return: torch::Tensor with the right order of input dimension(B,C,W,H)
 
-1) Passare la Mat con & o senza?
-2) https://discuss.pytorch.org/t/libtorch-c-convert-a-tensor-to-cv-mat-single-channel/47701/7
 */
-
-namespace ai4prod
-{
-
     torch::Tensor aiutils::convertMatToTensor(Mat ImageBGR, int width, int height, int channel, int batch, bool gpu)
     {
 
@@ -208,6 +192,28 @@ verify if 2 Mat are equal
         }
 
         return value;
+    }
+
+    bool aiutils::createFolderIfNotExist(string folderPath)
+    {
+
+        if (cv::utils::fs::exists(folderPath))
+        {
+
+            return true;
+        }
+        else
+        {
+
+            if (cv::utils::fs::createDirectory(folderPath))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 
 } // namespace ai4prod

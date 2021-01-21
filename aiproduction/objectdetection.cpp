@@ -180,7 +180,16 @@ namespace ai4prod
             {
                 try
                 {
-                    //set variable
+                     
+                    if(!aut.createFolderIfNotExist(model_path)){
+                        
+                        cout<<"cannot create folder"<<endl;
+                        
+                        return false;
+                        
+                    }
+
+                    cout << "INIT MODE " << t << endl;
 
                     createYamlConfig(modelPathOnnx, input_h, input_w, t, model_path);
 

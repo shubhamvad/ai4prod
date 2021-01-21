@@ -27,6 +27,8 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include <iostream>
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/utils/filesystem.hpp>
+
 
 #ifdef _WIN32
 #include <io.h>
@@ -64,6 +66,8 @@ namespace ai4prod
       //handle Mode for YamlCpp
       MODE setMode(string Mode);
       string setYamlMode(MODE t);
+
+      bool createFolderIfNotExist(string folderPath);
       //utils file handling
 
       // bool checkFileExists(std::string Filename);
