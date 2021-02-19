@@ -72,11 +72,6 @@ Below you will find folder descriptio
 
     Folder where we saved converted .onnx models
 
-### onnxConversion
-
-    In this folder you will find all python code to convert from our training tested repository in Python to get started with ai4prod inference library. If you want to know more have a look here
-    https://www.ai4prod.ai/ai4prod-ecosystem-overview/
-
 ### testAccuracy
 
     You will find code to reproduce our results for test accuracy. You can also use this code to verify your test accuracy. Based on your dataset.
