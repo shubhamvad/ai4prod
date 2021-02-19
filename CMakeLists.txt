@@ -10,6 +10,7 @@ project(aiprod)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
+
 #architecture definition
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
@@ -17,6 +18,10 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
     set(AARCH64 1)
 endif()
+
+#extra include directories
+set(AIPRODUCTION_INCLUDE_EXTRA "")
+
 
 if(UNIX)
 set (DEFAULT_PATH 1)
@@ -34,8 +39,8 @@ if(result)
     
 
 		if(UNIX)
-			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/install-Lib")
-			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/classification/Install")
+			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/classification/Imagenet/Cpp/Linux/Install")
+			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/extra/Tracking/Install")
 		endif()
 		if (MSVC)
 			#example
@@ -51,6 +56,8 @@ if(result)
 	endif()
 
 endif()
+
+
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/deps/opencv/lib")
 
@@ -106,16 +113,21 @@ message("JSON CPP ${JSON_CPP_INCLUDE_DIRS}")
 
 
 message("YAML-CPP ${YAML_CPP_INCLUDE_DIR}")
-#ai4production Library
-add_library(aiproduction SHARED aiproduction/classification.cpp 
 
-aiproduction/classification.h 
-aiproduction/objectdetection.h 
-aiproduction/objectdetection.cpp 
-aiproduction/utils.h 
-aiproduction/utils.cpp 
-aiproduction/aiproduction_export.h 
-aiproduction/modelInterface.h)
+
+#ai4production Library
+add_library(aiproduction SHARED aiproduction/src/classification.cpp 
+
+aiproduction/include/classification.h 
+aiproduction/include/objectdetection.h 
+aiproduction/src/objectdetection.cpp 
+aiproduction/include/utils.h 
+aiproduction/src/utils.cpp 
+aiproduction/include/aiproduction_export.h 
+aiproduction/include/modelInterface.h)
+
+
+target_include_directories(aiproduction PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
 
 if(UNIX)
         
@@ -127,8 +139,20 @@ endif()
 
 
 
+#VERIFY EXTRA DEPENDENCIES
+
+IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extra/Tracking)
+
+set(LIBS ${LIBS} tracking)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extra/Tracking)
+
+endif()
+
+set(LIBS ${LIBS} aiproduction)
+
 #need for symbol visibility
-generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/aiproduction_export.h)
+generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include/aiproduction_export.h)
 
 
 #Library Version
@@ -141,10 +165,10 @@ set_target_properties(
 
 #Installing
 
-set(AIPRODUCTION_INCLUDES aiproduction/classification.h 
-aiproduction/objectdetection.h 
-aiproduction/utils.h 
-aiproduction/aiproduction_export.h aiproduction/modelInterface.h
+set(AIPRODUCTION_INCLUDES aiproduction/include/classification.h 
+aiproduction/include/objectdetection.h 
+aiproduction/include/utils.h 
+aiproduction/include/aiproduction_export.h aiproduction/include/modelInterface.h
 )
 
 set_target_properties(aiproduction PROPERTIES PUBLIC_HEADER "${AIPRODUCTION_INCLUDES}" )

@@ -31,7 +31,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #pragma once
 
-//#define EVAL_ACCURACY
+#define EVAL_ACCURACY
 
 #include "yaml-cpp/yaml.h"
 #include <iostream>

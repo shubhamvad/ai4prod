@@ -22,7 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 //inference time detection
-#define TIME_EVAL
+//#define TIME_EVAL
 
 #include <iostream>
 #include <iostream>
@@ -59,10 +59,10 @@ int main()
     resnet = new ResNet50();
 
     cout << "INIT SESSION: Could take some time if TensorRT Mode selected" << endl;
-    resnet->init("../../../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "tensorrtModel");
+    resnet->init("/home/aistudios/Develop/Official/ai4prod_python/classification/onnxConversion/models/res50-lighting.onnx", 256, 256, 1000, 5, TensorRT, "tensorrtModel");
     //resnet = new ResNet50();
     //std::string AccurayFolderPath = "../../../../../Dataset/Imagenet2012/val2012";
-    std::string AccurayFolderPath ="/media/d50f8cb9-a942-4133-ba99-0a298b9dddd5/data/Imagenet/Validation-2012/val2012";
+    std::string AccurayFolderPath ="/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Dataset/Imagenet/Validation-2012/val2012";
     vector<double> infTime;
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
@@ -108,8 +108,9 @@ int main()
         if (i == 1000)
             break;
 #endif
-
+        cout<<i<<endl;
         i = i + 1;
+        
     }
 
 #ifdef TIME_EVAL

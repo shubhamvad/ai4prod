@@ -23,8 +23,8 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "classification.h"
 
-#include "../deps/onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
-#include "../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
+#include "../../deps/onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
+#include "../../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
 
 using namespace std;
 

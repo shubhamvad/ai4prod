@@ -6,6 +6,7 @@ example/Linux/install-Lib
 example/Linux/build
 example/Windows/install-Lib
 example/Windows/build
+aiproduction/include/aiproduction_export.h
 testAccuracy/classification/Imagenet/Cpp/Linux/build
 testAccuracy/classification/Imagenet/Cpp/Linux/Install
 testAccuracy/classification/Imagenet/Cpp/Linux/tensorrtModel
@@ -36,6 +37,8 @@ example/Linux/classification/tensorrtModel
 example/Aarch64/classification/build
 example/Aarch64/classification/Install
 example/Aarch64/classification/tensorrtModel
+example/Linux/object_detection/Install
+example/Linux/object_detection/build
 Model/
 testAccuracy/Dataset
 onnxConversion/Yolov3/models

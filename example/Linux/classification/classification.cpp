@@ -29,6 +29,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "classification.h"
 #include "objectdetection.h"
+#include "Sort.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
@@ -38,6 +39,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 using namespace ai4prod;
 using namespace objectDetection;
 using namespace classification;
+using namespace tracking;
 using namespace cv;
 using namespace std::chrono;
 
@@ -55,7 +57,7 @@ int main()
 {
 	//initialize resnet
     ResNet50 *resnet;
-
+    Sort s;
    	//create new instance
     resnet = new ResNet50();
 

@@ -22,8 +22,8 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "objectdetection.h"
-#include "../deps/onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
-#include "../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
+#include "../../deps/onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
+#include "../../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
 
 using namespace std;
 using namespace std::chrono;
