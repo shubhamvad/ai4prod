@@ -3,7 +3,7 @@
 - Install ai4prod library in this folder under Install directory. If you don't know how, have a look 
 at this tutorial https://www.ai4prod.ai/build-ai4prod-inference-for-windows/
 
-- create tensorrtModel folder (without this folder Tensorrt model is not saved)
+- If you select tensorrt Mode the optimized model is saved in your specified directory
 
 
 # How to compile
