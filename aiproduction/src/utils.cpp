@@ -38,6 +38,7 @@ height: image_height
 channel: channel image
 batch: batch size for inference
 
+Each pixel value is in range [0,1]
 return: torch::Tensor with the right order of input dimension(B,C,W,H)
 
 */
@@ -51,6 +52,35 @@ return: torch::Tensor with the right order of input dimension(B,C,W,H)
         ImageBGR.convertTo(img_float, CV_32F, 1.0 / 255);
 
         auto img_tensor = torch::from_blob(img_float.data, {batch, height, width, channel}).to(torch::kCPU);
+
+        // you need to be contiguous to have all address memory of tensor sequentially
+        img_tensor = img_tensor.permute({0, 3, 1, 2}).contiguous();
+
+        //std::cout << img_tensor.dim() << std::endl;
+        //std::cout << img_tensor.sizes() << std::endl;
+
+        return img_tensor;
+    }
+
+    /*
+Convert a cv::Mat to torch::Tensor 
+image: cvMat in BGR format
+width: image_width
+height: image_height
+channel: channel image
+batch: batch size for inference
+
+Each pixel value is in range [0,255]
+return: torch::Tensor with the right order of input dimension(B,C,W,H)
+
+*/
+    torch::Tensor aiutils::convertMatToTensor8bit(Mat ImageBGR, int width, int height, int channel, int batch, bool gpu)
+    {
+
+        cv::cvtColor(ImageBGR, ImageBGR, COLOR_BGR2RGB);
+        cv::Mat img_float;
+
+        auto img_tensor = torch::from_blob(ImageBGR.data, {batch, height, width, channel}).to(torch::kCPU);
 
         // you need to be contiguous to have all address memory of tensor sequentially
         img_tensor = img_tensor.permute({0, 3, 1, 2}).contiguous();

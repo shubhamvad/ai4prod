@@ -11,7 +11,6 @@ namespace ai4prod
         {
         }
 
-
         void Yolact::createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
         {
 
@@ -94,7 +93,14 @@ namespace ai4prod
 
 #endif
         }
+        void Yolact::setOnnxRuntimeModelInputOutput()
+        {
+            m_num_input_nodes = m_OrtSession->GetInputCount();
+            m_input_node_names = std::vector<const char *>(m_num_input_nodes);
 
+            m_num_out_nodes = m_OrtSession->GetOutputCount();
+       
+       }
         bool Yolact::init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
         {
 
@@ -154,6 +160,20 @@ namespace ai4prod
 
         void Yolact::preprocessing(Mat &Image)
         {
+            Mat tmpImage;
+            tmpImage = Image.clone();
+
+            //tensor with RGB channel
+            m_TInputTensor = m_aut.convertMatToTensor8bit(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
+            //torch::nn::Functional::InterpolateFuncOptions().scale_factor({ 500 }).mode(torch::kBilinear).align_corners(false);
+
+            m_TInputTensor = torch::nn::functional::interpolate(m_TInputTensor, torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>{500, 500}).mode(torch::kBilinear).align_corners(false));
+
+            //normalization pixel image are in range [0,255]
+
+            m_TInputTensor[0][0] = m_TInputTensor[0][0].sub_(123.8).div_(58.40);
+            m_TInputTensor[0][1] = m_TInputTensor[0][1].sub_(116.78).div_(57.12);
+            m_TInputTensor[0][2] = m_TInputTensor[0][2].sub_(103.94).div_(57.38);
         }
         torch::Tensor Yolact::postprocessing()
         {
@@ -162,17 +182,25 @@ namespace ai4prod
         }
         void Yolact::runmodel()
         {
+
+            //verify if tensor is contiguous
+            if (m_TInputTensor.is_contiguous())
+            {
+            }
+            else
+            {
+
+                cout << "error" << endl;
+            }
         }
 
         Yolact::~Yolact()
         {
-          
 
-                m_OrtSession.reset();
-                m_OrtEnv.reset();
-            
+            m_OrtSession.reset();
+            m_OrtEnv.reset();
         }
 
-    } // namespace segmentationdetection
+    } // namespace instanceSegmentation
 
 } // namespace ai4prod

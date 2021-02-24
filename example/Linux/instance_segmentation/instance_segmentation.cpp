@@ -73,7 +73,11 @@ int main()
 	
 	//CHANGE THIS VALUE WITH YOURS
 	yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 500, 500, TensorRT, "../tensorrtModel"); 
-    
+
+	Mat img;
+	img= imread("/home/aistudios/Develop/Official/ai4prod/example/Linux/instance_segmentation/yolact-nadal.jpeg");	
+	yolact->preprocessing(img);
+	yolact->runmodel();
 	// //resnet = new ResNet50();
 	// cout << "test" << endl;
 	// //PATH TO FOLDER 

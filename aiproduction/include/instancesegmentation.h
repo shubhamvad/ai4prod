@@ -65,12 +65,29 @@ namespace ai4prod
             std::unique_ptr<Ort::Session> m_OrtSession;
             std::unique_ptr<Ort::Env> m_OrtEnv;
 
+
+            //OnnxRuntime Input Model
+
+            size_t m_num_input_nodes;
+            std::vector<const char *> m_input_node_names;
+
+            //OnnxRuntime Output Model
+
+            size_t m_num_out_nodes;
+
+
+            //libtorch Tensor
+
+            torch::Tensor m_TInputTensor;
+            //torch::Tensor m_TOutputTensor;
+
+
             //FUNCTION
-            void setOnnxRuntimeEnv();
-            //void setOnnxRuntimeModelInputOutput();
+            void setOnnxRuntimeEnv();            
             void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
             //void setEnvVariable();
             void setSession();
+            void setOnnxRuntimeModelInputOutput();
 
         public:
             Yolact();
