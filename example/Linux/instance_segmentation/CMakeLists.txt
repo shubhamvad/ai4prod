@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project (inference)
 
-#need for LibTorch
+#need for libtorch LibTorch
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
@@ -14,7 +14,7 @@ find_package(aiproduction REQUIRED)
 
 #link_directories(inference install-Lib/lib)
 
-add_executable(inference classification.cpp)
+add_executable(inference instance_segmentation.cpp)
 
 target_link_libraries(inference ${AIPRODUCTION_LIBS} stdc++fs)
 

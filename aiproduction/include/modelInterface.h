@@ -85,6 +85,17 @@ namespace ai4prod
         virtual torch::Tensor postprocessing()=0;
     };
 
+    class modelInterfaceInstanceSegmentation{
+
+        
+        virtual void preprocessing(Mat &Image) = 0;
+
+        virtual void runmodel() = 0;
+
+        virtual torch::Tensor postprocessing()=0;
+
+    };
+
 //#endif
 
 } // namespace ai4prod

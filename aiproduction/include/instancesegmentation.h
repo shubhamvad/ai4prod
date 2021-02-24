@@ -1,0 +1,87 @@
+/*
+
+GNU GPL V3 License
+
+Copyright (c) 2020 Eric Tondelli. All rights reserved.
+
+This file is part of Ai4prod.
+
+Ai4prod is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Ai4prod is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
+
+*/
+
+#include "modelInterface.h"
+
+
+namespace ai4prod
+{
+
+    namespace instanceSegmentation
+    {
+
+        class AIPRODUCTION_EXPORT Yolact : ai4prod::modelInterfaceInstanceSegmentation
+        {
+
+        private:
+            ai4prod::aiutils m_aut;
+            MODE m_eMode;
+            string m_sMessage;
+
+            YAML::Node m_ymlConfig;
+            std::string m_sModelTrPath;
+            std::string m_sModelOnnxPath;
+            std::string m_sEngineFp;
+            std::string m_sEngineCache;
+
+            //neural network input dimension
+
+            int m_iInput_h;
+            int m_iInput_w;
+            //original image width and height
+            int m_iMrows;
+            int m_iMcols;
+
+            float m_fNmsThresh;
+            float m_fDetectionThresh;
+
+
+
+            //onnxRuntime Session
+
+            Ort::SessionOptions m_OrtSessionOptions;
+            Ort::AllocatorWithDefaultOptions allocator;
+
+            std::unique_ptr<Ort::Session> m_OrtSession;
+            std::unique_ptr<Ort::Env> m_OrtEnv;
+
+            //FUNCTION
+            void setOnnxRuntimeEnv();
+            //void setOnnxRuntimeModelInputOutput();
+            void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
+            //void setEnvVariable();
+            void setSession();
+
+        public:
+            Yolact();
+            virtual ~Yolact();
+            bool init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path = NULL);
+
+            void preprocessing(Mat &Image);
+            torch::Tensor postprocessing();
+            void runmodel();
+        };
+
+    } // namespace segmentation
+
+} // namespace ai4prod

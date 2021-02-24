@@ -39,7 +39,8 @@ if(result)
     
 
 		if(UNIX)
-			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/classification/Imagenet/Cpp/Linux/Install")
+            #set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/classification/Imagenet/Cpp/Linux/Install")
+            set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/instance_segmentation/Install")
 			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/extra/Tracking/Install")
 		endif()
 		if (MSVC)
@@ -116,11 +117,15 @@ message("YAML-CPP ${YAML_CPP_INCLUDE_DIR}")
 
 
 #ai4production Library
-add_library(aiproduction SHARED aiproduction/src/classification.cpp 
+add_library(aiproduction SHARED 
+
 
 aiproduction/include/classification.h 
 aiproduction/include/objectdetection.h 
-aiproduction/src/objectdetection.cpp 
+aiproduction/include/instancesegmentation.h 
+aiproduction/src/classification.cpp 
+aiproduction/src/objectdetection.cpp
+aiproduction/src/instancesegmentation.cpp  
 aiproduction/include/utils.h 
 aiproduction/src/utils.cpp 
 aiproduction/include/aiproduction_export.h 
@@ -168,6 +173,7 @@ set_target_properties(
 set(AIPRODUCTION_INCLUDES aiproduction/include/classification.h 
 aiproduction/include/objectdetection.h 
 aiproduction/include/utils.h 
+aiproduction/include/instancesegmentation.h
 aiproduction/include/aiproduction_export.h aiproduction/include/modelInterface.h
 )
 

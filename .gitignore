@@ -34,11 +34,15 @@ example/Windows/objectdetection/tensorrtModel/*
 example/Linux/classification/build
 example/Linux/classification/Install
 example/Linux/classification/tensorrtModel
+example/Linux/object_detection/Install
+example/Linux/object_detection/build
+example/Linux/object_detection/tensorrtModel
+example/Linux/instance_segmentation/build
+example/Linux/instance_segmentation/Install
+example/Linux/instance_segmentation/tensorrtModel
 example/Aarch64/classification/build
 example/Aarch64/classification/Install
 example/Aarch64/classification/tensorrtModel
-example/Linux/object_detection/Install
-example/Linux/object_detection/build
 Model/
 testAccuracy/Dataset
 onnxConversion/Yolov3/models

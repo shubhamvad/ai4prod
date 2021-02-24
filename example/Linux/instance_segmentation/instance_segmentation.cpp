@@ -29,6 +29,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "classification.h"
 #include "objectdetection.h"
+#include "instancesegmentation.h"
 #include "Sort.h"
 
 #include <opencv2/opencv.hpp>
@@ -37,8 +38,8 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 // include namespace 
 using namespace ai4prod;
-using namespace objectDetection;
-using namespace classification;
+
+using namespace instanceSegmentation;
 using namespace cv;
 using namespace std::chrono;
 
@@ -55,9 +56,10 @@ using namespace std;
 int main()
 {
 	//initialize resnet
-    ResNet50 *resnet;
+    Yolact *yolact;
+    
    	//create new instance
-    resnet = new ResNet50();
+    yolact = new Yolact();
 
 	//You need to call init for every new class.
 	//This initizalize class component.
@@ -70,48 +72,48 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	resnet->init("../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel"); 
+	yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 500, 500, TensorRT, "../tensorrtModel"); 
     
-	//resnet = new ResNet50();
-	cout << "test" << endl;
-	//PATH TO FOLDER 
-    std::string AccurayFolderPath = "../../../../Images/classification/";
+	// //resnet = new ResNet50();
+	// cout << "test" << endl;
+	// //PATH TO FOLDER 
+    // std::string AccurayFolderPath = "../../../../Images/classification/";
 
-    cout << "Start Classification" << endl;
+    // cout << "Start Classification" << endl;
 
-    for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
-    {
+    // for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
+    // {
 		
 		
 	
-        string image_id = entry.path().string();
+    //     string image_id = entry.path().string();
         
-		//opencv Mat
-		Mat img;
-		//read image with opencv
-        img = imread(image_id.c_str());
+	// 	//opencv Mat
+	// 	Mat img;
+	// 	//read image with opencv
+    //     img = imread(image_id.c_str());
 
-		//ai4prod To understand how these functions works have look here https://www.ai4prod.ai/c-stack/
+	// 	//ai4prod To understand how these functions works have look here https://www.ai4prod.ai/c-stack/
 
-		//preprocessing(cv::Mat)
-        resnet->preprocessing(img);
+	// 	//preprocessing(cv::Mat)
+    //     resnet->preprocessing(img);
 
-		//run model on img
-        resnet->runmodel();
+	// 	//run model on img
+    //     resnet->runmodel();
 
-		//return a tuple<Tensor,Tensor>: <ClassId,Probability>
-		//This output is without softmax
-        std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
+	// 	//return a tuple<Tensor,Tensor>: <ClassId,Probability>
+	// 	//This output is without softmax
+    //     std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
 
-	cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
+	// cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
 		
-	//std::get<0>(prediction)[0].item<float>();
-	//if You need softmax you can use Libtorch softmax
+	// //std::get<0>(prediction)[0].item<float>();
+	// //if You need softmax you can use Libtorch softmax
 
         
 
     
-    }
-
+    // }
+    cout<<"model Created"<<endl;
 	getchar();
 }
