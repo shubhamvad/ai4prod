@@ -22,7 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "modelInterface.h"
-
+using namespace torch::indexing;
 
 namespace ai4prod
 {
@@ -55,8 +55,7 @@ namespace ai4prod
             float m_fNmsThresh;
             float m_fDetectionThresh;
 
-
-
+            //ONNXRUNTIME
             //onnxRuntime Session
 
             Ort::SessionOptions m_OrtSessionOptions;
@@ -64,7 +63,6 @@ namespace ai4prod
 
             std::unique_ptr<Ort::Session> m_OrtSession;
             std::unique_ptr<Ort::Env> m_OrtEnv;
-
 
             //OnnxRuntime Input Model
 
@@ -74,16 +72,22 @@ namespace ai4prod
             //OnnxRuntime Output Model
 
             size_t m_num_out_nodes;
+            std::vector<const char *> m_output_node_names;
 
+            //session IN/OUT
 
-            //libtorch Tensor
+            float *m_fpInputOnnxRuntime;
+            float *m_fpOutOnnxRuntime[5];
+
+            size_t m_InputTorchTensorSize;
+
+            //LIBTORCH Tensor
 
             torch::Tensor m_TInputTensor;
             //torch::Tensor m_TOutputTensor;
 
-
             //FUNCTION
-            void setOnnxRuntimeEnv();            
+            void setOnnxRuntimeEnv();
             void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
             //void setEnvVariable();
             void setSession();
@@ -99,6 +103,6 @@ namespace ai4prod
             void runmodel();
         };
 
-    } // namespace segmentation
+    } // namespace instanceSegmentation
 
 } // namespace ai4prod

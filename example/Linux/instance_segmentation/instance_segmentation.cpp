@@ -42,7 +42,7 @@ using namespace ai4prod;
 using namespace instanceSegmentation;
 using namespace cv;
 using namespace std::chrono;
-
+using namespace torch::indexing;
 
 //this is needed if you want to scan and entire folder
 // img1.jpg
@@ -54,8 +54,35 @@ namespace fs = std::experimental::filesystem;
 using namespace std;
 
 int main()
-{
-	//initialize resnet
+{	
+	int test= 5 + 3*4;
+	cout <<test<<endl;
+	// auto test= torch::zeros({4,8});
+
+	// auto prova= test >0.5;
+
+	// cout<<prova<<endl;
+
+	// auto test2= torch::rand({4,8,4});
+
+	// test2=test2.index({prova});
+	
+	// cout<<"TEST 2 "<< test2<<endl;
+
+	// cout<< "TEST "<< test<<endl;
+
+
+	// test= test.index({
+	// 	torch::indexing::Slice(None),
+	// 	torch::indexing::Slice(None,2)
+	// }).contiguous();
+
+	// cout<<test.sizes()<<endl;
+
+	// auto tMax= torch::max(test,0);
+	
+	// cout <<std::get<0>(tMax)<<endl;
+	// //initialize resnet
     Yolact *yolact;
     
    	//create new instance
@@ -72,12 +99,13 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 500, 500, TensorRT, "../tensorrtModel"); 
+	yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550, Cpu, "../tensorrtModel"); 
 
 	Mat img;
-	img= imread("/home/aistudios/Develop/Official/ai4prod/example/Linux/instance_segmentation/yolact-nadal.jpeg");	
+	img= imread("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/image/yolact-nadal.jpeg");	
 	yolact->preprocessing(img);
 	yolact->runmodel();
+	yolact->postprocessing();
 	// //resnet = new ResNet50();
 	// cout << "test" << endl;
 	// //PATH TO FOLDER 

@@ -79,8 +79,11 @@ return: torch::Tensor with the right order of input dimension(B,C,W,H)
 
         cv::cvtColor(ImageBGR, ImageBGR, COLOR_BGR2RGB);
         cv::Mat img_float;
+        
+        ImageBGR.convertTo(img_float, CV_32F, 1.0);
 
-        auto img_tensor = torch::from_blob(ImageBGR.data, {batch, height, width, channel}).to(torch::kCPU);
+        auto img_tensor = torch::from_blob(img_float.data, {batch, height, width, channel}).to(torch::kCPU);
+
 
         // you need to be contiguous to have all address memory of tensor sequentially
         img_tensor = img_tensor.permute({0, 3, 1, 2}).contiguous();
@@ -105,6 +108,22 @@ return: Image BGR
         //squeeze(): rimuove tutti i valori con dimensione 1
         tensor = tensor.squeeze().detach().permute({1, 2, 0});
         tensor = tensor.mul(255).clamp(0, 255).to(torch::kU8);
+        //Devo convertire il tensore in Cpu se voglio visualizzarlo con OpenCv
+        tensor = tensor.to(torch::kCPU);
+        cv::Mat resultImg(height, width, CV_8UC3);
+        std::memcpy((void *)resultImg.data, tensor.data_ptr(), sizeof(torch::kU8) * tensor.numel());
+
+        return resultImg;
+    }
+
+    cv::Mat aiutils::convertTensortToMat8bit(torch::Tensor tensor, int width, int height)
+    {
+
+        //devo controllare che la dimensione di batch sia uguale a 1
+
+        //squeeze(): rimuove tutti i valori con dimensione 1
+        tensor = tensor.squeeze().detach().permute({1, 2, 0});
+        tensor = tensor.clamp(0, 255).to(torch::kU8);
         //Devo convertire il tensore in Cpu se voglio visualizzarlo con OpenCv
         tensor = tensor.to(torch::kCPU);
         cv::Mat resultImg(height, width, CV_8UC3);
