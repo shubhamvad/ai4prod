@@ -166,6 +166,12 @@ namespace ai4prod
             Mat tmpImage;
             tmpImage = Image.clone();
 
+            testImage = Image.clone();
+
+            //set original image dimension
+            m_ImageHeightOrig = Image.rows;
+            m_ImageWidhtOrig = Image.cols;
+
             //cv::imshow("test", tmpImage);
 
             //tensor with RGB channel
@@ -205,7 +211,7 @@ namespace ai4prod
 
             if (m_TInputTensor.is_contiguous())
             {
-                m_TInputTensor= m_TInputTensor;
+                m_TInputTensor = m_TInputTensor;
 
                 m_fpInputOnnxRuntime = static_cast<float *>(m_TInputTensor.storage().data());
 
@@ -252,10 +258,9 @@ namespace ai4prod
 
                 auto tensortData = input_tensor.GetTensorMutableData<float>();
 
-                cout << "INPUT DIMENSION "<<input_node_dims  << endl;
-                cout << "INPUT SIZW DIMENSION "<< input_tensor.GetTensorTypeAndShapeInfo().GetShape() << endl;
-                
-                
+                cout << "INPUT DIMENSION " << input_node_dims << endl;
+                cout << "INPUT SIZW DIMENSION " << input_tensor.GetTensorTypeAndShapeInfo().GetShape() << endl;
+
                 auto tensorINput_test = torch::from_blob((float *)(tensortData), {1, 3, 550, 550}).clone();
 
                 // for (int k = 0; k < 500; k++)
@@ -264,8 +269,7 @@ namespace ai4prod
                 //     cout << tensorINput_test[0][0][0][k].item<float>()+0.002 << endl;
                 // }
 
-
-                cout << "output name "<<m_output_node_names<<endl;
+                cout << "output name " << m_output_node_names << endl;
                 assert(input_tensor.IsTensor());
 
                 std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, m_input_node_names.data(), &input_tensor, 1, m_output_node_names.data(), 5);
@@ -323,7 +327,7 @@ namespace ai4prod
             int batch_size = locTensor.sizes()[0];
             int num_priors = priorsTensor.sizes()[0];
 
-            cout << "NUM CLASSES "<<num_priors << " " <<batch_size<<endl;
+            cout << "NUM CLASSES " << num_priors << " " << batch_size << endl;
 
             auto confPreds = confTensor.view({batch_size, num_priors, 81}).transpose(2, 1).contiguous();
 
@@ -359,8 +363,6 @@ namespace ai4prod
 
             cout << "box size DECODE " << decoded_boxes.sizes()[0] << endl;
 
-            
-
             for (int i = 0; i < decoded_boxes.sizes()[0]; i++)
             {
 
@@ -380,17 +382,13 @@ namespace ai4prod
             cur_scores = cur_scores.index({{torch::indexing::Slice(1, None),
                                             torch::indexing::Slice(None)}});
 
-
-
             //this is a tuple
             auto [conf_scores, conf_index] = torch::max(cur_scores, 0);
-            
 
-            
             //0.05 detection threshold
             torch::Tensor keep = {conf_scores > 0.05};
 
-            cout <<"KEEP SIZE 1"<<endl;
+            cout << "KEEP SIZE 1" << endl;
 
             // for(int i=0;i<100;i++){
 
@@ -427,13 +425,12 @@ namespace ai4prod
                                    torch::indexing::Slice(None, topk)})
                          .contiguous();
 
-
-            cout<< "SCORES NMS"<<endl;
+            cout << "SCORES NMS" << endl;
 
             // for (int i; i<43;i++){
 
             //     cout <<scores_nms[0][i].item<float>()<<endl;
-            // } 
+            // }
 
             //Gli score_nms sono uguali
 
@@ -483,7 +480,6 @@ namespace ai4prod
             // cout << "TEST " << torch_test << endl;
 
             //FINO A QUI box_A e Box_b sono uguali al Python
-
 
             auto box_a_min = box_a.index({torch::indexing::Slice(None),
                                           torch::indexing::Slice(None),
@@ -622,6 +618,8 @@ namespace ai4prod
             boxes_nms = boxes_nms.index(idx);
             mask_nms = mask_nms.index(idx);
 
+            //--------------------------------postprocess Python
+
             //all score above threshold
             auto final_keep = (final_scores > 0.51);
 
@@ -629,6 +627,56 @@ namespace ai4prod
             auto final_boxes = boxes_nms.index(final_keep);
             auto final_mask_nms = mask_nms.index(final_keep);
 
+            auto x = final_boxes.index({torch::indexing::Slice(None), 0});
+            auto y = final_boxes.index({torch::indexing::Slice(None), 1});
+            auto width = final_boxes.index({torch::indexing::Slice(None), 2});
+            auto height = final_boxes.index({torch::indexing::Slice(None), 3});
+
+            auto x1 = x * m_ImageWidhtOrig;
+            auto y1 = y * m_ImageHeightOrig;
+            auto width1 = width * m_ImageWidhtOrig;
+            auto height1 = height * m_ImageHeightOrig;
+
+            auto bbox_x = torch::min(x1, width1);
+            auto bbox_width = torch::max(x1, width1);
+
+            auto bbox_y = torch::min(y1, height1);
+            auto bbox_height = torch::max(y1, height1);
+
+            bbox_x = torch::clamp(bbox_x, 0);
+            bbox_y = torch::clamp(bbox_y, 0);
+
+            bbox_width = torch::clamp(bbox_width,0 ,m_ImageWidhtOrig);
+            bbox_height = torch::clamp(bbox_height,0 ,m_ImageHeightOrig);
+
+            cout<<"BOX "<<bbox_x<<endl;
+            cout<<"BOX "<<bbox_y<<endl;
+            cout<<"BOX "<<bbox_width<<endl;
+            cout<<"BOX "<<bbox_height<<endl;
+
+            cout<<"Width "<<m_ImageWidhtOrig<<endl;
+            cout<<"Height "<<m_ImageHeightOrig<<endl;
+            
+
+            for (int i = 0; i < bbox_x.sizes()[0]; i++)
+            {
+
+                int x_rect = bbox_x[i].item<int>();
+                int y_rect = bbox_y[i].item<int>();
+                int width_rect = bbox_width[i].item<int>() -bbox_x[i].item<int>() ;
+                int height_rect = bbox_height[i].item<int>()- bbox_y[i].item<int>();
+
+                Rect rect(x_rect, y_rect, width_rect, height_rect);
+
+                rectangle(testImage, rect, (255, 255, 255), 0.5);
+            }
+            
+            cout<<"BOX "<<final_boxes<<endl;
+
+            imshow("final Image",testImage);
+            waitKey(0);
+
+            
             cout << "final classes " << final_classes << endl;
 
             cout << "final boxes " << final_boxes.sizes() << endl;

@@ -86,6 +86,14 @@ namespace ai4prod
             torch::Tensor m_TInputTensor;
             //torch::Tensor m_TOutputTensor;
 
+            //imageDimension Original
+            int m_ImageWidhtOrig;
+            int m_ImageHeightOrig;
+
+            //Test VARIABLE TO BE ELIMNATED
+
+            Mat testImage;
+
             //FUNCTION
             void setOnnxRuntimeEnv();
             void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
