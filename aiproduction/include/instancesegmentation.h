@@ -34,6 +34,17 @@ namespace ai4prod
         {
 
         private:
+
+            struct TensorResult{
+
+                torch::Tensor boxes;
+                torch::Tensor masks;
+                torch::Tensor classes;
+                torch::Tensor scores;
+            };
+
+            TensorResult m_TensorResult;
+
             ai4prod::aiutils m_aut;
             MODE m_eMode;
             string m_sMessage;
@@ -105,7 +116,14 @@ namespace ai4prod
             //postprocessing
 
             torch::Tensor decode(torch::Tensor locTensor, torch::Tensor priorsTensor);
+            
+            TensorResult detect(int batch_idx,torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor);
 
+            void FastNms(TensorResult &result,float nms_thres,int topk=200);
+
+            torch::Tensor jaccard(torch::Tensor boxes_a, torch::Tensor boxes_b);
+
+            torch::Tensor intersect(torch::Tensor box_a,torch::Tensor box_b);
 
         public:
             Yolact();
