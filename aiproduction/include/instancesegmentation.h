@@ -101,6 +101,12 @@ namespace ai4prod
             void setSession();
             void setOnnxRuntimeModelInputOutput();
 
+            
+            //postprocessing
+
+            torch::Tensor decode(torch::Tensor locTensor, torch::Tensor priorsTensor);
+
+
         public:
             Yolact();
             virtual ~Yolact();

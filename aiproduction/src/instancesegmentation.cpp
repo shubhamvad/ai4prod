@@ -295,44 +295,8 @@ namespace ai4prod
             }
         }
 
-        torch::Tensor Yolact::postprocessing()
-        {
-            auto locTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[0]), {1, 19248, 4}).clone();
-            auto confTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[1]), {1, 19248, 81}).clone();
-            auto maskTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[2]), {1, 19248, 32}).clone();
-            auto priorsTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[3]), {19248, 4}).clone();
-            auto protoTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[4]), {1, 138, 138, 32}).clone();
-
-            // cout<< "LOC TENSOR SIZE "<< locTensor.sizes()<<endl;
-            // cout << "TEST TENSOR" <<locTensor[0][1][1]<<endl;
-
-            cout << "Onnxrutime Value " << m_fpOutOnnxRuntime[0][1] << endl;
-
-            //tensor comparison between libtorch onnxruntime PRINT DATA
-            for (int i = 0; i < 4; i++)
-            {
-
-                cout << m_fpOutOnnxRuntime[0][i] << endl;
-            }
-
-            for (int i = 0; i < 4; i++)
-            {
-
-                cout << locTensor[0][i][0].item<float>() << endl;
-                cout << locTensor[0][i][1].item<float>() << endl;
-                cout << locTensor[0][i][2].item<float>() << endl;
-                cout << locTensor[0][i][3].item<float>() << endl;
-            }
-
-            int batch_size = locTensor.sizes()[0];
-            int num_priors = priorsTensor.sizes()[0];
-
-            cout << "NUM CLASSES " << num_priors << " " << batch_size << endl;
-
-            auto confPreds = confTensor.view({batch_size, num_priors, 81}).transpose(2, 1).contiguous();
-
-            //decode Function
-
+        torch::Tensor Yolact::decode(torch::Tensor locTensor, torch::Tensor priorsTensor){
+            
             float variances[2] = {0.1, 0.2};
 
             auto cat1 = priorsTensor.index({torch::indexing::Slice(None),
@@ -341,7 +305,7 @@ namespace ai4prod
 
             // 0 is the value of tensor in batch size
             // not good for multiple batch size
-            auto cat2 = locTensor[0].index({torch::indexing::Slice(None),
+            auto cat2 = locTensor.index({torch::indexing::Slice(None),
                                             torch::indexing::Slice(None, 2)})
                             .contiguous();
 
@@ -349,7 +313,7 @@ namespace ai4prod
                                             torch::indexing::Slice(2, None)})
                             .contiguous();
 
-            auto cat4 = locTensor[0].index({torch::indexing::Slice(None),
+            auto cat4 = locTensor.index({torch::indexing::Slice(None),
                                             torch::indexing::Slice(2, None)})
                             .contiguous();
 
@@ -373,6 +337,51 @@ namespace ai4prod
                 decoded_boxes[i][3] = decoded_boxes[i][3] + (decoded_boxes[i][1]);
             }
 
+
+            return decoded_boxes;
+
+        }
+        torch::Tensor Yolact::postprocessing()
+        {
+            auto locTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[0]), {1, 19248, 4}).clone();
+            auto confTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[1]), {1, 19248, 81}).clone();
+            auto maskTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[2]), {1, 19248, 32}).clone();
+            auto priorsTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[3]), {19248, 4}).clone();
+            auto protoTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[4]), {1, 138, 138, 32}).clone();
+
+            // cout<< "LOC TENSOR SIZE "<< locTensor.sizes()<<endl;
+            // cout << "TEST TENSOR" <<locTensor[0][1][1]<<endl;
+
+            cout << "Onnxrutime Value " << m_fpOutOnnxRuntime[0][1] << endl;
+
+            //tensor comparison between libtorch onnxruntime PRINT DATA
+            // for (int i = 0; i < 4; i++)
+            // {
+
+            //     cout << m_fpOutOnnxRuntime[0][i] << endl;
+            // }
+
+            // for (int i = 0; i < 4; i++)
+            // {
+
+            //     cout << locTensor[0][i][0].item<float>() << endl;
+            //     cout << locTensor[0][i][1].item<float>() << endl;
+            //     cout << locTensor[0][i][2].item<float>() << endl;
+            //     cout << locTensor[0][i][3].item<float>() << endl;
+            // }
+
+            int batch_size = locTensor.sizes()[0];
+            int num_priors = priorsTensor.sizes()[0];
+
+            cout << "NUM CLASSES " << num_priors << " " << batch_size << endl;
+
+            auto confPreds = confTensor.view({batch_size, num_priors, 81}).transpose(2, 1).contiguous();
+
+            //decode Function
+
+            torch::Tensor decoded_boxes= decode(locTensor[0],priorsTensor);
+
+            
             //detect function
 
             cout << confPreds.sizes() << endl;
@@ -627,6 +636,16 @@ namespace ai4prod
             auto final_boxes = boxes_nms.index(final_keep);
             auto final_mask_nms = mask_nms.index(final_keep);
 
+            //MASK DISPLAY
+
+            auto masksToDraw = torch::matmul(protoTensor[0], final_mask_nms.t());
+
+            masksToDraw.sigmoid_();
+
+            //-----crop mask
+
+            //BBOX DISPLAY
+
             auto x = final_boxes.index({torch::indexing::Slice(None), 0});
             auto y = final_boxes.index({torch::indexing::Slice(None), 1});
             auto width = final_boxes.index({torch::indexing::Slice(None), 2});
@@ -646,37 +665,35 @@ namespace ai4prod
             bbox_x = torch::clamp(bbox_x, 0);
             bbox_y = torch::clamp(bbox_y, 0);
 
-            bbox_width = torch::clamp(bbox_width,0 ,m_ImageWidhtOrig);
-            bbox_height = torch::clamp(bbox_height,0 ,m_ImageHeightOrig);
+            bbox_width = torch::clamp(bbox_width, 0, m_ImageWidhtOrig);
+            bbox_height = torch::clamp(bbox_height, 0, m_ImageHeightOrig);
 
-            cout<<"BOX "<<bbox_x<<endl;
-            cout<<"BOX "<<bbox_y<<endl;
-            cout<<"BOX "<<bbox_width<<endl;
-            cout<<"BOX "<<bbox_height<<endl;
+            cout << "BOX " << bbox_x << endl;
+            cout << "BOX " << bbox_y << endl;
+            cout << "BOX " << bbox_width << endl;
+            cout << "BOX " << bbox_height << endl;
 
-            cout<<"Width "<<m_ImageWidhtOrig<<endl;
-            cout<<"Height "<<m_ImageHeightOrig<<endl;
-            
+            cout << "Width " << m_ImageWidhtOrig << endl;
+            cout << "Height " << m_ImageHeightOrig << endl;
 
             for (int i = 0; i < bbox_x.sizes()[0]; i++)
             {
 
                 int x_rect = bbox_x[i].item<int>();
                 int y_rect = bbox_y[i].item<int>();
-                int width_rect = bbox_width[i].item<int>() -bbox_x[i].item<int>() ;
-                int height_rect = bbox_height[i].item<int>()- bbox_y[i].item<int>();
+                int width_rect = bbox_width[i].item<int>() - bbox_x[i].item<int>();
+                int height_rect = bbox_height[i].item<int>() - bbox_y[i].item<int>();
 
                 Rect rect(x_rect, y_rect, width_rect, height_rect);
 
                 rectangle(testImage, rect, (255, 255, 255), 0.5);
             }
-            
-            cout<<"BOX "<<final_boxes<<endl;
 
-            imshow("final Image",testImage);
+            cout << "BOX " << final_boxes << endl;
+
+            imshow("final Image", testImage);
             waitKey(0);
 
-            
             cout << "final classes " << final_classes << endl;
 
             cout << "final boxes " << final_boxes.sizes() << endl;
