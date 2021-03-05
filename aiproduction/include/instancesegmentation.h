@@ -118,6 +118,10 @@ namespace ai4prod
 
             torch::Tensor intersect(torch::Tensor box_a, torch::Tensor box_b);
 
+            //display
+
+            void sanitizeCoordinate(torch::Tensor &x,torch::Tensor &y, int imageDimension);
+
             
 
         public:

@@ -1,3 +1,27 @@
+/*
+
+GNU GPL V3 License
+
+Copyright (c) 2020 Eric Tondelli. All rights reserved.
+
+This file is part of Ai4prod.
+
+Ai4prod is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Ai4prod is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
+
+*/
+
+
 #include "instancesegmentation.h"
 #include "../../deps/onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 #include "../../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
@@ -702,45 +726,66 @@ namespace ai4prod
             return result;
         }
 
-         void Yolact::displayBbox(InstanceSegmentationResult result,Mat &image){
+        void Yolact::sanitizeCoordinate(torch::Tensor &x,torch::Tensor &y,int imageDimension){
+
+            auto x1 = x * imageDimension;
+            auto y1 = y * imageDimension;
+
+
+            auto bbox_x = torch::min(x1, y1);
+            auto bbox_y = torch::max(x1, y1);
+
+            x = torch::clamp(bbox_x, 0);
+            y = torch::clamp(bbox_y, 0, imageDimension);
+
+
+
+        }
+        void Yolact::displayBbox(InstanceSegmentationResult result,Mat &image){
             
-             auto x = result.boxes.index({torch::indexing::Slice(None), 0});
+            auto x = result.boxes.index({torch::indexing::Slice(None), 0});
             auto y = result.boxes.index({torch::indexing::Slice(None), 1});
             auto width = result.boxes.index({torch::indexing::Slice(None), 2});
             auto height = result.boxes.index({torch::indexing::Slice(None), 3});
 
-            auto x1 = x * m_ImageWidhtOrig;
-            auto y1 = y * m_ImageHeightOrig;
-            auto width1 = width * m_ImageWidhtOrig;
-            auto height1 = height * m_ImageHeightOrig;
 
-            auto bbox_x = torch::min(x1, width1);
-            auto bbox_width = torch::max(x1, width1);
+            
+            sanitizeCoordinate(x,width,m_ImageWidhtOrig);
+            sanitizeCoordinate(y,height,m_ImageHeightOrig);
 
-            auto bbox_y = torch::min(y1, height1);
-            auto bbox_height = torch::max(y1, height1);
 
-            bbox_x = torch::clamp(bbox_x, 0);
-            bbox_y = torch::clamp(bbox_y, 0);
+            // auto x1 = x * m_ImageWidhtOrig;
+            // auto y1 = y * m_ImageHeightOrig;
+            // auto width1 = width * m_ImageWidhtOrig;
+            // auto height1 = height * m_ImageHeightOrig;
 
-            bbox_width = torch::clamp(bbox_width, 0, m_ImageWidhtOrig);
-            bbox_height = torch::clamp(bbox_height, 0, m_ImageHeightOrig);
+            // auto bbox_x = torch::min(x1, width1);
+            // auto bbox_width = torch::max(x1, width1);
 
-            cout << "BOX " << bbox_x << endl;
-            cout << "BOX " << bbox_y << endl;
-            cout << "BOX " << bbox_width << endl;
-            cout << "BOX " << bbox_height << endl;
+            // auto bbox_y = torch::min(y1, height1);
+            // auto bbox_height = torch::max(y1, height1);
+
+            // bbox_x = torch::clamp(bbox_x, 0);
+            // bbox_y = torch::clamp(bbox_y, 0);
+
+            // bbox_width = torch::clamp(bbox_width, 0, m_ImageWidhtOrig);
+            // bbox_height = torch::clamp(bbox_height, 0, m_ImageHeightOrig);
+
+            // cout << "BOX " << bbox_x << endl;
+            // cout << "BOX " << bbox_y << endl;
+            // cout << "BOX " << bbox_width << endl;
+            // cout << "BOX " << bbox_height << endl;
 
             cout << "Width " << m_ImageWidhtOrig << endl;
             cout << "Height " << m_ImageHeightOrig << endl;
 
-            for (int i = 0; i < bbox_x.sizes()[0]; i++)
+            for (int i = 0; i < x.sizes()[0]; i++)
             {
 
-                int x_rect = bbox_x[i].item<int>();
-                int y_rect = bbox_y[i].item<int>();
-                int width_rect = bbox_width[i].item<int>() - bbox_x[i].item<int>();
-                int height_rect = bbox_height[i].item<int>() - bbox_y[i].item<int>();
+                int x_rect = x[i].item<int>();
+                int y_rect = y[i].item<int>();
+                int width_rect = width[i].item<int>() - x[i].item<int>();
+                int height_rect = height[i].item<int>() - y[i].item<int>();
 
                 Rect rect(x_rect, y_rect, width_rect, height_rect);
 
@@ -752,7 +797,9 @@ namespace ai4prod
             imshow("final Image", image);
             waitKey(0);
 
-         }
+        }
+
+
 
         Yolact::~Yolact()
         {
