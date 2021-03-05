@@ -34,16 +34,8 @@ namespace ai4prod
         {
 
         private:
-
-            struct TensorResult{
-
-                torch::Tensor boxes;
-                torch::Tensor masks;
-                torch::Tensor classes;
-                torch::Tensor scores;
-            };
-
-            TensorResult m_TensorResult;
+            
+            
 
             ai4prod::aiutils m_aut;
             MODE m_eMode;
@@ -112,18 +104,21 @@ namespace ai4prod
             void setSession();
             void setOnnxRuntimeModelInputOutput();
 
-            
+            //Yolact Result custom Struct
+
             //postprocessing
 
             torch::Tensor decode(torch::Tensor locTensor, torch::Tensor priorsTensor);
-            
-            TensorResult detect(int batch_idx,torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor);
 
-            void FastNms(TensorResult &result,float nms_thres,int topk=200);
+            YolactResult detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor);
+
+            void FastNms(YolactResult &result, float nms_thres, int topk = 200);
 
             torch::Tensor jaccard(torch::Tensor boxes_a, torch::Tensor boxes_b);
 
-            torch::Tensor intersect(torch::Tensor box_a,torch::Tensor box_b);
+            torch::Tensor intersect(torch::Tensor box_a, torch::Tensor box_b);
+
+            
 
         public:
             Yolact();
@@ -131,8 +126,12 @@ namespace ai4prod
             bool init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path = NULL);
 
             void preprocessing(Mat &Image);
-            torch::Tensor postprocessing();
             void runmodel();
+            torch::Tensor postprocessing();
+
+            //display 
+
+            void displayBbox(YolactResult result,float threshold);
         };
 
     } // namespace instanceSegmentation

@@ -450,7 +450,7 @@ namespace ai4prod
             return iou;
         }
 
-        void Yolact::FastNms(Yolact::TensorResult &result, float nms_thres, int topk)
+        void Yolact::FastNms(YolactResult &result, float nms_thres, int topk)
         {
 
             auto [scores_nms, idx_nms] = result.scores.sort(1, true);
@@ -531,20 +531,20 @@ namespace ai4prod
             result.masks = result.masks.index(idx);
         }
 
-        Yolact::TensorResult Yolact::detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor)
+        YolactResult Yolact::detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor)
         {
-            cout << "2" << endl;
-            TensorResult result;
-            cout << "2.1" << endl;
+           
+            YolactResult result;
+          
             auto cur_scores = confPreds[batch_idx];
-            cout << "2.2" << endl;
+           
             cur_scores = cur_scores.index({{torch::indexing::Slice(1, None),
                                             torch::indexing::Slice(None)}});
-            cout << "2.3" << endl;
+          
             //this is a tuple
             auto [conf_scores, conf_index] = torch::max(cur_scores, 0);
-            cout << "2.4" << endl;
-            cout << "3" << endl;
+          
+          
             torch::Tensor keep = {conf_scores > 0.05};
 
             result.scores = cur_scores.index({torch::indexing::Slice(None),
@@ -554,12 +554,12 @@ namespace ai4prod
             //[0] is the batch size element. If one element is 0
             result.masks = maskTensor[0].index({keep, torch::indexing::Slice(None)});
 
-            cout << "4" << endl;
+          
 
             if (result.scores.sizes()[1] == 0)
             {
 
-                TensorResult tensor = {};
+                YolactResult tensor = {};
                 return tensor;
             }
 
@@ -664,12 +664,20 @@ namespace ai4prod
 
             //--------------------------------postprocess Python
 
+
+
             //all score above threshold
             auto final_keep = (result.scores > 0.51);
 
             auto final_classes = result.classes.index(final_keep);
             auto final_boxes = result.boxes.index(final_keep);
             auto final_mask_nms = result.masks.index(final_keep);
+
+
+            result.classes= result.classes.index(final_keep);
+            result.boxes=result.boxes.index(final_keep);
+            result.masks=result.masks.index(final_keep);
+
 
             //MASK DISPLAY
 
@@ -735,28 +743,16 @@ namespace ai4prod
 
             cout << "final mask_nms " << final_mask_nms.sizes() << endl;
 
-            // cout << "box_nms " << boxes_nms.sizes() << endl;
-            // cout << "mask_nms " << mask_nms.sizes() << endl;
-            // cout << "scores_nms " << final_scores.sizes() << endl;
-            // cout << "classes_nms " << classes.sizes() << endl;
-
-            // cout << "iou out" << iou.sizes() << endl;
-            // cout << "inters ect " << intersect.sizes() << endl;
-
-            // cout << "box_a " << box_a.sizes() << endl;
-            // cout << "box b " << box_b.sizes() << endl;
-
-            // cout << "box_nms" << boxes_nms.sizes() << endl;
-
-            // cout << "boxes Size" << boxes.sizes() << endl;
-            // cout << "Mask Size " << mask.sizes() << endl;
-            // cout << "index Scores True" << scores.sizes() << endl;
-            // //cout << "tensor Keep" << keep.sizes() << " Value " << keep[0] << endl;
-            // cout << "max Tensor Size " << conf_scores.sizes() << endl;
 
             auto tensor = torch::ones({0});
             return tensor;
         }
+
+         void Yolact::displayBbox(YolactResult result,float threshold){
+            
+
+
+         }
 
         Yolact::~Yolact()
         {

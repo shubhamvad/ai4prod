@@ -42,6 +42,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include "utils.h"
 //Cmake generated
 #include "aiproduction_export.h"
+#include "customDataType.h"
 
 
 

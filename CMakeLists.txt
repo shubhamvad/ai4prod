@@ -129,7 +129,8 @@ aiproduction/src/instancesegmentation.cpp
 aiproduction/include/utils.h 
 aiproduction/src/utils.cpp 
 aiproduction/include/aiproduction_export.h 
-aiproduction/include/modelInterface.h)
+aiproduction/include/modelInterface.h
+aiproduction/include/customDataType)
 
 
 target_include_directories(aiproduction PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
@@ -174,7 +175,7 @@ set(AIPRODUCTION_INCLUDES aiproduction/include/classification.h
 aiproduction/include/objectdetection.h 
 aiproduction/include/utils.h 
 aiproduction/include/instancesegmentation.h
-aiproduction/include/aiproduction_export.h aiproduction/include/modelInterface.h
+aiproduction/include/aiproduction_export.h aiproduction/include/modelInterface.h aiproduction/include/customDataType.h
 )
 
 set_target_properties(aiproduction PROPERTIES PUBLIC_HEADER "${AIPRODUCTION_INCLUDES}" )
