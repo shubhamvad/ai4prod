@@ -93,7 +93,7 @@ namespace ai4prod
 
         virtual void runmodel() = 0;
 
-        virtual torch::Tensor postprocessing()=0;
+        virtual InstanceSegmentationResult postprocessing()=0;
 
     };
 

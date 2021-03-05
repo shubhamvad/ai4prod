@@ -105,7 +105,10 @@ int main()
 	img= imread("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/image/yolact-nadal.jpeg");	
 	yolact->preprocessing(img);
 	yolact->runmodel();
-	yolact->postprocessing();
+	auto result = yolact->postprocessing();
+	
+	yolact->displayBbox(result,img);
+	
 	// //resnet = new ResNet50();
 	// cout << "test" << endl;
 	// //PATH TO FOLDER 

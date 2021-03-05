@@ -166,7 +166,7 @@ namespace ai4prod
             Mat tmpImage;
             tmpImage = Image.clone();
 
-            testImage = Image.clone();
+            
 
             //set original image dimension
             m_ImageHeightOrig = Image.rows;
@@ -450,7 +450,7 @@ namespace ai4prod
             return iou;
         }
 
-        void Yolact::FastNms(YolactResult &result, float nms_thres, int topk)
+        void Yolact::FastNms(InstanceSegmentationResult &result, float nms_thres, int topk)
         {
 
             auto [scores_nms, idx_nms] = result.scores.sort(1, true);
@@ -531,10 +531,10 @@ namespace ai4prod
             result.masks = result.masks.index(idx);
         }
 
-        YolactResult Yolact::detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor)
+        InstanceSegmentationResult Yolact::detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor)
         {
            
-            YolactResult result;
+            InstanceSegmentationResult result;
           
             auto cur_scores = confPreds[batch_idx];
            
@@ -559,7 +559,7 @@ namespace ai4prod
             if (result.scores.sizes()[1] == 0)
             {
 
-                YolactResult tensor = {};
+                InstanceSegmentationResult tensor = {};
                 return tensor;
             }
 
@@ -567,7 +567,7 @@ namespace ai4prod
 
             return result;
         }
-        torch::Tensor Yolact::postprocessing()
+        InstanceSegmentationResult Yolact::postprocessing()
         {
             auto locTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[0]), {1, 19248, 4}).clone();
             auto confTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[1]), {1, 19248, 81}).clone();
@@ -689,10 +689,25 @@ namespace ai4prod
 
             //BBOX DISPLAY
 
-            auto x = final_boxes.index({torch::indexing::Slice(None), 0});
-            auto y = final_boxes.index({torch::indexing::Slice(None), 1});
-            auto width = final_boxes.index({torch::indexing::Slice(None), 2});
-            auto height = final_boxes.index({torch::indexing::Slice(None), 3});
+            
+
+            cout << "final classes " << final_classes << endl;
+
+            cout << "final boxes " << final_boxes.sizes() << endl;
+
+            cout << "final mask_nms " << final_mask_nms.sizes() << endl;
+
+
+           
+            return result;
+        }
+
+         void Yolact::displayBbox(InstanceSegmentationResult result,Mat &image){
+            
+             auto x = result.boxes.index({torch::indexing::Slice(None), 0});
+            auto y = result.boxes.index({torch::indexing::Slice(None), 1});
+            auto width = result.boxes.index({torch::indexing::Slice(None), 2});
+            auto height = result.boxes.index({torch::indexing::Slice(None), 3});
 
             auto x1 = x * m_ImageWidhtOrig;
             auto y1 = y * m_ImageHeightOrig;
@@ -729,28 +744,13 @@ namespace ai4prod
 
                 Rect rect(x_rect, y_rect, width_rect, height_rect);
 
-                rectangle(testImage, rect, (255, 255, 255), 0.5);
+                rectangle(image, rect, (255, 255, 255), 0.5);
             }
 
-            cout << "BOX " << final_boxes << endl;
-
-            imshow("final Image", testImage);
-            waitKey(0);
-
-            cout << "final classes " << final_classes << endl;
-
-            cout << "final boxes " << final_boxes.sizes() << endl;
-
-            cout << "final mask_nms " << final_mask_nms.sizes() << endl;
-
-
-            auto tensor = torch::ones({0});
-            return tensor;
-        }
-
-         void Yolact::displayBbox(YolactResult result,float threshold){
             
 
+            imshow("final Image", image);
+            waitKey(0);
 
          }
 

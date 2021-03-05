@@ -95,7 +95,7 @@ namespace ai4prod
 
             //Test VARIABLE TO BE ELIMNATED
 
-            Mat testImage;
+        
 
             //FUNCTION
             void setOnnxRuntimeEnv();
@@ -110,9 +110,9 @@ namespace ai4prod
 
             torch::Tensor decode(torch::Tensor locTensor, torch::Tensor priorsTensor);
 
-            YolactResult detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor);
+            InstanceSegmentationResult detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor);
 
-            void FastNms(YolactResult &result, float nms_thres, int topk = 200);
+            void FastNms(InstanceSegmentationResult &result, float nms_thres, int topk = 200);
 
             torch::Tensor jaccard(torch::Tensor boxes_a, torch::Tensor boxes_b);
 
@@ -127,11 +127,11 @@ namespace ai4prod
 
             void preprocessing(Mat &Image);
             void runmodel();
-            torch::Tensor postprocessing();
+            InstanceSegmentationResult postprocessing();
 
             //display 
 
-            void displayBbox(YolactResult result,float threshold);
+            void displayBbox(InstanceSegmentationResult result, Mat &image);
         };
 
     } // namespace instanceSegmentation

@@ -2,7 +2,7 @@
 namespace ai4prod
 {
 
-    struct YolactResult
+    struct InstanceSegmentationResult
     {
 
         torch::Tensor boxes;
