@@ -32,6 +32,7 @@ namespace ai4prod
         torch::Tensor masks;
         torch::Tensor classes;
         torch::Tensor scores;
+        torch::Tensor proto;
     };
 
 } // namespace ai4prod

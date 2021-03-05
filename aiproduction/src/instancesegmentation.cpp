@@ -21,7 +21,6 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
-
 #include "instancesegmentation.h"
 #include "../../deps/onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 #include "../../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
@@ -189,8 +188,6 @@ namespace ai4prod
         {
             Mat tmpImage;
             tmpImage = Image.clone();
-
-            
 
             //set original image dimension
             m_ImageHeightOrig = Image.rows;
@@ -557,18 +554,17 @@ namespace ai4prod
 
         InstanceSegmentationResult Yolact::detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor)
         {
-           
+
             InstanceSegmentationResult result;
-          
+
             auto cur_scores = confPreds[batch_idx];
-           
+
             cur_scores = cur_scores.index({{torch::indexing::Slice(1, None),
                                             torch::indexing::Slice(None)}});
-          
+
             //this is a tuple
             auto [conf_scores, conf_index] = torch::max(cur_scores, 0);
-          
-          
+
             torch::Tensor keep = {conf_scores > 0.05};
 
             result.scores = cur_scores.index({torch::indexing::Slice(None),
@@ -577,8 +573,6 @@ namespace ai4prod
             result.boxes = decoded_boxes.index({keep, torch::indexing::Slice(None)});
             //[0] is the batch size element. If one element is 0
             result.masks = maskTensor[0].index({keep, torch::indexing::Slice(None)});
-
-          
 
             if (result.scores.sizes()[1] == 0)
             {
@@ -688,8 +682,6 @@ namespace ai4prod
 
             //--------------------------------postprocess Python
 
-
-
             //all score above threshold
             auto final_keep = (result.scores > 0.51);
 
@@ -697,12 +689,14 @@ namespace ai4prod
             auto final_boxes = result.boxes.index(final_keep);
             auto final_mask_nms = result.masks.index(final_keep);
 
+            result.classes = result.classes.index(final_keep);
+            result.boxes = result.boxes.index(final_keep);
+            result.masks = result.masks.index(final_keep);
 
-            result.classes= result.classes.index(final_keep);
-            result.boxes=result.boxes.index(final_keep);
-            result.masks=result.masks.index(final_keep);
+            result.proto = protoTensor[0];
 
-
+            cout << "MASk OUTPUT" << endl;
+            cout << result.masks[0] << endl;
             //MASK DISPLAY
 
             // auto masksToDraw = torch::matmul(protoTensor[0], final_mask_nms.t());
@@ -713,71 +707,39 @@ namespace ai4prod
 
             //BBOX DISPLAY
 
-            
-
             cout << "final classes " << final_classes << endl;
 
             cout << "final boxes " << final_boxes.sizes() << endl;
 
             cout << "final mask_nms " << final_mask_nms.sizes() << endl;
 
-
-           
             return result;
         }
 
-        void Yolact::sanitizeCoordinate(torch::Tensor &x,torch::Tensor &y,int imageDimension){
+        void Yolact::sanitizeCoordinate(torch::Tensor &x, torch::Tensor &y, int imageDimension)
+        {
 
             auto x1 = x * imageDimension;
             auto y1 = y * imageDimension;
-
 
             auto bbox_x = torch::min(x1, y1);
             auto bbox_y = torch::max(x1, y1);
 
             x = torch::clamp(bbox_x, 0);
             y = torch::clamp(bbox_y, 0, imageDimension);
-
-
-
         }
-        void Yolact::displayBbox(InstanceSegmentationResult result,Mat &image){
-            
+
+        vector<Rect> Yolact::getCorrectBbox(InstanceSegmentationResult result)
+        {   
+            vector<Rect> resultCvBbox;
+
             auto x = result.boxes.index({torch::indexing::Slice(None), 0});
             auto y = result.boxes.index({torch::indexing::Slice(None), 1});
             auto width = result.boxes.index({torch::indexing::Slice(None), 2});
             auto height = result.boxes.index({torch::indexing::Slice(None), 3});
 
-
-            
-            sanitizeCoordinate(x,width,m_ImageWidhtOrig);
-            sanitizeCoordinate(y,height,m_ImageHeightOrig);
-
-
-            // auto x1 = x * m_ImageWidhtOrig;
-            // auto y1 = y * m_ImageHeightOrig;
-            // auto width1 = width * m_ImageWidhtOrig;
-            // auto height1 = height * m_ImageHeightOrig;
-
-            // auto bbox_x = torch::min(x1, width1);
-            // auto bbox_width = torch::max(x1, width1);
-
-            // auto bbox_y = torch::min(y1, height1);
-            // auto bbox_height = torch::max(y1, height1);
-
-            // bbox_x = torch::clamp(bbox_x, 0);
-            // bbox_y = torch::clamp(bbox_y, 0);
-
-            // bbox_width = torch::clamp(bbox_width, 0, m_ImageWidhtOrig);
-            // bbox_height = torch::clamp(bbox_height, 0, m_ImageHeightOrig);
-
-            // cout << "BOX " << bbox_x << endl;
-            // cout << "BOX " << bbox_y << endl;
-            // cout << "BOX " << bbox_width << endl;
-            // cout << "BOX " << bbox_height << endl;
-
-            cout << "Width " << m_ImageWidhtOrig << endl;
-            cout << "Height " << m_ImageHeightOrig << endl;
+            sanitizeCoordinate(x, width, m_ImageWidhtOrig);
+            sanitizeCoordinate(y, height, m_ImageHeightOrig);
 
             for (int i = 0; i < x.sizes()[0]; i++)
             {
@@ -789,17 +751,86 @@ namespace ai4prod
 
                 Rect rect(x_rect, y_rect, width_rect, height_rect);
 
-                rectangle(image, rect, (255, 255, 255), 0.5);
+                // if (!image.empty())
+                //     rectangle(image, rect, (255, 255, 255), 0.5);
+
+                resultCvBbox.push_back(rect);
+
+                
             }
 
-            
-
-            imshow("final Image", image);
-            waitKey(0);
-
+            return resultCvBbox;
         }
 
+        void Yolact::cropMask(torch::Tensor &masks, torch::Tensor boxes)
+        {
 
+            int h = masks.sizes()[0];
+            int w = masks.sizes()[1];
+            int n = masks.sizes()[2];
+
+            auto x = boxes.index({torch::indexing::Slice(None), 0});
+            auto y = boxes.index({torch::indexing::Slice(None), 1});
+            auto width = boxes.index({torch::indexing::Slice(None), 2});
+            auto height = boxes.index({torch::indexing::Slice(None), 3});
+
+            sanitizeCoordinate(x, width, w);
+            sanitizeCoordinate(y, height, h);
+
+            auto rows = torch::arange(w).view({1, -1, 1}).expand({h, w, n});
+            auto cols = torch::arange(h).view({-1, 1, 1}).expand({h, w, n});
+
+            auto mask_left = rows >= x.view({1, 1, -1});
+            auto mask_right = rows < width.view({1, 1, -1});
+            auto mask_up = cols >= y.view({1, 1, -1});
+            auto mask_down = cols < height.view({1, 1, -1});
+
+            auto crop_mask = mask_left * mask_right * mask_up * mask_down;
+
+            cout << "CROP MASK SIZE" << crop_mask.sizes() << endl;
+
+            masks = masks * crop_mask.to(torch::kFloat);
+        }
+
+        /*
+        
+        return a vector<Mat> resultMask where each value is a Mat CV_8UC1
+        
+        */
+        vector<Mat> Yolact::getCorrectMask(InstanceSegmentationResult result)
+        {
+
+            vector<Mat> resultcvMask;
+
+            auto masks = torch::matmul(result.proto, result.masks.t());
+
+            masks = torch::sigmoid(masks);
+
+            cropMask(masks, result.boxes);
+
+            masks = masks.permute({2, 0, 1}).contiguous();
+
+            masks = torch::nn::functional::interpolate(masks.unsqueeze(0),
+                                                       torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>{m_ImageHeightOrig, m_ImageWidhtOrig}).mode(torch::kBilinear).align_corners(false))
+                        .squeeze(0);
+
+            masks = masks.gt(0.5);
+
+            for (int i = 0; i < masks.sizes()[0]; i++)
+            {
+
+                //masks=masks.unsqueeze(0);
+                auto tensor = masks[i].mul(255).to(torch::kU8);
+                //Devo convertire il tensore in Cpu se voglio visualizzarlo con OpenCv
+                tensor = tensor.to(torch::kCPU);
+                cv::Mat resultImg(m_ImageHeightOrig, m_ImageWidhtOrig, CV_8UC1);
+                std::memcpy((void *)resultImg.data, tensor.data_ptr(), sizeof(torch::kU8) * tensor.numel());
+
+                resultcvMask.push_back(resultImg);
+            }
+
+            return resultcvMask;
+        }
 
         Yolact::~Yolact()
         {

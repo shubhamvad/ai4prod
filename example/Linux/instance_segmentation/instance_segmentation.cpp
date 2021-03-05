@@ -105,9 +105,42 @@ int main()
 	img= imread("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/image/yolact-nadal.jpeg");	
 	yolact->preprocessing(img);
 	yolact->runmodel();
+
+	/*
+	result is a struct {
+		
+		torch::Tensor boxes; -> bbox need to be processed see getCorrectBbox()
+        torch::Tensor masks; -> Mask need to be processed see getCorrectMask()
+        torch::Tensor classes; -> Number of classes
+        torch::Tensor scores; 
+        torch::Tensor proto;
+
+	}
+	*/
 	auto result = yolact->postprocessing();
 	
-	yolact->displayBbox(result,img);
+
+
+	//return vector<Rect>
+	auto resultBbox=yolact->getCorrectBbox(result);
+	cout<<"1"<<endl;
+
+	for(auto &rect: resultBbox){
+
+		rectangle(img,rect,(255, 255, 255), 0.5);
+	}
+
+	imshow("bbox",img);
+	//return vector<Mat> 
+	auto resultMask = yolact->getCorrectMask(result);
+	
+	for(auto& mask:resultMask){
+		
+
+		cv::imshow("mask",mask);
+		waitKey(0);
+	}
+
 	
 	// //resnet = new ResNet50();
 	// cout << "test" << endl;
@@ -150,5 +183,5 @@ int main()
     
     // }
     cout<<"model Created"<<endl;
-	getchar();
+	
 }

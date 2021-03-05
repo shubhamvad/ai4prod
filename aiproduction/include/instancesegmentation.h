@@ -121,7 +121,7 @@ namespace ai4prod
             //display
 
             void sanitizeCoordinate(torch::Tensor &x,torch::Tensor &y, int imageDimension);
-
+            void cropMask(torch::Tensor &masks,torch::Tensor boxes);
             
 
         public:
@@ -135,7 +135,9 @@ namespace ai4prod
 
             //display 
 
-            void displayBbox(InstanceSegmentationResult result, Mat &image);
+            vector<Rect> getCorrectBbox(InstanceSegmentationResult result);
+
+            vector<Mat> getCorrectMask(InstanceSegmentationResult result);
         };
 
     } // namespace instanceSegmentation
