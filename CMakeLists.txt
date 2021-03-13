@@ -31,7 +31,7 @@ endif()
 string(COMPARE EQUAL "${DEFAULT_PATH}" 1 result)
 
 # user not specified installation path
-
+ 
 if(result)
 
 
@@ -39,8 +39,8 @@ if(result)
     
 
 		if(UNIX)
-            #set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/classification/Imagenet/Cpp/Linux/Install")
-            set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/instance_segmentation/Install")
+            set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/instanceSegmentation/TestCoco/Cpp/Linux/Install")
+            #set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/instance_segmentation/Install")
 			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/extra/Tracking/Install")
 		endif()
 		if (MSVC)

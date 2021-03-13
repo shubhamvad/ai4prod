@@ -99,7 +99,7 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550, Cpu, "../tensorrtModel"); 
+	yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550,80, TensorRT, "../tensorrtModel"); 
 
 	Mat img;
 	img= imread("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/image/yolact-nadal.jpeg");	

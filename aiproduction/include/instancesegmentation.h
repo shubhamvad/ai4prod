@@ -41,6 +41,7 @@ namespace ai4prod
             MODE m_eMode;
             string m_sMessage;
 
+            //Config Parameter
             YAML::Node m_ymlConfig;
             std::string m_sModelTrPath;
             std::string m_sModelOnnxPath;
@@ -55,6 +56,7 @@ namespace ai4prod
             int m_iMrows;
             int m_iMcols;
 
+            int m_iNumClasses;
             float m_fNmsThresh;
             float m_fDetectionThresh;
 
@@ -99,7 +101,7 @@ namespace ai4prod
 
             //FUNCTION
             void setOnnxRuntimeEnv();
-            void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
+            void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses,MODE t, std::string model_path);
             //void setEnvVariable();
             void setSession();
             void setOnnxRuntimeModelInputOutput();
@@ -123,21 +125,32 @@ namespace ai4prod
             void sanitizeCoordinate(torch::Tensor &x,torch::Tensor &y, int imageDimension);
             void cropMask(torch::Tensor &masks,torch::Tensor boxes);
             
+            //detection accuracy
+
+             //array with all detection accuracy
+            Json::Value m_JsonRootArray;
+
+            
 
         public:
             Yolact();
             virtual ~Yolact();
-            bool init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path = NULL);
+            bool init(std::string modelPathOnnx, int input_h, int input_w,int numClasses, MODE t, std::string model_path = NULL);
 
             void preprocessing(Mat &Image);
             void runmodel();
-            InstanceSegmentationResult postprocessing();
+            InstanceSegmentationResult postprocessing(string imagePathAccuracy="");
 
             //display 
 
             vector<Rect> getCorrectBbox(InstanceSegmentationResult result);
 
             vector<Mat> getCorrectMask(InstanceSegmentationResult result);
+
+            //detection accuracy
+            
+            string m_sAccurayImagePath;
+            void createAccuracyFile();
         };
 
     } // namespace instanceSegmentation

@@ -23,6 +23,15 @@ testAccuracy/objectDetection/TestCoco/Cpp/Windows/tensorrtModel
 testAccuracy/objectDetection/TestCoco/python/instances_val2017.json
 testAccuracy/objectDetection/TestCoco/python/yoloVal.json
 testAccuracy/objectDetection/TestCoco/python/TestDifferentThreshold
+testAccuracy/instanceSegmentation/TestCoco/Cpp/Linux/build
+testAccuracy/instanceSegmentation/TestCoco/Cpp/Linux/Install
+testAccuracy/instanceSegmentation/TestCoco/Cpp/Linux/tensorrtModel
+testAccuracy/instanceSegmentation/TestCoco/Cpp/Windows/build
+testAccuracy/instanceSegmentation/TestCoco/Cpp/Windows/Install
+testAccuracy/instanceSegmentation/TestCoco/Cpp/Windows/tensorrtModel
+testAccuracy/instanceSegmentation/TestCoco/python/instances_val2017.json
+testAccuracy/instanceSegmentation/TestCoco/python/yoloVal.json
+testAccuracy/instanceSegmentation/TestCoco/python/TestDifferentThreshold
 classes/
 aiproduction/aiproduction_export.h
 example/Windows/classification/build/*

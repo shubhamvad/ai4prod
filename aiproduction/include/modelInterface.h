@@ -31,7 +31,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #pragma once
 
-#define EVAL_ACCURACY
+//#define EVAL_ACCURACY
 
 #include "yaml-cpp/yaml.h"
 #include <iostream>
@@ -93,7 +93,7 @@ namespace ai4prod
 
         virtual void runmodel() = 0;
 
-        virtual InstanceSegmentationResult postprocessing()=0;
+        virtual InstanceSegmentationResult postprocessing(string imagePathAccuracy="")=0;
 
     };
 

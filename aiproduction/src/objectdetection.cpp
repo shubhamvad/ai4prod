@@ -568,7 +568,7 @@ namespace ai4prod
                         }
 
 #ifdef EVAL_ACCURACY
-
+                        //need for handling image path for COCO DATASET
                         //for every image
 
                         string image_id = m_sAccurayImagePath;
