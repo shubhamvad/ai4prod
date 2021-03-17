@@ -119,12 +119,9 @@ message("JSON CPP ${JSON_CPP_INCLUDE_DIRS}")
 
 
 message("YAML-CPP ${YAML_CPP_INCLUDE_DIR}")
+#FILE(GLOB MY_SRCS dir/*)
 
-
-#ai4production Library
-add_library(aiproduction SHARED 
-
-
+FILE(GLOB MY_SRCS 
 aiproduction/include/classification.h 
 aiproduction/include/objectdetection.h 
 aiproduction/include/instancesegmentation.h 
@@ -135,8 +132,10 @@ aiproduction/include/utils.h
 aiproduction/src/utils.cpp 
 aiproduction/include/aiproduction_export.h 
 aiproduction/include/modelInterface.h
-aiproduction/include/customDataType
+aiproduction/include/customDataType.h
 )
+#ai4production Library
+add_library(aiproduction SHARED ${MY_SRCS})
 
 
 target_include_directories(aiproduction PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
@@ -152,10 +151,10 @@ endif()
 
 #TEST
 
-add_executable(catch_test test/classification.cpp)
+add_executable(catch_test test/testClassification.cpp ${MY_SRCS} )
 
-
-target_link_libraries(catch_test PRIVATE Catch2::Catch2)
+target_include_directories(catch_test PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
+target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp_static stdc++fs Catch2::Catch2)
 
 
 #VERIFY EXTRA DEPENDENCIES
