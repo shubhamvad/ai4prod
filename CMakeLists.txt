@@ -103,6 +103,11 @@ find_package(yaml-cpp CONFIG REQUIRED)
 
 find_package(jsoncpp CONFIG REQUIRED)
 
+#catch2
+
+find_package(Catch2 CONFIG REQUIRED)
+    
+
 # get_cmake_property(_variableNames VARIABLES)
 # list (SORT _variableNames)
 # foreach (_variableName ${_variableNames})
@@ -130,7 +135,8 @@ aiproduction/include/utils.h
 aiproduction/src/utils.cpp 
 aiproduction/include/aiproduction_export.h 
 aiproduction/include/modelInterface.h
-aiproduction/include/customDataType)
+aiproduction/include/customDataType
+)
 
 
 target_include_directories(aiproduction PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
@@ -143,6 +149,13 @@ if(UNIX)
     target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp )
 endif()
 
+
+#TEST
+
+add_executable(catch_test test/classification.cpp)
+
+
+target_link_libraries(catch_test PRIVATE Catch2::Catch2)
 
 
 #VERIFY EXTRA DEPENDENCIES
