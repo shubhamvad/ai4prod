@@ -52,111 +52,113 @@ using namespace std;
 int main()
 {
 
-    //YOLO MAP ---------------------------------------------------------------------
+        //YOLO MAP ---------------------------------------------------------------------
 
-    //setup image folder of Coco dataset
+        //setup image folder of Coco dataset
 
-    std::string AccurayFolderPath = "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Dataset/Coco2017/validation/val2017";
+        std::string AccurayFolderPath = "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Dataset/Coco2017/validation/val2017";
+        //std::string AccurayFolderPath = "/home/aistudios/Develop/Official/ai4prod/testAccuracy/instanceSegmentation/TestCoco/Cpp/Linux/Dataset";
 
-    Yolact *yolact;
+        Yolact *yolact;
 
-    //linux
-    // Check our api for full description
-    // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
-    yolact = new Yolact();
+        //linux
+        // Check our api for full description
+        // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
+        yolact = new Yolact();
 
-    yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550, 80, TensorRT, "../tensorrtModel");
-    //windows
+        yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550, 80, TensorRT, "../tensorrtModel");
+        //windows
 
-    //C:\Users\erict\OneDrive\Desktop\Develop\ai4prod\onnxruntime\models
+        //C:\Users\erict\OneDrive\Desktop\Develop\ai4prod\onnxruntime\models
 
-    //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/ai4prod/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
+        //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/ai4prod/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
 
-    cout << "START PROCESSING" << endl;
+        cout << "START PROCESSING" << endl;
 
-    //auto start = high_resolution_clock::now();
+        //auto start = high_resolution_clock::now();
 
-    double numDetection = 0;
+        double numDetection = 0;
 
-    vector<double> infTime;
+        vector<double> infTime;
 
-    for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
-    {
-        //std::cout << entry.path() << std::endl;
-
-        string image_id = entry.path();
-
-        //image processed
-        //cout << image_id << endl;
-
-        Mat img;
-
-        img = imread(image_id.c_str());
-
-        // auto start1 = high_resolution_clock::now();
-
-        yolact->preprocessing(img);
-#ifdef TIME_EVAL
-
-        auto start = high_resolution_clock::now();
-
-#endif
-        yolact->runmodel();
-#ifdef TIME_EVAL
-        auto stop = high_resolution_clock::now();
-
-        auto duration = duration_cast<microseconds>(stop - start);
- 
-        
-        infTime.push_back((double)duration.count());
-#endif
-        auto start1 = high_resolution_clock::now();
-        auto result = yolact->postprocessing(image_id);
-        auto stop1 = high_resolution_clock::now();
-
-        auto duration1 = duration_cast<microseconds>(stop1 - start1);
-
-        // auto stop1 = high_resolution_clock::now();
-
-        // auto duration1 = duration_cast<microseconds>(stop1 - start1);
-
-        cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000) << "Sec" << endl;
-        cout << "SINGLE TIME PostProcessing " << (double)duration1.count() / (1000000) << "Sec" << endl;
-#ifdef TIME_EVAL
-        if (numDetection == 1000)
-            break;
-#endif
-        numDetection++;
-
-        cout<<numDetection<<endl;
-        if (result.boxes.sizes()[0] == 0)
+        for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
         {
-            std::cout << "tensor is empty! No detection Found" << std::endl;
-        }
-        else
-        {
-        
-        //SHOW RESULT
-        
-        //     auto resultBbox = yolact->getCorrectBbox(result);
+                //std::cout << entry.path() << std::endl;
 
-        //     for (auto &rect : resultBbox)
-        //     {
+                string image_id = entry.path();
 
-        //         rectangle(img, rect, (255, 255, 255), 0.5);
-        //     }
+                //image processed
+                //cout << image_id << endl;
 
-        //     imshow("bbox", img);
+                Mat img;
 
-        //     auto resultMask = yolact->getCorrectMask(result);
+                img = imread(image_id.c_str());
 
-        //     for (auto &mask : resultMask)
-            
-        //     {   cv::imshow("mask",mask);
-        //         waitKey(0);
+                // auto start1 = high_resolution_clock::now();
 
-        //     }
-            }
+                yolact->preprocessing(img);
+#ifdef TIME_EVAL
+
+                auto start = high_resolution_clock::now();
+
+#endif
+                yolact->runmodel();
+#ifdef TIME_EVAL
+                auto stop = high_resolution_clock::now();
+
+                auto duration = duration_cast<microseconds>(stop - start);
+
+#endif
+                auto start1 = high_resolution_clock::now();
+                auto result = yolact->postprocessing(image_id);
+
+#ifdef TIME_EVAL
+                auto stop1 = high_resolution_clock::now();
+
+                auto duration1 = duration_cast<microseconds>(stop1 - start);
+                infTime.push_back((double)duration1.count());
+#endif
+                // auto stop1 = high_resolution_clock::now();
+
+                // auto duration1 = duration_cast<microseconds>(stop1 - start1);
+
+                // cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000) << "Sec" << endl;
+                // cout << "SINGLE TIME PostProcessing " << (double)duration1.count() / (1000000) << "Sec" << endl;
+#ifdef TIME_EVAL
+                if (numDetection == 1000)
+                        break;
+#endif
+                numDetection++;
+
+                //cout << numDetection << endl;
+                if (!result.scores.numel())
+                {
+                        std::cout << "tensor is empty! No detection Found" << std::endl;
+                }
+                else
+                {
+
+                        //SHOW RESULT
+
+                        // auto resultBbox = yolact->getCorrectBbox(result);
+
+                        // for (auto &rect : resultBbox)
+                        // {
+
+                        //         rectangle(img, rect, (255, 255, 255), 0.5);
+                        // }
+
+                        // imshow("bbox", img);
+
+                        // auto resultMask = yolact->getCorrectMask(result);
+
+                        // for (auto &mask : resultMask)
+
+                        // {
+                        //         cv::imshow("mask", mask);
+                        //         waitKey(0);
+                        // }
+                }
         }
 
         // auto stop = high_resolution_clock::now();
@@ -176,4 +178,4 @@ int main()
 
         cout << "program end" << endl;
         return 0;
-    }
+}

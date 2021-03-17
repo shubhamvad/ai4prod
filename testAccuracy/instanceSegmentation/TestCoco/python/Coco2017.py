@@ -10,7 +10,7 @@ if __name__ == "__main__":
     cocoGt = COCO("instances_val2017.json")
     
     #Detection results
-    cocoDt = cocoGt.loadRes("yoloVal.json")
+    cocoDt = cocoGt.loadRes("yolactVal.json")
 
     imgIds = sorted(cocoGt.getImgIds())
     

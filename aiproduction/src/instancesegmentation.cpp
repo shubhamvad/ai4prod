@@ -196,19 +196,9 @@ namespace ai4prod
             m_ImageHeightOrig = Image.rows;
             m_ImageWidhtOrig = Image.cols;
 
-            //cv::imshow("test", tmpImage);
 
             //tensor with RGB channel
             m_TInputTensor = m_aut.convertMatToTensor8bit(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
-
-            // auto imgAfter = m_aut.convertTensortToMat8bit(m_TInputTensor, Image.cols, Image.rows);
-
-            // cv::imshow("test2", imgAfter);
-            // cv::waitKey(0);
-
-            //torch::nn::Functional::InterpolateFuncOptions().scale_factor({ 500 }).mode(torch::kBilinear).align_corners(false);
-
-            //cout << "AFTER" << endl;
 
             m_TInputTensor = torch::nn::functional::interpolate(m_TInputTensor, torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>{550, 550}).mode(torch::kBilinear).align_corners(false));
 
@@ -216,18 +206,12 @@ namespace ai4prod
 
             m_InputTorchTensorSize = size[1] * size[2] * size[3];
 
-            //cout << "valore DImensione" << m_InputTorchTensorSize << endl;
-            //normalization pixel image are in range [0,255]
+
 
             m_TInputTensor[0][0] = m_TInputTensor[0][0].sub_(123.8).div_(58.40);
             m_TInputTensor[0][1] = m_TInputTensor[0][1].sub_(116.78).div_(57.12);
             m_TInputTensor[0][2] = m_TInputTensor[0][2].sub_(103.94).div_(57.38);
 
-            // for (int i = 0; i < 200; i++)
-            // {
-
-            //     cout << m_TInputTensor[0][0][0][i] << endl;
-            // }
         }
 
         void Yolact::runmodel()
@@ -282,18 +266,9 @@ namespace ai4prod
 
                 auto tensortData = input_tensor.GetTensorMutableData<float>();
 
-                // cout << "INPUT DIMENSION " << input_node_dims << endl;
-                // cout << "INPUT SIZW DIMENSION " << input_tensor.GetTensorTypeAndShapeInfo().GetShape() << endl;
 
                 auto tensorINput_test = torch::from_blob((float *)(tensortData), {1, 3, 550, 550}).clone();
 
-                // for (int k = 0; k < 500; k++)
-                // {
-
-                //     cout << tensorINput_test[0][0][0][k].item<float>()+0.002 << endl;
-                // }
-
-                //cout << "output name " << m_output_node_names << endl;
                 assert(input_tensor.IsTensor());
 
                 std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, m_input_node_names.data(), &input_tensor, 1, m_output_node_names.data(), 5);
@@ -306,11 +281,7 @@ namespace ai4prod
                 m_fpOutOnnxRuntime[3] = output_tensors[3].GetTensorMutableData<float>();
                 m_fpOutOnnxRuntime[4] = output_tensors[4].GetTensorMutableData<float>();
 
-                // cout << "loc " << output_tensors[0].GetTensorTypeAndShapeInfo().GetShape() << endl;
-                // cout << " conf " << output_tensors[1].GetTensorTypeAndShapeInfo().GetShape() << endl;
-                // cout << " mask " << output_tensors[2].GetTensorTypeAndShapeInfo().GetShape() << endl;
-                // cout << " priors " << output_tensors[3].GetTensorTypeAndShapeInfo().GetShape() << endl;
-                // cout << " proto " << output_tensors[4].GetTensorTypeAndShapeInfo().GetShape() << endl;
+              
             }
             else
             {
@@ -319,7 +290,7 @@ namespace ai4prod
             }
         }
 
-        torch::Tensor Yolact::decode(torch::Tensor locTensor, torch::Tensor priorsTensor)
+        torch::Tensor Yolact::decode(torch::Tensor &locTensor, torch::Tensor &priorsTensor, int batchSizePos)
         {
 
             float variances[2] = {0.1, 0.2};
@@ -328,35 +299,25 @@ namespace ai4prod
                                             torch::indexing::Slice(None, 2)})
                             .contiguous();
 
-            auto cat2 = locTensor.index({torch::indexing::Slice(None),
-                                         torch::indexing::Slice(None, 2)})
+            auto cat2 = locTensor[batchSizePos].index({torch::indexing::Slice(None),
+                                                       torch::indexing::Slice(None, 2)})
                             .contiguous();
 
             auto cat3 = priorsTensor.index({torch::indexing::Slice(None),
                                             torch::indexing::Slice(2, None)})
                             .contiguous();
 
-            auto cat4 = locTensor.index({torch::indexing::Slice(None),
-                                         torch::indexing::Slice(2, None)})
+            auto cat4 = locTensor[batchSizePos].index({torch::indexing::Slice(None),
+                                                       torch::indexing::Slice(2, None)})
                             .contiguous();
 
             auto finalExp = torch::exp(cat4 * variances[1]);
-
             auto catFinal = cat1 + cat2 * variances[0] * cat3;
-
             auto catFinal2 = cat3 * finalExp;
-
             auto decoded_boxes = torch::cat({catFinal, catFinal2}, 1);
 
-            for (int i = 0; i < decoded_boxes.sizes()[0]; i++)
-            {
-
-                decoded_boxes[i][0] = decoded_boxes[i][0] - (decoded_boxes[i][2] / 2);
-                decoded_boxes[i][1] = decoded_boxes[i][1] - (decoded_boxes[i][3] / 2);
-
-                decoded_boxes[i][2] = decoded_boxes[i][2] + (decoded_boxes[i][0]);
-                decoded_boxes[i][3] = decoded_boxes[i][3] + (decoded_boxes[i][1]);
-            }
+            decoded_boxes.index({torch::indexing::Slice(None), torch::indexing::Slice(None, 2)}) -= decoded_boxes.index({torch::indexing::Slice(None), torch::indexing::Slice(2, None)}) / 2;
+            decoded_boxes.index({torch::indexing::Slice(None), torch::indexing::Slice(2, None)}) += decoded_boxes.index({torch::indexing::Slice(None), torch::indexing::Slice(None, 2)});
 
             return decoded_boxes;
         }
@@ -366,9 +327,6 @@ namespace ai4prod
         torch::Tensor Yolact::intersect(torch::Tensor box_a, torch::Tensor box_b)
         {
 
-            //cout << box_a.sizes() << endl;
-            //cout << "box A " << box_a[0][0] << endl;
-            //cout << "box B" << box_b[0][1] << endl;
 
             int n = box_a.sizes()[0];
             int A = box_a.sizes()[1];
@@ -406,21 +364,16 @@ namespace ai4prod
                                  .expand({n, A, B, 2})
                                  .clone();
 
-            //cout << "BOX A MIN " << box_a_min.sizes() << endl;
             auto min_xy = torch::max(box_a_max, box_b_max);
 
             auto inter = torch::clamp((max_xy - min_xy), 0);
 
-            //cout << "0.5" << endl;
             auto inter1 = inter.index({torch::indexing::Slice(None), torch::indexing::Slice(None),
                                        torch::indexing::Slice(None), 0});
 
             auto inter2 = inter.index({torch::indexing::Slice(None), torch::indexing::Slice(None),
                                        torch::indexing::Slice(None), 1});
 
-            // cout << "Inter 0" << inter1[0][0] << endl;
-
-            // cout << "Inter 2" << inter2[0][0] << endl;
 
             torch::Tensor intersect = inter1 * inter2;
 
@@ -449,7 +402,6 @@ namespace ai4prod
                               .unsqueeze(2)
                               .expand_as(inter);
 
-            //cout << "2" << endl;
 
             auto area_b = ((box_b.index({torch::indexing::Slice(None),
                                          torch::indexing::Slice(None), 2}) -
@@ -462,13 +414,7 @@ namespace ai4prod
                               .unsqueeze(2)
                               .expand_as(inter);
 
-            //cout << "3" << endl;
-
             torch::Tensor areaUnion = area_a + area_b - inter;
-
-            //cout << "Area Union " <<areaUnion[0]<<endl;
-
-            //cout << "INtersect"  << intersect[0]<< endl;
 
             torch::Tensor iou = inter / areaUnion;
 
@@ -496,8 +442,6 @@ namespace ai4prod
             int num_classes = idx_nms.sizes()[0];
             int num_dets = idx_nms.sizes()[1];
 
-            //cout << "NUM CLASSES " << num_classes << " " << num_dets << " " << endl;
-
             result.boxes = result.boxes.index({idx_nms.view(-1),
                                                torch::indexing::Slice(None)});
 
@@ -508,31 +452,16 @@ namespace ai4prod
 
             result.masks = result.masks.view({num_classes, num_dets, -1}).contiguous();
 
-            //cout << "BOX NmS PRE " << result.boxes.sizes() << endl;
-
             torch::Tensor iou = jaccard(result.boxes, result.boxes);
 
             iou = iou.triu(1);
 
-            //cout << "4" << endl;
+    
             auto [iou_max, indeces_max] = torch::max(iou, 1);
 
-            //cout << "max IOU " <<iou_max<<endl;
-
+            
             //0.5 iou_threshold
             torch::Tensor keep_iou = iou_max <= m_fNmsThresh;
-
-            //cout<<"IOU VALUE KEEP"<<keep_iou<<endl;
-
-            // cout << "KEEP_IOU SIZE " << keep_iou.sizes() << endl;
-            // cout << "IOU SIZE " << iou.sizes() << endl;
-
-            // cout << "5" << endl;
-
-            // cout << "box nms " << result.boxes.sizes() << endl;
-
-            // cout << "mask nms " << result.masks.sizes() << endl;
-            // cout << "scores nms " << result.scores.sizes() << endl;
 
             result.classes = torch::arange(num_classes).index({torch::indexing::Slice(None), None}).expand_as(keep_iou);
 
@@ -541,11 +470,6 @@ namespace ai4prod
             result.boxes = result.boxes.index({keep_iou});
             result.masks = result.masks.index({keep_iou});
             result.scores = result.scores.index({keep_iou});
-
-            // cout << "box nms " << result.boxes.sizes() << endl;
-
-            // cout << "mask nms " << result.masks.sizes() << endl;
-            // cout << "scores nms " << result.scores.sizes() << endl;
 
             auto [final_scores, idx] = torch::sort(result.scores, 0, true);
 
@@ -572,7 +496,7 @@ namespace ai4prod
             //this is a tuple
             auto [conf_scores, conf_index] = torch::max(cur_scores, 0);
 
-            torch::Tensor keep = {conf_scores > 0.05};
+            torch::Tensor keep = {conf_scores > 0.4};
 
             result.scores = cur_scores.index({torch::indexing::Slice(None),
                                               keep});
@@ -581,11 +505,20 @@ namespace ai4prod
             //[0] is the batch size element. If one element is 0
             result.masks = maskTensor[0].index({keep, torch::indexing::Slice(None)});
 
-            if (result.scores.sizes()[1] == 0)
+
+
+            if (!result.scores.numel())
             {
 
-                InstanceSegmentationResult tensor = {};
-                return tensor;
+                InstanceSegmentationResult tensorNumel = {};
+                return tensorNumel;
+
+                if (result.scores.sizes()[1] == 0)
+                {
+       
+                    InstanceSegmentationResult tensor = {};
+                    return tensor;
+                }
             }
 
             FastNms(result, m_fNmsThresh);
@@ -594,32 +527,12 @@ namespace ai4prod
         }
         InstanceSegmentationResult Yolact::postprocessing(string imagePathAccuracy)
         {
-            auto locTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[0]), {1, 19248, 4}).clone();
-            auto confTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[1]), {1, 19248, m_iNumClasses + 1}).clone();
-            auto maskTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[2]), {1, 19248, 32}).clone();
-            auto priorsTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[3]), {19248, 4}).clone();
-            auto protoTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[4]), {1, 138, 138, 32}).clone();
+            torch::Tensor locTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[0]), {1, 19248, 4}).clone();
+            torch::Tensor confTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[1]), {1, 19248, m_iNumClasses + 1}).clone();
+            torch::Tensor maskTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[2]), {1, 19248, 32}).clone();
+            torch::Tensor priorsTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[3]), {19248, 4}).clone();
+            torch::Tensor protoTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[4]), {1, 138, 138, 32}).clone();
 
-            // cout<< "LOC TENSOR SIZE "<< locTensor.sizes()<<endl;
-            // cout << "TEST TENSOR" <<locTensor[0][1][1]<<endl;
-
-            //cout << "Onnxrutime Value " << m_fpOutOnnxRuntime[0][1] << endl;
-
-            //tensor comparison between libtorch onnxruntime PRINT DATA
-            // for (int i = 0; i < 4; i++)
-            // {
-
-            //     cout << m_fpOutOnnxRuntime[0][i] << endl;
-            // }
-
-            // for (int i = 0; i < 4; i++)
-            // {
-
-            //     cout << locTensor[0][i][0].item<float>() << endl;
-            //     cout << locTensor[0][i][1].item<float>() << endl;
-            //     cout << locTensor[0][i][2].item<float>() << endl;
-            //     cout << locTensor[0][i][3].item<float>() << endl;
-            // }
 
             int batch_size = locTensor.sizes()[0];
             int num_priors = priorsTensor.sizes()[0];
@@ -630,64 +543,24 @@ namespace ai4prod
 
             //decode Function
 
-            torch::Tensor decoded_boxes = decode(locTensor[0], priorsTensor);
+            torch::Tensor decoded_boxes = decode(locTensor, priorsTensor, 0);
 
-            //DETECT FUNCTION
-
-            //0.05 detection threshold
-
-            // for(int i=0;i<100;i++){
-
-            //     cout<< keep[i].item<float>()<<endl;
-
-            // }
-
-            //No tensor Found
-
-            //SONO ARRIVATO QUI
             //fast_nms------------------------------
 
             int topk = 200;
 
-            //cout << "SCORES NMS" << endl;
-
-            // for (int i; i<43;i++){
-
-            //     cout <<scores_nms[0][i].item<float>()<<endl;
-            // }
-
-            //Gli score_nms sono uguali
-
-            //jaccard------------------------------------
-
-            //if (boxes_nms.dim()==2){
-            //cout << "box Size" << endl;
-
-            //auto box_a = boxes_nms.index({torch::indexing::Slice(None), "..."}).clone();
-            //auto box_b = boxes_nms.index({torch::indexing::Slice(None), "..."}).clone();
-
-            //intersection calculation-----------------------------------------
-
-            //min
-
-            // auto torch_test = torch::min(box_a[0][0], box_b[0][1]);
-
-            // cout << "TEST " << torch_test << endl;
-
-            //FINO A QUI box_A e Box_b sono uguali al Python
-
-            //intersection calculation-------------------------------------------
-
-            //cout << "1" << endl;
-
-            //cout << "max IOU " <<iou[0]<<endl;
-
-            //jaccard -------------------------------------
-            //put all 0 under the main diagonal matrix
-
             auto result = detect(0, confPreds, decoded_boxes, maskTensor);
 
-            //--------------------------------postprocess Python
+            if (!result.scores.numel())
+            {
+                
+               
+                InstanceSegmentationResult tensor = {};
+                return tensor;
+            }
+
+            
+           
 
             //all score above threshold
             auto final_keep = (result.scores > m_fDetectionThresh);
@@ -702,27 +575,15 @@ namespace ai4prod
 
             result.proto = protoTensor[0];
 
-            // cout << "MASk OUTPUT" << endl;
-            // cout << result.masks[0] << endl;
-            //MASK DISPLAY
-
-            // auto masksToDraw = torch::matmul(protoTensor[0], final_mask_nms.t());
-
-            // masksToDraw.sigmoid_();
-
-            //-----crop mask
-
-            //BBOX DISPLAY
-
             //Find Accuracy for COCO
 
 #ifdef EVAL_ACCURACY
             //need for handling image path for COCO DATASET
             //for every image
-            cout<< "eval accuracy"<<endl;
+            //cout << "eval accuracy" << endl;
             string image_id = imagePathAccuracy;
 
-            auto scores= result.scores.index(final_keep);
+            auto scores = result.scores.index(final_keep);
 
             const size_t last_slash_idx = image_id.find_last_of("\\/");
             if (std::string::npos != last_slash_idx)
@@ -742,7 +603,7 @@ namespace ai4prod
             //cout << image_id << endl;
             cv::Rect brect;
 
-            auto resultBbox= getCorrectBbox(result);
+            auto resultBbox = getCorrectBbox(result);
 
             for (int i = 0; i < result.boxes.sizes()[0]; i++)
             {
@@ -757,13 +618,11 @@ namespace ai4prod
                 //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
                 //1
 
-                cocoCategory= CocoMap[result.classes[i].item<int>()];
+                cocoCategory = CocoMap[result.classes[i].item<int>()];
 
                 root["category_id"] = cocoCategory;
 
                 Json::Value valueBBoxjson(Json::arrayValue);
-
-                
 
                 valueBBoxjson.append(resultBbox[i].x);
                 valueBBoxjson.append(resultBbox[i].y);
@@ -777,12 +636,6 @@ namespace ai4prod
             }
 
 #endif
-
-            //cout << "final classes " << final_classes << endl;
-
-            cout << "final boxes " << final_boxes.sizes() << endl;
-
-            //cout << "final mask_nms " << final_mask_nms.sizes() << endl;
 
             return result;
         }
@@ -901,13 +754,12 @@ namespace ai4prod
             return resultcvMask;
         }
 
-         void Yolact::createAccuracyFile()
+        void Yolact::createAccuracyFile()
         {
 
             Json::StreamWriterBuilder builder;
             const std::string json_file = Json::writeString(builder, m_JsonRootArray);
-            //std::cout << json_file << std::endl;
-
+           
             ofstream myfile;
             myfile.open("yolactVal.json", std::ios::in | std::ios::out | std::ios::app);
             myfile << json_file + "\n";

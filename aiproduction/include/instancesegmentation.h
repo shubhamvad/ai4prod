@@ -23,6 +23,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "modelInterface.h"
 using namespace torch::indexing;
+using namespace std::chrono;
 
 namespace ai4prod
 {
@@ -110,7 +111,7 @@ namespace ai4prod
 
             //postprocessing
 
-            torch::Tensor decode(torch::Tensor locTensor, torch::Tensor priorsTensor);
+            torch::Tensor decode(torch::Tensor &locTensor, torch::Tensor &priorsTensor, int batchSizePos=0);
 
             InstanceSegmentationResult detect(int batch_idx, torch::Tensor confPreds, torch::Tensor decoded_boxes, torch::Tensor maskTensor);
 
