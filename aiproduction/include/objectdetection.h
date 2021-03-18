@@ -51,6 +51,7 @@ namespace ai4prod
             int m_iMrows;
             int m_iMcols;
 
+            int m_iNumClasses;
             float m_fNmsThresh;
             float m_fDetectionThresh;
 
@@ -112,7 +113,8 @@ namespace ai4prod
 
             void setOnnxRuntimeEnv();
             void setOnnxRuntimeModelInputOutput();
-            void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path);
+            bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses,MODE t, std::string model_path);
+            bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w,int numClasses, MODE t, std::string model_path);
             void setEnvVariable();
             void setSession();
 
@@ -136,7 +138,7 @@ namespace ai4prod
 
             virtual ~Yolov3();
 
-            bool init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path = NULL);
+            bool init(std::string modelPathOnnx, int input_h, int input_w,int numClasses, MODE t, std::string model_path = NULL);
 
             void preprocessing(Mat &Image);
             torch::Tensor postprocessing();

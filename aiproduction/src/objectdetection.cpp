@@ -72,7 +72,47 @@ namespace ai4prod
             num_out_nodes = m_OrtSession->GetOutputCount();
         }
 
-        void Yolov3::createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
+        bool Yolov3::checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
+        {
+            if (m_eMode != t)
+            {
+                m_sMessage = "ERROR: mode initialization is different from configuration file. Please choose another save directory.";
+                return false;
+            }
+
+            if (input_h != m_iInput_h)
+            {
+                m_sMessage = "ERROR: Image input height is different from configuration file.";
+                return false;
+            }
+
+            if (input_w != m_iInput_w)
+            {
+                m_sMessage = "ERROR: Image input width is different from configuration file. ";
+                return false;
+            }
+
+            if (m_iNumClasses != numClasses)
+            {
+                m_sMessage = "ERROR: Number of model class is different from configuration file.";
+                return false;
+            }
+
+            if (m_eMode == TensorRT)
+            {
+
+                if (m_sModelOnnxPath != modelPathOnnx && m_sEngineCache == "1")
+                {
+
+                    m_sMessage = "WARNING: Use cache tensorrt engine file with different onnx Model";
+                    return true;
+                }
+            }
+
+            return true;
+        }
+
+        bool Yolov3::createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
         {
 
             //retrive or create config yaml file
@@ -90,6 +130,13 @@ namespace ai4prod
                 m_iInput_h = m_ymlConfig["height"].as<int>();
                 m_eMode = aut.setMode(m_ymlConfig["Mode"].as<std::string>());
                 m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
+                m_iNumClasses = m_ymlConfig["numClasses"].as<int>();
+
+                if (!checkParameterConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
+                {
+                    return false;
+                }
+                return true;
             }
 
             else
@@ -104,6 +151,7 @@ namespace ai4prod
                 m_iInput_h = input_h;
                 m_eMode = t;
                 m_sModelOnnxPath = modelPathOnnx;
+                m_iNumClasses = numClasses;
 
                 m_ymlConfig["fp16"] = m_sEngineFp;
                 m_ymlConfig["engine_cache"] = m_sEngineCache;
@@ -114,9 +162,12 @@ namespace ai4prod
                 m_ymlConfig["height"] = m_iInput_h;
                 m_ymlConfig["Mode"] = aut.setYamlMode(m_eMode);
                 m_ymlConfig["modelOnnxPath"] = m_sModelOnnxPath;
+                m_ymlConfig["numClasses"] = m_iNumClasses;
 
                 std::ofstream fout(m_sModelTrPath + "/config.yaml");
                 fout << m_ymlConfig;
+
+                return true;
             }
         }
 
@@ -174,24 +225,28 @@ namespace ai4prod
         }
 
         //function to initialize on Linux
-        bool Yolov3::init(std::string modelPathOnnx, int input_h, int input_w, MODE t, std::string model_path)
+        bool Yolov3::init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
         {
             if (!m_bCheckInit)
             {
                 try
                 {
-                     
-                    if(!aut.createFolderIfNotExist(model_path)){
-                        
-                        cout<<"cannot create folder"<<endl;
-                        
+
+                    if (!aut.createFolderIfNotExist(model_path))
+                    {
+
+                        cout << "cannot create folder" << endl;
+
                         return false;
-                        
                     }
 
                     cout << "INIT MODE " << t << endl;
 
-                    createYamlConfig(modelPathOnnx, input_h, input_w, t, model_path);
+                    if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
+                    {
+
+                        return false;
+                    }
 
                     if (!aut.checkMode(m_eMode, m_sMessage))
                     {
@@ -304,11 +359,6 @@ namespace ai4prod
                 m_InputTorchTensorSize = Image.cols * Image.rows * Image.channels();
 
                 m_bCheckPre = true;
-
-                // imshow("insidePadding", Image);
-                // waitKey(500);
-                // cv::Mat test;
-                // test = aut.convertTensortToMat(m_TInputTorchTensor, 608, 608);
             }
             else
             {

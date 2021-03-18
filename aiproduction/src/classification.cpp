@@ -45,7 +45,48 @@ namespace ai4prod
             m_bCheckPost = true;
         }
 
-        void ResNet50::createYamlConfig(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
+        bool ResNet50::checkParameterConfig(std::string modelPathOnnx, int input_w, int input_h, int numClasses, MODE t)
+        {
+            if (m_eMode != t)
+            {
+                m_sMessage = "ERROR: mode initialization is different from configuration file. Please choose another save directory.";
+                return false;
+            }
+
+            if (input_h != m_iInput_h)
+            {
+                m_sMessage = "ERROR: Image input height is different from configuration file.";
+                return false;
+            }
+
+            if (input_w != m_iInput_w)
+            {
+                m_sMessage = "ERROR: Image input width is different from configuration file. ";
+                return false;
+            }
+
+            if (m_iNumClasses != numClasses)
+            {
+                m_sMessage = "ERROR: Number of model class is different from configuration file.";
+                
+                return false;
+            }
+
+            if (m_eMode == TensorRT)
+            {
+
+                if (m_sModelOnnxPath != modelPathOnnx && m_sEngineCache == "1")
+                {
+
+                    m_sMessage = "WARNING: Use cache tensorrt engine file with different onnx Model";
+                    return true;
+                }
+            }
+
+            return true;
+        }
+
+        bool ResNet50::createYamlConfig(std::string modelPathOnnx, int input_w, int input_h, int numClasses, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
         {
 
             //retrive or create config yaml file
@@ -58,25 +99,32 @@ namespace ai4prod
                 m_sEngineCache = m_ymlConfig["engine_cache"].as<std::string>();
                 m_sModelTrPath = m_ymlConfig["engine_path"].as<std::string>();
                 m_iNumberOfReturnedPrediction = m_ymlConfig["outputClass"].as<int>();
-                m_iModelNumberOfClass = m_ymlConfig["modelNumberOfClass"].as<int>();
+                m_iNumClasses = m_ymlConfig["modelNumberOfClass"].as<int>();
                 m_iInput_w = m_ymlConfig["width"].as<int>();
                 m_iInput_h = m_ymlConfig["width"].as<int>();
                 m_iCropImage = m_ymlConfig["crop"].as<int>();
                 m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
                 m_eMode = aut.setMode(m_ymlConfig["Mode"].as<std::string>());
+
+
+               if (!checkParameterConfig(modelPathOnnx, input_w, input_h, numClasses, t))
+                {
+                    return false;
+                }
+                return true;
             }
             else
             {
 
                 cout << "INIT" << endl;
 
-                m_sModelOnnxPath = modelPath;
+                m_sModelOnnxPath = modelPathOnnx;
                 //size at which image is resised
-                m_iInput_w = width;
-                m_iInput_h = height;
+                m_iInput_w = input_w;
+                m_iInput_h = input_h;
                 //by default input of neural network is 224 same as imagenet
                 m_iCropImage = 224;
-                m_iModelNumberOfClass = ModelNumberOfClass;
+                m_iNumClasses = numClasses;
                 m_iNumberOfReturnedPrediction = NumberOfReturnedPrediction;
                 m_sModelTrPath = modelTr_path;
                 m_eMode = t;
@@ -88,7 +136,7 @@ namespace ai4prod
                 m_ymlConfig["engine_cache"] = m_sEngineCache;
                 m_ymlConfig["engine_path"] = m_sModelTrPath;
                 m_ymlConfig["outputClass"] = m_iNumberOfReturnedPrediction;
-                m_ymlConfig["modelNumberOfClass"] = m_iModelNumberOfClass;
+                m_ymlConfig["modelNumberOfClass"] = m_iNumClasses;
                 m_ymlConfig["width"] = m_iInput_w;
                 m_ymlConfig["height"] = m_iInput_h;
                 m_ymlConfig["crop"] = m_iCropImage;
@@ -98,6 +146,8 @@ namespace ai4prod
 
                 std::ofstream fout(m_sModelTrPath + "/config.yaml");
                 fout << m_ymlConfig;
+
+                return true;
             }
         }
 
@@ -195,25 +245,28 @@ namespace ai4prod
             out_node_names = std::vector<const char *>(num_out_nodes);
         }
 
-        bool ResNet50::init(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
+        bool ResNet50::init(std::string modelPath, int width, int height, int numClasses, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path)
         {
             if (!m_bCheckInit)
             {
                 try
                 {
 
-                    
-                    if(!aut.createFolderIfNotExist(modelTr_path)){
-                        
-                        cout<<"cannot create folder"<<endl;
-                        
+                    if (!aut.createFolderIfNotExist(modelTr_path))
+                    {
+
+                        cout << "cannot create folder" << endl;
+
                         return false;
-                        
                     }
 
                     cout << "INIT MODE " << t << endl;
 
-                    createYamlConfig(modelPath, width, height, ModelNumberOfClass, NumberOfReturnedPrediction, t, modelTr_path);
+                    if(!createYamlConfig(modelPath, width, height, numClasses, NumberOfReturnedPrediction, t, modelTr_path)){
+                        
+                        cout<<m_sMessage<<endl;
+                        return false;
+                    };
 
                     if (!aut.checkMode(m_eMode, m_sMessage))
                     {
@@ -435,7 +488,7 @@ namespace ai4prod
             {
 
                 //https://discuss.pytorch.org/t/can-i-initialize-tensor-from-std-vector-in-libtorch/33236/4
-                m_TOutputTensor = torch::from_blob(m_fpOutOnnxRuntime, {m_iModelNumberOfClass}).clone();
+                m_TOutputTensor = torch::from_blob(m_fpOutOnnxRuntime, {m_iNumClasses}).clone();
 
                 std::tuple<torch::Tensor, torch::Tensor> bestTopPrediction = torch::sort(m_TOutputTensor, 0, true);
 

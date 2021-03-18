@@ -36,7 +36,7 @@ namespace ai4prod
 
          //INIT VARIABLE
 
-         int m_iModelNumberOfClass;
+         int m_iNumClasses;
          int m_iNumberOfReturnedPrediction;
 
          YAML::Node m_ymlConfig;
@@ -117,7 +117,8 @@ namespace ai4prod
 
          void setOnnxRuntimeEnv();
          void setOnnxRuntimeModelInputOutput();
-         void createYamlConfig(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path);
+         bool checkParameterConfig(std::string modelPathOnnx, int input_w, int input_h, int numClasses, MODE t);
+         bool createYamlConfig(std::string modelPathOnnx, int input_w, int input_h, int numClasses, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path);
          void setEnvVariable();
          void setSession();
 
@@ -128,7 +129,7 @@ namespace ai4prod
 
          virtual ~ResNet50();
 
-         bool init(std::string modelPath, int width, int height, int ModelNumberOfClass, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path = NULL);
+         bool init(std::string modelPath, int width, int height, int numClasses, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path = NULL);
 
          string m_sAccurayImagePath;
 
