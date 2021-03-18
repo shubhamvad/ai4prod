@@ -64,12 +64,15 @@ int main(){
     yolov3 = new Yolov3();
 	cout << "INIT SESSION " << endl;
 
-	// init(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,PathsavedModelandConfig)
+	// init(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,NumClasses,Mode,PathsavedModelandConfig)
 	//Mode= Cpu,TensorRT
 
     //init function return true if model is initialized correctly
 	// For model path is better to use absolute path in order to avoid loading different model
-    yolov3->init("../../../../Model/Yolov3/yolov3-spp.onnx", 608, 608, TensorRT, "../tensorrtModel");
+    if(!yolov3->init("../../../../Model/Yolov3/yolov3-spp.onnx", 608, 608, 80,TensorRT, "../tensorrtModel")){
+
+        return 0;
+    }
 
     cout<<"START PROCESSING"<<endl;
 

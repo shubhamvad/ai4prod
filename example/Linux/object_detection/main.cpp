@@ -61,11 +61,15 @@ int main()
 
     //linux
     // Check our api for full description
-    // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
+    // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,NumClasses,Mode,TensortFoldersavedModel)
     yolov3 = new Yolov3();
 
-    yolov3->init("/home/aistudios/Develop/Official/ai4prod/Model/Yolov3/yolov3-spp.onnx", 608, 608, TensorRT, "tensorrtModel");
-   
+    if(!yolov3->init("/home/aistudios/Develop/Official/ai4prod/Model/Yolov3/yolov3-spp.onnx", 608, 608, 80,TensorRT, "tensorrtModel")){
+
+        return 0;
+    }
+    
+
     cout << "START PROCESSING" << endl;
 
 

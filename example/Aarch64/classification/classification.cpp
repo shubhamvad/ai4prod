@@ -70,7 +70,9 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	resnet->init("../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel"); 
+	if(!resnet->init("../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel")){
+		return 0;
+	} 
     
 	//resnet = new ResNet50();
 	cout << "test" << endl;
