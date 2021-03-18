@@ -48,7 +48,7 @@ https://www.ai4prod.ai/docs/tutorial/yolov3/
 ### Inference Time
 
 ### Accuracy
-![image info](./images/readme/Accuracy.png)
+![title](Images/readme/Accuracy.png)
 
 
 ## Troubleshooting
