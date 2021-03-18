@@ -52,7 +52,7 @@ using namespace std;
 int main()
 {
 
-        //YOLO MAP ---------------------------------------------------------------------
+      
 
         //setup image folder of Coco dataset
 
@@ -61,17 +61,18 @@ int main()
 
         Yolact *yolact;
 
-        //linux
+  
         // Check our api for full description
-        // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
+        // Yolact(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,numClasses,Mode,TensortFoldersavedModel)
+        //MODE = (Cpu,TensorRt)
         yolact = new Yolact();
 
-        yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550, 80, TensorRT, "../tensorrtModel");
-        //windows
+        bool checkInit=yolact->init("/home/aistudios/Develop/Official/NewImplementation/Done/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550, 80, TensorRT, "../tensorrtModel");
+        
+        if(!checkInit){
 
-        //C:\Users\erict\OneDrive\Desktop\Develop\ai4prod\onnxruntime\models
-
-        //yolov3 = new Yolov3("C:/Users/erict/OneDrive/Desktop/Develop/ai4prod/onnxruntime/models/yolov3-spp-darknet.onnx", 608, 608, "C:/Users/erict/OneDrive/Desktop/engine");
+                return 0;
+        }
 
         cout << "START PROCESSING" << endl;
 
@@ -94,11 +95,12 @@ int main()
 
                 img = imread(image_id.c_str());
 
-                // auto start1 = high_resolution_clock::now();
-
+                //duration0
+                auto start0 = high_resolution_clock::now();
+                
                 yolact->preprocessing(img);
 #ifdef TIME_EVAL
-
+                //duration
                 auto start = high_resolution_clock::now();
 
 #endif
@@ -108,7 +110,8 @@ int main()
 
                 auto duration = duration_cast<microseconds>(stop - start);
 
-#endif
+#endif          
+                //duration1
                 auto start1 = high_resolution_clock::now();
                 auto result = yolact->postprocessing(image_id);
 
@@ -116,14 +119,13 @@ int main()
                 auto stop1 = high_resolution_clock::now();
 
                 auto duration1 = duration_cast<microseconds>(stop1 - start);
-                infTime.push_back((double)duration1.count());
+                //total inference time
+                auto duration0 = duration_cast<microseconds>(stop1 - start0);
+                infTime.push_back((double)duration.count());
 #endif
-                // auto stop1 = high_resolution_clock::now();
-
-                // auto duration1 = duration_cast<microseconds>(stop1 - start1);
 
                 // cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000) << "Sec" << endl;
-                // cout << "SINGLE TIME PostProcessing " << (double)duration1.count() / (1000000) << "Sec" << endl;
+                
 #ifdef TIME_EVAL
                 if (numDetection == 1000)
                         break;
@@ -140,31 +142,28 @@ int main()
 
                         //SHOW RESULT
 
-                        // auto resultBbox = yolact->getCorrectBbox(result);
+                        auto resultBbox = yolact->getCorrectBbox(result);
 
-                        // for (auto &rect : resultBbox)
-                        // {
+                        for (auto &rect : resultBbox)
+                        {
 
-                        //         rectangle(img, rect, (255, 255, 255), 0.5);
-                        // }
+                                rectangle(img, rect, (255, 255, 255), 0.5);
+                        }
 
-                        // imshow("bbox", img);
+                        imshow("bbox", img);
 
-                        // auto resultMask = yolact->getCorrectMask(result);
+                        auto resultMask = yolact->getCorrectMask(result);
 
-                        // for (auto &mask : resultMask)
+                        for (auto &mask : resultMask)
 
-                        // {
-                        //         cv::imshow("mask", mask);
-                        //         waitKey(0);
-                        // }
+                        {
+                                cv::imshow("mask", mask);
+                                waitKey(0);
+                        }
                 }
         }
 
-        // auto stop = high_resolution_clock::now();
-        // auto duration = duration_cast<microseconds>(stop - start);
-
-        // cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000 * numDetection) << "Sec" << endl;
+       
 #ifdef TIME_EVAL
 
         double sum_of_elems = 0;

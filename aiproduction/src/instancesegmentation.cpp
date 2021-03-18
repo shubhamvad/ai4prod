@@ -34,7 +34,50 @@ namespace ai4prod
         {
         }
 
-        void Yolact::createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
+        //verify if all parameters are good.
+        //for example if Mode: tensorRt is the same as initialization
+        bool Yolact::checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
+        {
+            if (m_eMode != t)
+            {
+                m_sMessage = "ERROR: mode initialization is different from configuration file. Please choose another save directory.";
+                return false;
+            }
+            
+            if (input_h != m_iInput_h)
+            {
+                m_sMessage = "ERROR: Image input height is different from configuration file.";
+                return false;
+            }
+            
+            if (input_w != m_iInput_w)
+            {
+                m_sMessage = "ERROR: Image input width is different from configuration file. ";
+                return false;
+            }
+            
+            if (m_iNumClasses != numClasses)
+            {
+                m_sMessage = "ERROR: Number of model class is different from configuration file.";
+                return false;
+            }
+
+            if(m_eMode==TensorRT){
+                
+                
+                if (m_sModelOnnxPath!=modelPathOnnx && m_sEngineCache=="1"){
+
+                m_sMessage = "WARNING: Use cache tensorrt engine file with different onnx Model";
+                return true;
+                }
+            }
+
+            return true;
+        }
+
+        //create config file if not present
+        //return false if something is not configured correctly
+        bool Yolact::createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
         {
 
             //retrive or create config yaml file
@@ -53,6 +96,12 @@ namespace ai4prod
                 m_eMode = m_aut.setMode(m_ymlConfig["Mode"].as<std::string>());
                 m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
                 m_iNumClasses = m_ymlConfig["numClasses"].as<int>();
+
+                if (!checkParameterConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
+                {
+                    return false;
+                }
+                return true;
             }
 
             else
@@ -82,6 +131,8 @@ namespace ai4prod
 
                 std::ofstream fout(m_sModelTrPath + "/config.yaml");
                 fout << m_ymlConfig;
+
+                return true;
             }
         }
         void Yolact::setOnnxRuntimeEnv()
@@ -140,9 +191,15 @@ namespace ai4prod
             }
 
             cout << "INIT MODE " << t << endl;
+            //create config file and check for configuration error
+            if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
+            {
 
-            createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path);
+                cout << m_sMessage << endl;
+                return false;
+            }
 
+            //verify if Mode is implemented
             if (!m_aut.checkMode(m_eMode, m_sMessage))
             {
 
@@ -196,7 +253,6 @@ namespace ai4prod
             m_ImageHeightOrig = Image.rows;
             m_ImageWidhtOrig = Image.cols;
 
-
             //tensor with RGB channel
             m_TInputTensor = m_aut.convertMatToTensor8bit(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
 
@@ -206,12 +262,9 @@ namespace ai4prod
 
             m_InputTorchTensorSize = size[1] * size[2] * size[3];
 
-
-
             m_TInputTensor[0][0] = m_TInputTensor[0][0].sub_(123.8).div_(58.40);
             m_TInputTensor[0][1] = m_TInputTensor[0][1].sub_(116.78).div_(57.12);
             m_TInputTensor[0][2] = m_TInputTensor[0][2].sub_(103.94).div_(57.38);
-
         }
 
         void Yolact::runmodel()
@@ -266,7 +319,6 @@ namespace ai4prod
 
                 auto tensortData = input_tensor.GetTensorMutableData<float>();
 
-
                 auto tensorINput_test = torch::from_blob((float *)(tensortData), {1, 3, 550, 550}).clone();
 
                 assert(input_tensor.IsTensor());
@@ -280,8 +332,6 @@ namespace ai4prod
                 m_fpOutOnnxRuntime[2] = output_tensors[2].GetTensorMutableData<float>();
                 m_fpOutOnnxRuntime[3] = output_tensors[3].GetTensorMutableData<float>();
                 m_fpOutOnnxRuntime[4] = output_tensors[4].GetTensorMutableData<float>();
-
-              
             }
             else
             {
@@ -326,7 +376,6 @@ namespace ai4prod
         */
         torch::Tensor Yolact::intersect(torch::Tensor box_a, torch::Tensor box_b)
         {
-
 
             int n = box_a.sizes()[0];
             int A = box_a.sizes()[1];
@@ -374,7 +423,6 @@ namespace ai4prod
             auto inter2 = inter.index({torch::indexing::Slice(None), torch::indexing::Slice(None),
                                        torch::indexing::Slice(None), 1});
 
-
             torch::Tensor intersect = inter1 * inter2;
 
             return intersect;
@@ -401,7 +449,6 @@ namespace ai4prod
                                          torch::indexing::Slice(None), 1})))
                               .unsqueeze(2)
                               .expand_as(inter);
-
 
             auto area_b = ((box_b.index({torch::indexing::Slice(None),
                                          torch::indexing::Slice(None), 2}) -
@@ -456,10 +503,8 @@ namespace ai4prod
 
             iou = iou.triu(1);
 
-    
             auto [iou_max, indeces_max] = torch::max(iou, 1);
 
-            
             //0.5 iou_threshold
             torch::Tensor keep_iou = iou_max <= m_fNmsThresh;
 
@@ -505,8 +550,6 @@ namespace ai4prod
             //[0] is the batch size element. If one element is 0
             result.masks = maskTensor[0].index({keep, torch::indexing::Slice(None)});
 
-
-
             if (!result.scores.numel())
             {
 
@@ -515,7 +558,7 @@ namespace ai4prod
 
                 if (result.scores.sizes()[1] == 0)
                 {
-       
+
                     InstanceSegmentationResult tensor = {};
                     return tensor;
                 }
@@ -532,7 +575,6 @@ namespace ai4prod
             torch::Tensor maskTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[2]), {1, 19248, 32}).clone();
             torch::Tensor priorsTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[3]), {19248, 4}).clone();
             torch::Tensor protoTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[4]), {1, 138, 138, 32}).clone();
-
 
             int batch_size = locTensor.sizes()[0];
             int num_priors = priorsTensor.sizes()[0];
@@ -553,14 +595,10 @@ namespace ai4prod
 
             if (!result.scores.numel())
             {
-                
-               
+
                 InstanceSegmentationResult tensor = {};
                 return tensor;
             }
-
-            
-           
 
             //all score above threshold
             auto final_keep = (result.scores > m_fDetectionThresh);
@@ -759,7 +797,7 @@ namespace ai4prod
 
             Json::StreamWriterBuilder builder;
             const std::string json_file = Json::writeString(builder, m_JsonRootArray);
-           
+
             ofstream myfile;
             myfile.open("yolactVal.json", std::ios::in | std::ios::out | std::ios::app);
             myfile << json_file + "\n";

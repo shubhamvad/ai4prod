@@ -102,7 +102,8 @@ namespace ai4prod
 
             //FUNCTION
             void setOnnxRuntimeEnv();
-            void createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses,MODE t, std::string model_path);
+            bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses,MODE t, std::string model_path);
+            bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses,MODE t, std::string model_path);
             //void setEnvVariable();
             void setSession();
             void setOnnxRuntimeModelInputOutput();
