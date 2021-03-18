@@ -21,6 +21,9 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
+//inference time detection
+//#define TIME_EVAL
+
 #include <iostream>
 
 #include "torch/torch.h"
@@ -38,7 +41,6 @@ using namespace objectDetection;
 using namespace classification;
 
 using namespace std::chrono;
-using namespace cv;
 
 #include <experimental/filesystem>
 
@@ -46,74 +48,66 @@ namespace fs = std::experimental::filesystem;
 
 using namespace std;
 
+int main()
+{
 
-int main(){
+    //YOLO ---------------------------------------------------------------------
 
-    //YOLO MAP ---------------------------------------------------------------------
-    
-    //setup image folder of Coco dataset
+    //setup image folder
 
-    std::string AccurayFolderPath = "../../../Images/objectdetection/";
+    std::string AccurayFolderPath = "/home/aistudios/Desktop/images_Manu/Immagini_cani";
 
     Yolov3 *yolov3;
 
-    
-
-    // Check our api for full description 
-    
+    //linux
+    // Check our api for full description
+    // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,NumClasses,Mode,TensortFoldersavedModel)
     yolov3 = new Yolov3();
-	cout << "INIT SESSION " << endl;
 
-	// init(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,NumClasses,Mode,PathsavedModelandConfig)
-	//Mode= Cpu,TensorRT
-
-    //init function return true if model is initialized correctly
-	// For model path is better to use absolute path in order to avoid loading different model
-    if(!yolov3->init("../../../../Model/Yolov3/yolov3-spp.onnx", 608, 608, 80,TensorRT, "../tensorrtModel")){
+    if (!yolov3->init("/home/aistudios/Develop/Official/ai4prod/Model/Yolov3/yolov3-spp.onnx", 608, 608, 80, TensorRT, "tensorrtModel"))
+    {
 
         return 0;
     }
 
-    cout<<"START PROCESSING"<<endl;
+    cout << "START PROCESSING" << endl;
 
-    //auto start = high_resolution_clock::now();
-
-    double numDetection=0;
+    vector<double> infTime;
 
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
     {
-        //std::cout << entry.path() << std::endl;
 
-        string image_id = entry.path().string();
+        string image_id = entry.path();
 
-        //read image
         Mat img;
+
         img = imread(image_id.c_str());
 
-        // auto start1 = high_resolution_clock::now();
-
         yolov3->preprocessing(img);
-       
-        yolov3->runmodel();
+#ifdef TIME_EVAL
 
-		//result is multi dim tensor with n row.
-		//n are number of detections
-		//reuslt is (x,y,width,height,class_number,class_probability)
+        auto start = high_resolution_clock::now();
+
+#endif
+        yolov3->runmodel();
+#ifdef TIME_EVAL
+        auto stop = high_resolution_clock::now();
+
+        auto duration = duration_cast<microseconds>(stop - start);
+
+        infTime.push_back((double)duration.count());
+#endif
+
         torch::Tensor result = yolov3->postprocessing();
 
-		
-        // auto stop1 = high_resolution_clock::now();
-
-        // auto duration1 = duration_cast<microseconds>(stop1 - start1);
-
-        // cout << "SINGLE TIME INFERENCE " << (double)duration1.count() / (1000000) << "Sec" << endl;
-
-     
+#ifdef TIME_EVAL
+        if (numDetection == 1000)
+            break;
+#endif
 
         if (!result.numel())
         {
             std::cout << "tensor is empty! No detection Found" << std::endl;
-            
         }
         else
         {
@@ -129,34 +123,33 @@ int main(){
                 float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
 
                 brect = yolov3->get_rect(img, tmp);
-                
-                string category= to_string(result[i][4].item<int>());
+
+                string category = to_string(result[i][4].item<float>());
                 cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
                 cv::putText(img,                         //target image
                             category.c_str(),            //text
                             cv::Point(brect.x, brect.y), //top-left position
                             cv::FONT_HERSHEY_DUPLEX,
                             1.0,
-                            CV_RGB(0, 0, 0), //font color
+                            CV_RGB(118, 185, 0), //font color
                             2);
                 //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
             }
 
-			cvtColor(img, img, cv::COLOR_RGB2BGR);
-            imshow("immagine", img);
+            imshow("image", img);
             waitKey(0);
         }
     }
 
-    // auto stop = high_resolution_clock::now();
-    // auto duration = duration_cast<microseconds>(stop - start);
+#ifdef TIME_EVAL
 
-    // cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000 * numDetection) << "Sec" << endl;
+    double sum_of_elems = 0;
+    sum_of_elems = std::accumulate(infTime.begin(), infTime.end(), 0);
 
+    cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000 * 1000) << "Sec" << endl;
 
+#endif
 
-    cout<<"program end"<<endl;
+    cout << "program end" << endl;
     return 0;
-
-
 }
