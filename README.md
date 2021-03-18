@@ -24,7 +24,7 @@ Ai4prod is built to be as easy as possible to get started.
 1) Download this repository
 2) Download dependencies of the project. You can find all dependencies here 
 https://drive.google.com/drive/u/2/folders/1B4lXyGM2IQmj6IHFThwlJRqnMGQoTjNq
-3) Build https://www.ai4prod.ai/build-ai4prod-inference-library/
+3) Build https://www.ai4prod.ai/docs/getting-started/
 4) See our example folder
 
 Note: some dependencies are not build yet. If you need send us an email to info@ai4prod.ai
@@ -46,6 +46,7 @@ https://www.ai4prod.ai/docs/tutorial/yolov3/
 ## Results 
 
 ### Inference Time
+![title](Images/readme/Time.png)
 
 ### Accuracy
 ![title](Images/readme/Accuracy.png)
