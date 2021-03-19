@@ -14,7 +14,7 @@ find_package(aiproduction REQUIRED)
 
 #link_directories(inference install-Lib/lib)
 
-add_executable(inference main.cpp)
+add_executable(inference classification.cpp)
 
 if(UNIX)
 target_link_libraries(inference ${AIPRODUCTION_LIBS} stdc++fs)

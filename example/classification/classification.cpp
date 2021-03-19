@@ -28,8 +28,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include "torch/torch.h"
 
 #include "classification.h"
-#include "objectdetection.h"
-#include "Sort.h"
+
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
@@ -37,7 +36,6 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 // include namespace 
 using namespace ai4prod;
-using namespace objectDetection;
 using namespace classification;
 using namespace cv;
 using namespace std::chrono;
@@ -70,7 +68,7 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	if(!resnet->init("../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel")){
+	if(!resnet->init("../resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel")){
 
 		return 0;
 	} 
@@ -78,7 +76,7 @@ int main()
 	//resnet = new ResNet50();
 	cout << "test" << endl;
 	//PATH TO FOLDER 
-    std::string AccurayFolderPath = "../../../../Images/classification/";
+    std::string AccurayFolderPath = "../images/";
 
     cout << "Start Classification" << endl;
 
