@@ -45,7 +45,7 @@ if(result)
 		endif()
 		if (MSVC)
 			#example
-			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Windows/objectdetection/Install")
+			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/classification/Install")
 			#accuracy
 			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/objectDetection/TestCoco/Cpp/Windows/Install")
 		endif()
@@ -70,6 +70,11 @@ set(ONNXRUNTIME_INCLUDE_DIR deps/onnxruntime/include/)
 #onnxruntime build with tensorrt 
 # tensorrt library must be in /usr/local/tensorrt for linux
 link_directories(deps/onnxruntime/lib/onnxruntime/tensorrt)
+
+if(MSVC)
+# this add folder path to .lib library in linker directory
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/build/vcpkg_installed/x64-windows/lib)
+endif()
 
 include_directories(
   ${ONNXRUNTIME_INCLUDE_DIR}
@@ -121,40 +126,76 @@ message("JSON CPP ${JSON_CPP_INCLUDE_DIRS}")
 message("YAML-CPP ${YAML_CPP_INCLUDE_DIR}")
 #FILE(GLOB MY_SRCS dir/*)
 
-FILE(GLOB MY_SRCS 
+FILE(GLOB MY_SRCS_INCLUDE 
 aiproduction/include/classification.h 
 aiproduction/include/objectdetection.h 
 aiproduction/include/instancesegmentation.h 
-aiproduction/src/classification.cpp 
-aiproduction/src/objectdetection.cpp
-aiproduction/src/instancesegmentation.cpp  
 aiproduction/include/utils.h 
-aiproduction/src/utils.cpp 
 aiproduction/include/aiproduction_export.h 
 aiproduction/include/modelInterface.h
 aiproduction/include/customDataType.h
 )
+
+FILE(GLOB MY_SRCS 
+aiproduction/src/classification.cpp 
+aiproduction/src/objectdetection.cpp
+aiproduction/src/instancesegmentation.cpp 
+aiproduction/src/utils.cpp )
+
 #ai4production Library
-add_library(aiproduction SHARED ${MY_SRCS})
+add_library(aiproduction SHARED ${MY_SRCS} ${MY_SRCS_INCLUDE})
 
 
 target_include_directories(aiproduction PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
+
 
 if(UNIX)
         
         target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp_static stdc++fs)
     endif()
-    if (MSVC)
+if (MSVC)
+    
     target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp )
 endif()
 
 
 #TEST
 
-add_executable(catch_test test/testClassification.cpp ${MY_SRCS} )
+add_executable(catch_test test/testClassification.cpp ${MY_SRCS_INCLUDE} )
+
 
 target_include_directories(catch_test PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
-target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp_static stdc++fs Catch2::Catch2)
+
+if(UNIX)
+    target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp_static stdc++fs Catch2::Catch2)
+endif()
+
+if (MSVC)
+    target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp Catch2::Catch2 )
+
+    file(GLOB TORCH_DLLS "deps/libtorch/lib/*.dll")
+  add_custom_command(TARGET catch_test
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TORCH_DLLS}
+                     $<TARGET_FILE_DIR:catch_test>)
+     #tensorrt 
+   file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
+   add_custom_command(TARGET catch_test
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TENSORRT_DLL}
+                     $<TARGET_FILE_DIR:catch_test>)
+     
+                     
+    file(GLOB ONNXRUNTIME_DLL "deps/onnxruntime/lib/onnxruntime/tensorrt/*.dll")
+    add_custom_command(TARGET catch_test
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${ONNXRUNTIME_DLL}
+                     $<TARGET_FILE_DIR:catch_test>)
+endif()
+
 
 
 #VERIFY EXTRA DEPENDENCIES
@@ -183,12 +224,7 @@ set_target_properties(
 
 #Installing
 
-set(AIPRODUCTION_INCLUDES aiproduction/include/classification.h 
-aiproduction/include/objectdetection.h 
-aiproduction/include/utils.h 
-aiproduction/include/instancesegmentation.h
-aiproduction/include/aiproduction_export.h aiproduction/include/modelInterface.h aiproduction/include/customDataType.h
-)
+set(AIPRODUCTION_INCLUDES ${MY_SRCS_INCLUDE})
 
 set_target_properties(aiproduction PROPERTIES PUBLIC_HEADER "${AIPRODUCTION_INCLUDES}" )
 
