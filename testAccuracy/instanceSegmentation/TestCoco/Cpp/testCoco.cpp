@@ -55,9 +55,10 @@ int main()
       
 
         //setup image folder of Coco dataset
-
-        std::string AccurayFolderPath = "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Dataset/Coco2017/validation/val2017";
-        //std::string AccurayFolderPath = "/home/aistudios/Develop/Official/ai4prod/testAccuracy/instanceSegmentation/TestCoco/Cpp/Linux/Dataset";
+        //Linux 
+        //std::string AccurayFolderPath = "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Dataset/Coco2017/validation/val2017";
+        //Windows
+        std::string AccurayFolderPath = "C:/Users/erict/Desktop/Dataset/Coco2017/validation/val2017";
 
         Yolact *yolact;
 
@@ -67,7 +68,7 @@ int main()
         //MODE = (Cpu,TensorRt)
         yolact = new Yolact();
 
-        bool checkInit=yolact->init("/home/aistudios/Develop/Official/NewImplementation/Done/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550, 80, TensorRT, "../tensorrtModel");
+        bool checkInit=yolact->init("../yolact.onnx", 550, 550, 80, Cpu, "../tensorrtModel2");
         
         if(!checkInit){
 
@@ -86,7 +87,7 @@ int main()
         {
                 //std::cout << entry.path() << std::endl;
 
-                string image_id = entry.path();
+                string image_id = entry.path().string();
 
                 //image processed
                 //cout << image_id << endl;
@@ -127,7 +128,7 @@ int main()
                 // cout << "SINGLE TIME INFERENCE " << (double)duration.count() / (1000000) << "Sec" << endl;
                 
 #ifdef TIME_EVAL
-                if (numDetection == 1000)
+                if (numDetection == 10)
                         break;
 #endif
                 numDetection++;
@@ -142,7 +143,7 @@ int main()
 
                         //SHOW RESULT
 
-                        auto resultBbox = yolact->getCorrectBbox(result);
+                       /* auto resultBbox = yolact->getCorrectBbox(result);
 
                         for (auto &rect : resultBbox)
                         {
@@ -159,7 +160,7 @@ int main()
                         {
                                 cv::imshow("mask", mask);
                                 waitKey(0);
-                        }
+                        }*/
                 }
         }
 
@@ -169,7 +170,7 @@ int main()
         double sum_of_elems = 0;
         sum_of_elems = std::accumulate(infTime.begin(), infTime.end(), 0);
 
-        cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000 * 1000) << "Sec" << endl;
+        cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000 * 10) << "Sec" << endl;
 
 #endif
         //create yoloVal.json

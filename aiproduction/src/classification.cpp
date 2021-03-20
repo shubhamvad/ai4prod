@@ -499,6 +499,7 @@ namespace ai4prod
 
 #ifdef EVAL_ACCURACY
 
+                cout << "EVAL_ACCURACY" << endl;
                 ofstream myfile;
                 myfile.open("classification-Detection.csv", std::ios::in | std::ios::out | std::ios::app);
 

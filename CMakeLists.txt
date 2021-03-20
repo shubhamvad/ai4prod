@@ -22,43 +22,12 @@ endif()
 #extra include directories
 set(AIPRODUCTION_INCLUDE_EXTRA "")
 
-
-if(UNIX)
-set (DEFAULT_PATH 1)
-endif()
 #Where to install the library
 
-string(COMPARE EQUAL "${DEFAULT_PATH}" 1 result)
+string(COMPARE EQUAL "${TEST_ACCURACY}" 1 accuracy)
 
 # user not specified installation path
  
-if(result)
-
-
-	if(${X86_64})
-    
-
-		if(UNIX)
-            set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/instanceSegmentation/TestCoco/Cpp/Linux/Install")
-            #set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Linux/instance_segmentation/Install")
-			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/extra/Tracking/Install")
-		endif()
-		if (MSVC)
-			#example
-			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/classification/Install")
-			#accuracy
-			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/objectDetection/TestCoco/Cpp/Windows/Install")
-		endif()
-
-	elseif(${AARCH64})
-			#accuracy testAccuracy/classification/Imagenet/Cpp/Linux
-			set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/objectDetection/TestCoco/Cpp/Linux/Install")
-			#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/example/Aarch64/classification/Install")
-	endif()
-
-endif()
-
-
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/deps/opencv/lib")
 
@@ -149,15 +118,22 @@ add_library(aiproduction SHARED ${MY_SRCS} ${MY_SRCS_INCLUDE})
 target_include_directories(aiproduction PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
 
 
-if(UNIX)
-        
-        target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp_static stdc++fs)
-    endif()
+if(UNIX)        
+    target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp_static stdc++fs)
+endif()
+
 if (MSVC)
-    
     target_link_libraries(aiproduction "${TORCH_LIBRARIES}" ${OpenCV_LIBS} onnxruntime yaml-cpp jsoncpp )
 endif()
 
+# set Cmake preprocessor definition
+if(accuracy)
+    message("WARNING. LIBRARY BUILD FOR ACCURACY EVALUATION. DO NOT USE IN PRODUCTION")
+    #This Flag enable accuracy evaluation
+    target_compile_definitions(aiproduction PRIVATE EVAL_ACCURACY)
+	#set (CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testAccuracy/classifcation/TestCoco/Cpp/Install")
+		
+endif()
 
 #TEST
 
@@ -174,7 +150,7 @@ if (MSVC)
     target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp Catch2::Catch2 )
 
     file(GLOB TORCH_DLLS "deps/libtorch/lib/*.dll")
-  add_custom_command(TARGET catch_test
+	add_custom_command(TARGET catch_test
                      POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different
                      ${TORCH_DLLS}
