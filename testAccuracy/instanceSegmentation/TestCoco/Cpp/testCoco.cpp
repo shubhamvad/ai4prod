@@ -22,7 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 //inference time detection
-#define TIME_EVAL
+//#define TIME_EVAL
 
 #include <iostream>
 
