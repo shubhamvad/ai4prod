@@ -69,7 +69,7 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	yolact->init("/media/mic-710aix/test/Develop/ai4prod/example/instance_segmentation/yolact.onnx", 550, 550,80, TensorRT, "../tensorrtModel"); 
+	yolact->init("/media/mic-710aix/test/Develop/ai4prod/example/instance_segmentation/yolact_xavier.onnx", 550, 550,80, TensorRT, "../tensorrtModel_xavier"); 
 
 	Mat img;
 	img= imread("/media/mic-710aix/test/Develop/ai4prod/example/instance_segmentation/yolact-nadal.jpeg");	
@@ -92,6 +92,11 @@ int main()
 
 
 	//return vector<Rect>
+	
+	
+		cout<<result.classes<<endl;	
+	
+	
 	auto resultBbox=yolact->getCorrectBbox(result);
 	cout<<"1"<<endl;
 
