@@ -27,10 +27,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "torch/torch.h"
 
-#include "classification.h"
-#include "objectdetection.h"
 #include "instancesegmentation.h"
-#include "Sort.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
@@ -55,34 +52,7 @@ using namespace std;
 
 int main()
 {	
-	int test= 5 + 3*4;
-	cout <<test<<endl;
-	// auto test= torch::zeros({4,8});
 
-	// auto prova= test >0.5;
-
-	// cout<<prova<<endl;
-
-	// auto test2= torch::rand({4,8,4});
-
-	// test2=test2.index({prova});
-	
-	// cout<<"TEST 2 "<< test2<<endl;
-
-	// cout<< "TEST "<< test<<endl;
-
-
-	// test= test.index({
-	// 	torch::indexing::Slice(None),
-	// 	torch::indexing::Slice(None,2)
-	// }).contiguous();
-
-	// cout<<test.sizes()<<endl;
-
-	// auto tMax= torch::max(test,0);
-	
-	// cout <<std::get<0>(tMax)<<endl;
-	// //initialize resnet
     Yolact *yolact;
     
    	//create new instance
@@ -99,10 +69,10 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	yolact->init("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/yolact.onnx", 550, 550,80, TensorRT, "../tensorrtModel"); 
+	yolact->init("/media/mic-710aix/test/Develop/ai4prod/example/instance_segmentation/yolact.onnx", 550, 550,80, TensorRT, "../tensorrtModel"); 
 
 	Mat img;
-	img= imread("/home/aistudios/Develop/Official/Inprogress/Segmentation/yolact_onnx/yolact/image/yolact-nadal.jpeg");	
+	img= imread("/media/mic-710aix/test/Develop/ai4prod/example/instance_segmentation/yolact-nadal.jpeg");	
 	yolact->preprocessing(img);
 	yolact->runmodel();
 
@@ -142,46 +112,7 @@ int main()
 	}
 
 	
-	// //resnet = new ResNet50();
-	// cout << "test" << endl;
-	// //PATH TO FOLDER 
-    // std::string AccurayFolderPath = "../../../../Images/classification/";
-
-    // cout << "Start Classification" << endl;
-
-    // for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
-    // {
-		
-		
 	
-    //     string image_id = entry.path().string();
-        
-	// 	//opencv Mat
-	// 	Mat img;
-	// 	//read image with opencv
-    //     img = imread(image_id.c_str());
-
-	// 	//ai4prod To understand how these functions works have look here https://www.ai4prod.ai/c-stack/
-
-	// 	//preprocessing(cv::Mat)
-    //     resnet->preprocessing(img);
-
-	// 	//run model on img
-    //     resnet->runmodel();
-
-	// 	//return a tuple<Tensor,Tensor>: <ClassId,Probability>
-	// 	//This output is without softmax
-    //     std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
-
-	// cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
-		
-	// //std::get<0>(prediction)[0].item<float>();
-	// //if You need softmax you can use Libtorch softmax
-
-        
-
-    
-    // }
-    cout<<"model Created"<<endl;
+    cout<<"End"<<endl;
 	
 }
