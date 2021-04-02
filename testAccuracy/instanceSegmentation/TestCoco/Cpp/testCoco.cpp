@@ -146,6 +146,7 @@ int main()
 
                         //SHOW RESULT
 
+                        cout<< "CLASSES "<<result.classes<<endl;
                        auto resultBbox = yolact->getCorrectBbox(result);
 
                         for (auto &rect : resultBbox)
