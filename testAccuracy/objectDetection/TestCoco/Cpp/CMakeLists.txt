@@ -15,9 +15,13 @@ find_package(aiproduction REQUIRED)
 #link_directories(inference install-Lib/lib)
 
 add_executable(testcocomap testCoco.cpp)
+if(UNIX)
+target_link_libraries(testcocomap ${AIPRODUCTION_LIBS} stdc++fs)
+endif()
 
+if(MSVC)
 target_link_libraries(testcocomap ${AIPRODUCTION_LIBS})
-
+endif()
 
 target_include_directories(testcocomap PRIVATE ${AIPRODUCTION_INCLUDE_DIRS} )
 

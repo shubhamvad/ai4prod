@@ -22,7 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 //inference time detection
-//#define TIME_EVAL
+#define TIME_EVAL
 
 #include <iostream>
 
@@ -55,7 +55,7 @@ int main()
 
     //setup image folder of Coco dataset
 
-    std::string AccurayFolderPath = "../../../../../Dataset/Coco2017/val2017";
+    std::string AccurayFolderPath = "/media/mic-710aix/dataDisk1/data/Coco2017/validation/val2017";
     Yolov3 *yolov3;
 
     //linux
@@ -65,7 +65,7 @@ int main()
 
     cout << "INIT SESSION" << endl;
 
-    yolov3->init("../../../../../../Model/Yolov3/yolov3-spp.onnx", 608, 608, TensorRT, "../tensorrtModel");
+    yolov3->init("../yolov3-spp.onnx", 608, 608,80,TensorRT, "../tensorrtModel");
 
     cout << "START PROCESSING" << endl;
 
@@ -88,7 +88,7 @@ int main()
 
         img = imread(image_id.c_str());
 
-        // auto start1 = high_resolution_clock::now();
+        auto start1 = high_resolution_clock::now();
 
         yolov3->m_sAccurayImagePath = image_id.c_str();
 
@@ -106,11 +106,17 @@ int main()
 
         auto duration = duration_cast<microseconds>(stop - start);
 
-        infTime.push_back((double)duration.count());
+       
 #endif
 
         torch::Tensor result = yolov3->postprocessing();
 
+
+#ifdef TIME_EVAL
+	auto stop1 = high_resolution_clock::now();
+	auto duration1 = duration_cast<microseconds>(stop1 - start1);
+ 	infTime.push_back((double)duration1.count());
+#endif
         // auto stop1 = high_resolution_clock::now();
 
         // auto duration1 = duration_cast<microseconds>(stop1 - start1);
@@ -170,12 +176,13 @@ int main()
 
     cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000 * 1000) << "Sec" << endl;
 
-#elif
+#endif
+    
     yolov3->createAccuracyFile();
 
     cout << "create yoloVal.json" << endl;
 
-#endif
+
 
     return 0;
 }
