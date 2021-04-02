@@ -541,7 +541,7 @@ namespace ai4prod
             //this is a tuple
             auto [conf_scores, conf_index] = torch::max(cur_scores, 0);
 
-            torch::Tensor keep = {conf_scores > 0.4};
+            torch::Tensor keep = {conf_scores > 0.3};
 
             result.scores = cur_scores.index({torch::indexing::Slice(None),
                                               keep});
