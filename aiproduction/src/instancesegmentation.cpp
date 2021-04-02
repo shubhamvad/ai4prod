@@ -194,7 +194,7 @@ namespace ai4prod
             //create config file and check for configuration error
             if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
             {
-
+                
                 cout << m_sMessage << endl;
                 return false;
             }
@@ -202,7 +202,7 @@ namespace ai4prod
             //verify if Mode is implemented
             if (!m_aut.checkMode(m_eMode, m_sMessage))
             {
-
+               
                 cout << m_sMessage << endl;
                 return false;
             }
@@ -242,6 +242,9 @@ namespace ai4prod
             setSession();
 
             setOnnxRuntimeModelInputOutput();
+
+            cout << "initDone" << endl;
+            return true;
         }
 
         void Yolact::preprocessing(Mat &Image)
@@ -250,13 +253,17 @@ namespace ai4prod
             tmpImage = Image.clone();
 
             //set original image dimension
-            m_ImageHeightOrig = Image.rows;
-            m_ImageWidhtOrig = Image.cols;
+            m_ImageHeightOrig = tmpImage.rows;
+            m_ImageWidhtOrig = tmpImage.cols;
 
+
+            resize(tmpImage, tmpImage, Size(m_iInput_w, m_iInput_h), 0, 0, cv::INTER_LINEAR);
             //tensor with RGB channel
+            
             m_TInputTensor = m_aut.convertMatToTensor8bit(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
-
-            m_TInputTensor = torch::nn::functional::interpolate(m_TInputTensor, torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>{550, 550}).mode(torch::kBilinear).align_corners(false));
+            
+            //m_TInputTensor = m_aut.convertMatToTensor8bit(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
+            //m_TInputTensor = torch::nn::functional::interpolate(m_TInputTensor, torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>{m_iInput_w, m_iInput_h}).mode(torch::kBilinear).align_corners(false));
 
             auto size = m_TInputTensor.sizes();
 

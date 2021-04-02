@@ -58,8 +58,9 @@ int main()
         //Linux 
         //std::string AccurayFolderPath = "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Dataset/Coco2017/validation/val2017";
         //Windows
-        std::string AccurayFolderPath = "C:/Users/erict/Desktop/Dataset/Coco2017/validation/val2017";
-
+        //std::string AccurayFolderPath = "C:/Users/erict/Desktop/Dataset/Coco2017/validation/val2017";
+        //Test Single Image
+        std::string AccurayFolderPath = "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/testAccuracy/instanceSegmentation/TestCoco/Cpp/test";
         Yolact *yolact;
 
   
@@ -68,9 +69,11 @@ int main()
         //MODE = (Cpu,TensorRt)
         yolact = new Yolact();
 
-        bool checkInit=yolact->init("../yolact.onnx", 550, 550, 80, Cpu, "../tensorrtModel2");
+        bool checkInit=yolact->init("../yolact.onnx", 550, 550, 80, TensorRT, "../tensorrtModel2");
         
         if(!checkInit){
+                
+                cout << "Problem Init" << endl;
 
                 return 0;
         }
@@ -84,8 +87,8 @@ int main()
         vector<double> infTime;
 
         for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
-        {
-                //std::cout << entry.path() << std::endl;
+        {       
+                std::cout << entry.path() << std::endl;
 
                 string image_id = entry.path().string();
 
@@ -143,7 +146,7 @@ int main()
 
                         //SHOW RESULT
 
-                       /* auto resultBbox = yolact->getCorrectBbox(result);
+                       auto resultBbox = yolact->getCorrectBbox(result);
 
                         for (auto &rect : resultBbox)
                         {
@@ -160,7 +163,7 @@ int main()
                         {
                                 cv::imshow("mask", mask);
                                 waitKey(0);
-                        }*/
+                        }
                 }
         }
 
