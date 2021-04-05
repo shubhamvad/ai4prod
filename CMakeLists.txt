@@ -27,7 +27,13 @@ set(AIPRODUCTION_INCLUDE_EXTRA "")
 string(COMPARE EQUAL "${TEST_ACCURACY}" 1 accuracy)
 
 # user not specified installation path
+
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
+set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/Install )
  
+endif()
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/deps/opencv/lib")
 
@@ -195,7 +201,7 @@ generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}
 set_target_properties(
   aiproduction PROPERTIES
     SOVERSION 0
-    VERSION 0.4.1
+    VERSION 0.5.0
 )
 
 #Installing
