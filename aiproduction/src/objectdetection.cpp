@@ -22,8 +22,13 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "objectdetection.h"
-#include "../../deps/onnxruntime/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
-#include "../../deps/onnxruntime/include/onnxruntime/core/providers/providers.h"
+
+#ifdef TENSORRT
+
+#include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
+#include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
+
+#endif TENSORRT
 
 using namespace std;
 using namespace std::chrono;
@@ -58,8 +63,12 @@ namespace ai4prod
 
             if (m_eMode == TensorRT)
             {
-
+#ifdef TENSORRT
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
+#else
+                cout << "Ai4prod not compiled with Tensorrt Execution Provider" << endl;
+#endif 
+               
             }
         }
 

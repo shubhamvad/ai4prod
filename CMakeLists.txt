@@ -11,7 +11,18 @@ project(aiprod)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
+# check for execution provider 
+# default cpu
+if( NOT DEFINED EXECUTION_PROVIDER)
+
+    set (EXECUTION_PROVIDER "cpu")
+
+endif()
 #architecture definition
+
+# this set #define TENSORRT from Cmake
+
+
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
     set(X86_64 1)
@@ -40,11 +51,11 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/deps/opencv/lib")
 # library to generate export header
 include(GenerateExportHeader)
 
-set(ONNXRUNTIME_INCLUDE_DIR deps/onnxruntime/include/)
+set(ONNXRUNTIME_INCLUDE_DIR deps/onnxruntime/${EXECUTION_PROVIDER}/include/)
 
 #onnxruntime build with tensorrt 
 # tensorrt library must be in /usr/local/tensorrt for linux
-link_directories(deps/onnxruntime/lib/onnxruntime/tensorrt)
+link_directories(deps/onnxruntime/${EXECUTION_PROVIDER}/lib/onnxruntime/)
 
 if(MSVC)
 # this add folder path to .lib library in linker directory
@@ -141,44 +152,55 @@ if(accuracy)
 		
 endif()
 
+# set execution provider preprocess definition 
+if(EXECUTION_PROVIDER STREQUAL "tensorrt")
+    message("TENSORRT EXECUTION PROVIDER")
+    target_compile_definitions(aiproduction PRIVATE TENSORRT)
+endif()
+
 #TEST
 
-add_executable(catch_test test/testClassification.cpp ${MY_SRCS_INCLUDE} )
 
 
-target_include_directories(catch_test PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
+if(ADDTEST STREQUAL "ON")
+    message("ADD TEST")
+    add_executable(catch_test test/testClassification.cpp ${MY_SRCS_INCLUDE} )
 
-if(UNIX)
-    target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp_static stdc++fs Catch2::Catch2)
-endif()
 
-if (MSVC)
-    target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp Catch2::Catch2 )
+    target_include_directories(catch_test PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
 
-    file(GLOB TORCH_DLLS "deps/libtorch/lib/*.dll")
-	add_custom_command(TARGET catch_test
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TORCH_DLLS}
-                     $<TARGET_FILE_DIR:catch_test>)
-     #tensorrt 
-   file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
-   add_custom_command(TARGET catch_test
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TENSORRT_DLL}
-                     $<TARGET_FILE_DIR:catch_test>)
-     
-                     
-    file(GLOB ONNXRUNTIME_DLL "deps/onnxruntime/lib/onnxruntime/tensorrt/*.dll")
+
+    if(UNIX)
+        target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp_static stdc++fs Catch2::Catch2)
+    endif()
+
+    if (MSVC)
+        target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp Catch2::Catch2 )
+
+        file(GLOB TORCH_DLLS "deps/libtorch/lib/*.dll")
+        add_custom_command(TARGET catch_test
+                        POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${TORCH_DLLS}
+                        $<TARGET_FILE_DIR:catch_test>)
+        #tensorrt 
+    file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
     add_custom_command(TARGET catch_test
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${ONNXRUNTIME_DLL}
-                     $<TARGET_FILE_DIR:catch_test>)
+                        POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${TENSORRT_DLL}
+                        $<TARGET_FILE_DIR:catch_test>)
+        
+                        
+        file(GLOB ONNXRUNTIME_DLL "deps/onnxruntime/"+"${EXECUTION_PROVIDER}"+"lib/onnxruntime/*.dll")
+        add_custom_command(TARGET catch_test
+                        POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${ONNXRUNTIME_DLL}
+                        $<TARGET_FILE_DIR:catch_test>)
+    endif()
+
 endif()
-
-
 
 #VERIFY EXTRA DEPENDENCIES
 
