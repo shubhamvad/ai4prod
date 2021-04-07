@@ -153,9 +153,24 @@ if(accuracy)
 endif()
 
 # set execution provider preprocess definition 
+
 if(EXECUTION_PROVIDER STREQUAL "tensorrt")
-    message("TENSORRT EXECUTION PROVIDER")
-    target_compile_definitions(aiproduction PRIVATE TENSORRT)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
+        message("TENSORRT EXECUTION PROVIDER")
+        target_compile_definitions(aiproduction PRIVATE TENSORRT)
+    else()
+        message(SEND_ERROR "TENSORRT PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
+    endif()
+elseif(EXECUTION_PROVIDER STREQUAL "directml")
+    
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
+        message("DIRECTML EXECUTION PROVIDER")
+        target_compile_definitions(aiproduction PRIVATE DIRECTML)
+    else()
+        message(SEND_ERROR "DIRECTML PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
+    endif()
+else()
+    message("WARNING: NO EXECUTION PROVIDER SET. USE DEFAULT Cpu")
 endif()
 
 #TEST
@@ -192,7 +207,7 @@ if(ADDTEST STREQUAL "ON")
                         $<TARGET_FILE_DIR:catch_test>)
         
                         
-        file(GLOB ONNXRUNTIME_DLL "deps/onnxruntime/"+"${EXECUTION_PROVIDER}"+"lib/onnxruntime/*.dll")
+        file(GLOB ONNXRUNTIME_DLL "deps/onnxruntime/${EXECUTION_PROVIDER}/lib/onnxruntime/*.dll")
         add_custom_command(TARGET catch_test
                         POST_BUILD
                         COMMAND ${CMAKE_COMMAND} -E copy_if_different

@@ -44,7 +44,7 @@ if (MSVC)
                      $<TARGET_FILE_DIR:inference>)
      
                      
-    file(GLOB ONNXRUNTIME_DLL "Install/deps/onnxruntime/lib/onnxruntime/tensorrt/*.dll")
+    file(GLOB ONNXRUNTIME_DLL "Install/deps/onnxruntime/${AI_EXECUTION_PROVIDER}/lib/onnxruntime/*.dll")
     add_custom_command(TARGET inference
                      POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different
