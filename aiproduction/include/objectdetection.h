@@ -23,7 +23,6 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "modelInterface.h"
 
-
 namespace ai4prod
 {
 
@@ -113,8 +112,8 @@ namespace ai4prod
 
             void setOnnxRuntimeEnv();
             void setOnnxRuntimeModelInputOutput();
-            bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses,MODE t, std::string model_path);
-            bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w,int numClasses, MODE t, std::string model_path);
+            bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
+            bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
             void setEnvVariable();
             void setSession();
 
@@ -138,7 +137,7 @@ namespace ai4prod
 
             virtual ~Yolov3();
 
-            bool init(std::string modelPathOnnx, int input_h, int input_w,int numClasses, MODE t, std::string model_path = NULL);
+            bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL);
 
             void preprocessing(cv::Mat &Image);
             torch::Tensor postprocessing();
@@ -172,6 +171,8 @@ namespace ai4prod
 
             float iou(float lbox[4], float rbox[4]);
         };
+
+
 
     } // namespace objectDetection
 

@@ -30,7 +30,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 
-#endif TENSORRT
+#endif 
 
 #ifdef DIRECTML
     #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
@@ -170,20 +170,20 @@ namespace ai4prod
             {
 #ifdef __linux__
 
-                string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+                std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
                 int cacheLenght = cacheModel.length();
                 char cacheModelchar[cacheLenght + 1];
                 strcpy(cacheModelchar, cacheModel.c_str());
                 putenv(cacheModelchar);
 
-                string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
                 int fp16Lenght = cacheModel.length();
                 char fp16char[cacheLenght + 1];
                 strcpy(fp16char, fp16.c_str());
                 putenv(fp16char);
 
-                string modelTrTmp;
+                std::string modelTrTmp;
 
                 m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
                 int n = modelTrTmp.length();
@@ -318,7 +318,7 @@ namespace ai4prod
                         strcpy(cacheModelchar, cacheModel.c_str());
                         putenv(cacheModelchar);
 
-                        string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                        std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
                         int fp16Lenght = cacheModel.length();
                         char fp16char[cacheLenght + 1];
                         strcpy(fp16char, fp16.c_str());
@@ -546,7 +546,7 @@ namespace ai4prod
                 std::string::size_type const p(base_filename.find_last_of('.'));
                 std::string file_without_extension = base_filename.substr(0, p);
 
-                string stringToWrite = file_without_extension + "," + std::to_string(std::get<0>(topPrediction)[0].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[1].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[2].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[3].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[4].item<int>()) + "\n";
+                std::string stringToWrite = file_without_extension + "," + std::to_string(std::get<0>(topPrediction)[0].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[1].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[2].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[3].item<int>()) + "," + std::to_string(std::get<0>(topPrediction)[4].item<int>()) + "\n";
 
                 myfile << stringToWrite.c_str();
 

@@ -28,7 +28,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 
-#endif TENSORRT
+#endif 
 
 #ifdef DIRECTML
 #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
@@ -206,14 +206,14 @@ namespace ai4prod
             {
 #ifdef __linux__
 
-                string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+                std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
                 int cacheLenght = cacheModel.length();
                 char cacheModelchar[cacheLenght + 1];
                 strcpy(cacheModelchar, cacheModel.c_str());
                 putenv(cacheModelchar);
 
-                string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
                 int fp16Lenght = cacheModel.length();
                 char fp16char[cacheLenght + 1];
                 strcpy(fp16char, fp16.c_str());
@@ -289,14 +289,14 @@ namespace ai4prod
 
 #ifdef __linux__
 
-                    string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+                    std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
                     int cacheLenght = cacheModel.length();
                     char cacheModelchar[cacheLenght + 1];
                     strcpy(cacheModelchar, cacheModel.c_str());
                     putenv(cacheModelchar);
 
-                    string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                    std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
                     int fp16Lenght = cacheModel.length();
                     char fp16char[cacheLenght + 1];
                     strcpy(fp16char, fp16.c_str());
@@ -649,7 +649,7 @@ namespace ai4prod
                         //need for handling image path for COCO DATASET
                         //for every image
 
-                        string image_id = m_sAccurayImagePath;
+                        std::string image_id = m_sAccurayImagePath;
 
                         const size_t last_slash_idx = image_id.find_last_of("\\/");
                         if (std::string::npos != last_slash_idx)
