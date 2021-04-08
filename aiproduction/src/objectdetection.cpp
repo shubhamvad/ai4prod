@@ -30,6 +30,13 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #endif TENSORRT
 
+#ifdef DIRECTML
+#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
+#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
+
+#endif
+
+
 using namespace std::chrono;
 
 namespace ai4prod
@@ -68,6 +75,19 @@ namespace ai4prod
                 std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
 #endif 
                
+            }
+            
+            if (m_eMode == DirectML)
+            {
+
+#ifdef DIRECTML
+
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(m_OrtSessionOptions, 0));
+
+#else
+
+                std::cout << "Ai4prod not compiled with DirectML Execution Provider" << std::endl;
+#endif
             }
         }
 

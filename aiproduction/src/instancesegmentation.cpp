@@ -29,6 +29,12 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #endif TENSORRT
 
+#ifdef DIRECTML
+#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
+#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
+
+#endif
+
 namespace ai4prod
 {
     namespace instanceSegmentation
@@ -161,6 +167,18 @@ namespace ai4prod
 #endif 
 
             }
+            if (m_eMode == DirectML)
+            {
+
+#ifdef DIRECTML
+
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(m_OrtSessionOptions, 0));
+
+#else
+
+                std::cout << "Ai4prod not compiled with DirectML Execution Provider" << std::endl;
+#endif
+            }
         }
 
         void Yolact::setSession()
@@ -215,36 +233,38 @@ namespace ai4prod
                 return false;
             }
 
+            if (m_eMode == TensorRT) {
 #ifdef __linux__
 
-            string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+                string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
-            int cacheLenght = cacheModel.length();
-            char cacheModelchar[cacheLenght + 1];
-            strcpy(cacheModelchar, cacheModel.c_str());
-            putenv(cacheModelchar);
+                int cacheLenght = cacheModel.length();
+                char cacheModelchar[cacheLenght + 1];
+                strcpy(cacheModelchar, cacheModel.c_str());
+                putenv(cacheModelchar);
 
-            string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-            int fp16Lenght = cacheModel.length();
-            char fp16char[cacheLenght + 1];
-            strcpy(fp16char, fp16.c_str());
-            putenv(fp16char);
+                string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                int fp16Lenght = cacheModel.length();
+                char fp16char[cacheLenght + 1];
+                strcpy(fp16char, fp16.c_str());
+                putenv(fp16char);
 
-            m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
-            int n = m_sModelTrPath.length();
-            char modelSavePath[n + 1];
-            strcpy(modelSavePath, m_sModelTrPath.c_str());
-            //esporto le path del modello di Tensorrt
-            putenv(modelSavePath);
+                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+                int n = m_sModelTrPath.length();
+                char modelSavePath[n + 1];
+                strcpy(modelSavePath, m_sModelTrPath.c_str());
+                //esporto le path del modello di Tensorrt
+                putenv(modelSavePath);
 
 #elif _WIN32
 
-            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
-            _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
 
+            }
             setOnnxRuntimeEnv();
 
             setSession();

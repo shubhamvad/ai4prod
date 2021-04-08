@@ -210,7 +210,7 @@ namespace ai4prod
 
             if (m_eMode == Cpu)
             {
-                std::cout << "Class 0 CPU" << std::endl;
+             
                 m_OrtSessionOptions.SetIntraOpNumThreads(1);
                 //ORT_ENABLE_ALL sembra avere le performance migliori
                 m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
@@ -218,7 +218,7 @@ namespace ai4prod
 
             std::cout << "MODE " << m_eMode << std::endl;
 
-            std::cout << "Class 0.3 DirectML" << std::endl;
+
             if (m_eMode == TensorRT)
             {
 #ifdef TENSORRT
@@ -228,14 +228,14 @@ namespace ai4prod
 #endif 
                 
             }
-            std::cout << "Class 0.4 DirectML" << std::endl;
+           
              if (m_eMode == DirectML)
             {
-                 std::cout << "Class 0.5 DirectML" << std::endl;
+                
 #ifdef DIRECTML
-                 std::cout << "Class 1" << std::endl;
+                 
                  Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(m_OrtSessionOptions, 0));
-                 std::cout << "Class 2" << std::endl;
+                
 #else
              
                  std::cout << "Ai4prod not compiled with DirectML Execution Provider" << std::endl;
@@ -343,7 +343,7 @@ namespace ai4prod
 #endif
                     }
 
-                    std::cout << "Class 0.1 Mode" << std::endl;
+                   
                     //OnnxRuntime set Env
                     setOnnxRuntimeEnv();
 
