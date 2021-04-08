@@ -37,8 +37,8 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include <unistd.h>
 #endif
 
-using namespace cv;
-using namespace std;
+//using namespace cv;
+
 
 namespace ai4prod
 {
@@ -47,7 +47,8 @@ namespace ai4prod
    {
 
       TensorRT,
-      Cpu
+      Cpu,
+      DirectML
 
    };
 
@@ -58,18 +59,18 @@ namespace ai4prod
    {
 
    public:
-      torch::Tensor convertMatToTensor(Mat ImageBGR, int width, int height, int channel, int batch, bool gpu = false);
-      torch::Tensor convertMatToTensor8bit(Mat ImageBGR, int width, int height, int channel, int batch, bool gpu = false);
+      torch::Tensor convertMatToTensor(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu = false);
+      torch::Tensor convertMatToTensor8bit(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu = false);
       cv::Mat convertTensortToMat8bit(torch::Tensor tensor, int width, int height);
       cv::Mat convertTensortToMat(torch::Tensor tensor, int width, int height);
-      bool equalImage(const Mat &a, const Mat &b);
+      bool equalImage(const cv::Mat &a, const cv::Mat &b);
       torch::Tensor convert2dVectorToTensor(std::vector<std::vector<float>> &input);
 
       //handle Mode for YamlCpp
-      MODE setMode(string Mode);
-      string setYamlMode(MODE t);
+      MODE setMode(std::string Mode);
+      std::string setYamlMode(MODE t);
 
-      bool createFolderIfNotExist(string folderPath);
+      bool createFolderIfNotExist(std::string folderPath);
       //utils file handling
 
       // bool checkFileExists(std::string Filename);
@@ -82,13 +83,13 @@ namespace ai4prod
 
 
 	  inline bool checkFileExists(const std::string& name) {
-		  ifstream f(name.c_str());
+          std::ifstream f(name.c_str());
 		  return f.good();
 	  }
 
 
 #endif
-      bool checkMode(MODE m, string &Message);
+      bool checkMode(MODE m, std::string &Message);
 
       //#endif
    };

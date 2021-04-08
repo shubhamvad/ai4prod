@@ -68,8 +68,9 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	if(!resnet->init("../resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel")){
-
+	if(!resnet->init("../resnet50.onnx", 256, 256, 1000, 5, DirectML, "../tensorrtModel_directml")){
+		cout << "exit" << endl;
+		getchar();
 		return 0;
 	} 
     
@@ -83,8 +84,7 @@ int main()
     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
     {
 		
-		
-	
+
         string image_id = entry.path().string();
         
 		//opencv Mat
@@ -108,9 +108,6 @@ int main()
 		
 	//std::get<0>(prediction)[0].item<float>();
 	//if You need softmax you can use Libtorch softmax
-
-        
-
     
     }
 

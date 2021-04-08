@@ -40,7 +40,7 @@ namespace ai4prod
 
             ai4prod::aiutils m_aut;
             MODE m_eMode;
-            string m_sMessage;
+            std::string m_sMessage;
 
             //Config Parameter
             YAML::Node m_ymlConfig;
@@ -139,19 +139,19 @@ namespace ai4prod
             virtual ~Yolact();
             bool init(std::string modelPathOnnx, int input_h, int input_w,int numClasses, MODE t, std::string model_path = NULL);
 
-            void preprocessing(Mat &Image);
+            void preprocessing(cv::Mat &Image);
             void runmodel();
-            InstanceSegmentationResult postprocessing(string imagePathAccuracy="");
+            InstanceSegmentationResult postprocessing(std::string imagePathAccuracy="");
 
             //display 
 
-            vector<Rect> getCorrectBbox(InstanceSegmentationResult result);
+            std::vector<cv::Rect> getCorrectBbox(InstanceSegmentationResult result);
 
-            vector<Mat> getCorrectMask(InstanceSegmentationResult result);
+            std::vector<cv::Mat> getCorrectMask(InstanceSegmentationResult result);
 
             //detection accuracy
             
-            string m_sAccurayImagePath;
+            std::string m_sAccurayImagePath;
             void createAccuracyFile();
         };
 

@@ -30,7 +30,6 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #endif TENSORRT
 
-using namespace std;
 using namespace std::chrono;
 
 namespace ai4prod
@@ -66,7 +65,7 @@ namespace ai4prod
 #ifdef TENSORRT
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
 #else
-                cout << "Ai4prod not compiled with Tensorrt Execution Provider" << endl;
+                std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
 #endif 
                
             }
@@ -244,12 +243,12 @@ namespace ai4prod
                     if (!aut.createFolderIfNotExist(model_path))
                     {
 
-                        cout << "cannot create folder" << endl;
+                        std::cout << "cannot create folder" << std::endl;
 
                         return false;
                     }
 
-                    cout << "INIT MODE " << t << endl;
+                    std::cout << "INIT MODE " << t << std::endl;
 
                     if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
                     {
@@ -260,7 +259,7 @@ namespace ai4prod
                     if (!aut.checkMode(m_eMode, m_sMessage))
                     {
 
-                        cout << m_sMessage << endl;
+                        std::cout << m_sMessage << std::endl;
                         return false;
                     }
 
@@ -318,7 +317,7 @@ namespace ai4prod
             else
             {
                 m_sMessage = "Is not possibile to call init() twice. Class already initialized";
-                cout << "Is not possibile to call init() twice. Class already initialized" << endl;
+                std::cout << "Is not possibile to call init() twice. Class already initialized" << std::endl;
             }
         }
 
@@ -349,7 +348,7 @@ namespace ai4prod
             return out;
         }
 
-        void Yolov3::preprocessing(Mat &Image)
+        void Yolov3::preprocessing(cv::Mat &Image)
         {
             if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
             {
@@ -372,7 +371,7 @@ namespace ai4prod
             else
             {
                 m_sMessage = "call init() before";
-                cout << "call init() before" << endl;
+                std::cout << "call init() before" << std::endl;
             }
         }
 
@@ -452,7 +451,7 @@ namespace ai4prod
             {
 
                 m_sMessage = "Cannot call run model without preprocessing";
-                cout << "Cannot call run model without preprocessing" << endl;
+                std::cout << "Cannot call run model without preprocessing" << std::endl;
             }
         } // namespace objectDetection
 
@@ -465,7 +464,7 @@ namespace ai4prod
                 std::vector<std::tuple<int, int, float>> bboxIndex;
 
                 //vettore dei bounding box con soglia milgiore di 0.7
-                vector<vector<float>> bboxValues;
+                std::vector<std::vector<float>> bboxValues;
 
                 //m_viNumberOfBoundingBox[0]=(22743,80)
                 //m_viNumberOfBoundingBox[1]=(22743,4)
@@ -509,7 +508,7 @@ namespace ai4prod
                         float w = m_fpOutOnnxRuntime[1][index * 4 + 2];
                         float h = m_fpOutOnnxRuntime[1][index * 4 + 3];
 
-                        vector<float> tmpbox{x, y, w, h, (float)indexClassMaxValue, classProbability};
+                        std::vector<float> tmpbox{x, y, w, h, (float)indexClassMaxValue, classProbability};
 
                         bboxValues.push_back(tmpbox);
 
@@ -528,7 +527,7 @@ namespace ai4prod
                 {
 
                     //cout << "NO DETECTION " << noDetection << endl;
-                    cout << "0Detection" << endl;
+                    std::cout << "0Detection" << std::endl;
                     auto tensor = torch::ones({0});
                     m_bCheckRun = false;
                     m_bCheckPre = false;
@@ -542,7 +541,7 @@ namespace ai4prod
                     //NMS
                     auto start1 = high_resolution_clock::now();
 
-                    vector<int> indexAfterNms;
+                    std::vector<int> indexAfterNms;
 
                     for (int i = 0; i < bboxValues.size(); i++)
                     {
@@ -611,7 +610,7 @@ namespace ai4prod
 
                         auto start2 = high_resolution_clock::now();
 
-                        vector<vector<float>> bboxValuesNms;
+                        std::vector<std::vector<float>> bboxValuesNms;
 
                         for (int i = 0; i < bboxValues.size(); i++)
                         {
@@ -762,7 +761,7 @@ namespace ai4prod
                 torch::Tensor nullTensor;
 
                 m_sMessage = "call run model before postprocessing";
-                cout << "call run model before postprocessing" << endl;
+                std::cout << "call run model before postprocessing" << std::endl;
                 return nullTensor;
             }
         }
@@ -855,7 +854,7 @@ namespace ai4prod
             const std::string json_file = Json::writeString(builder, m_JsonRootArray);
             //std::cout << json_file << std::endl;
 
-            ofstream myfile;
+            std::ofstream myfile;
             myfile.open("yoloVal.json", std::ios::in | std::ios::out | std::ios::app);
             myfile << json_file + "\n";
             myfile.close();

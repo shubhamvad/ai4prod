@@ -53,7 +53,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 namespace fs = std::experimental::filesystem;
 
 
-using namespace cv;
+//using namespace cv;
 
 namespace ai4prod
 {
@@ -66,7 +66,7 @@ namespace ai4prod
     {
 
     public:
-        virtual void preprocessing(Mat &Image) = 0;
+        virtual void preprocessing(cv::Mat &Image) = 0;
 
         virtual void runmodel() = 0;
 
@@ -78,7 +78,7 @@ namespace ai4prod
     {
 
     public:
-        virtual void preprocessing(Mat &Image) = 0;
+        virtual void preprocessing(cv::Mat &Image) = 0;
 
         virtual void runmodel() = 0;
 
@@ -88,11 +88,11 @@ namespace ai4prod
     class modelInterfaceInstanceSegmentation{
 
         
-        virtual void preprocessing(Mat &Image) = 0;
+        virtual void preprocessing(cv::Mat &Image) = 0;
 
         virtual void runmodel() = 0;
 
-        virtual InstanceSegmentationResult postprocessing(string imagePathAccuracy="")=0;
+        virtual InstanceSegmentationResult postprocessing(std::string imagePathAccuracy="")=0;
 
     };
 

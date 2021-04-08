@@ -157,7 +157,7 @@ namespace ai4prod
 #ifdef TENSORRT
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));            
 #else
-                cout << "Ai4prod not compiled with Tensorrt Execution Provider" << endl;
+                std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
 #endif 
 
             }
@@ -193,17 +193,17 @@ namespace ai4prod
             if (!m_aut.createFolderIfNotExist(model_path))
             {
 
-                cout << "cannot create folder" << endl;
+                std::cout << "cannot create folder" << std::endl;
 
                 return false;
             }
 
-            cout << "INIT MODE " << t << endl;
+            std::cout << "INIT MODE " << t << std::endl;
             //create config file and check for configuration error
             if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
             {
                 
-                cout << m_sMessage << endl;
+                std::cout << m_sMessage << std::endl;
                 return false;
             }
 
@@ -211,7 +211,7 @@ namespace ai4prod
             if (!m_aut.checkMode(m_eMode, m_sMessage))
             {
                
-                cout << m_sMessage << endl;
+                std::cout << m_sMessage << std::endl;
                 return false;
             }
 
@@ -251,13 +251,13 @@ namespace ai4prod
 
             setOnnxRuntimeModelInputOutput();
 
-            cout << "initDone" << endl;
+            std::cout << "initDone" << std::endl;
             return true;
         }
 
-        void Yolact::preprocessing(Mat &Image)
+        void Yolact::preprocessing(cv::Mat &Image)
         {
-            Mat tmpImage;
+            cv::Mat tmpImage;
             tmpImage = Image.clone();
 
             //set original image dimension
@@ -265,7 +265,7 @@ namespace ai4prod
             m_ImageWidhtOrig = tmpImage.cols;
 
 
-            resize(tmpImage, tmpImage, Size(m_iInput_w, m_iInput_h), 0, 0, cv::INTER_LINEAR);
+            resize(tmpImage, tmpImage, cv::Size(m_iInput_w, m_iInput_h), 0, 0, cv::INTER_LINEAR);
             //tensor with RGB channel
             
             m_TInputTensor = m_aut.convertMatToTensor8bit(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
@@ -583,7 +583,7 @@ namespace ai4prod
 
             return result;
         }
-        InstanceSegmentationResult Yolact::postprocessing(string imagePathAccuracy)
+        InstanceSegmentationResult Yolact::postprocessing(std::string imagePathAccuracy)
         {
             torch::Tensor locTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[0]), {1, 19248, 4}).clone();
             torch::Tensor confTensor = torch::from_blob((float *)(m_fpOutOnnxRuntime[1]), {1, 19248, m_iNumClasses + 1}).clone();
@@ -706,9 +706,9 @@ namespace ai4prod
             y = torch::clamp(bbox_y, 0, imageDimension);
         }
 
-        vector<Rect> Yolact::getCorrectBbox(InstanceSegmentationResult result)
+        std::vector<cv::Rect> Yolact::getCorrectBbox(InstanceSegmentationResult result)
         {
-            vector<Rect> resultCvBbox;
+            std::vector<cv::Rect> resultCvBbox;
 
             auto x = result.boxes.index({torch::indexing::Slice(None), 0});
             auto y = result.boxes.index({torch::indexing::Slice(None), 1});
@@ -726,7 +726,7 @@ namespace ai4prod
                 int width_rect = width[i].item<int>() - x[i].item<int>();
                 int height_rect = height[i].item<int>() - y[i].item<int>();
 
-                Rect rect(x_rect, y_rect, width_rect, height_rect);
+                cv::Rect rect(x_rect, y_rect, width_rect, height_rect);
 
                 // if (!image.empty())
                 //     rectangle(image, rect, (255, 255, 255), 0.5);
@@ -772,10 +772,10 @@ namespace ai4prod
         return a vector<Mat> resultMask where each value is a Mat CV_8UC1
         
         */
-        vector<Mat> Yolact::getCorrectMask(InstanceSegmentationResult result)
+        std::vector<cv::Mat> Yolact::getCorrectMask(InstanceSegmentationResult result)
         {
 
-            vector<Mat> resultcvMask;
+            std::vector<cv::Mat> resultcvMask;
 
             auto masks = torch::matmul(result.proto, result.masks.t());
 
@@ -813,7 +813,7 @@ namespace ai4prod
             Json::StreamWriterBuilder builder;
             const std::string json_file = Json::writeString(builder, m_JsonRootArray);
 
-            ofstream myfile;
+            std::ofstream myfile;
             myfile.open("yolactVal.json", std::ios::in | std::ios::out | std::ios::app);
             myfile << json_file + "\n";
             myfile.close();

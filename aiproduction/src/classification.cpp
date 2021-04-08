@@ -32,7 +32,13 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #endif TENSORRT
 
-using namespace std;
+#ifdef DIRECTML
+    #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
+    #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
+
+#endif
+
+
 
 using namespace onnxruntime;
 
@@ -122,7 +128,7 @@ namespace ai4prod
             else
             {
 
-                cout << "INIT" << endl;
+                std::cout << "INIT" << std::endl;
 
                 m_sModelOnnxPath = modelPathOnnx;
                 //size at which image is resised
@@ -189,7 +195,7 @@ namespace ai4prod
 
 #elif _WIN32
                 int Cache = stoi(m_sEngineCache);
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", to_string(Cache).c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", std::to_string(Cache).c_str());
                 _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
                 _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
@@ -204,22 +210,36 @@ namespace ai4prod
 
             if (m_eMode == Cpu)
             {
-
+                std::cout << "Class 0 CPU" << std::endl;
                 m_OrtSessionOptions.SetIntraOpNumThreads(1);
                 //ORT_ENABLE_ALL sembra avere le performance migliori
                 m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
             }
 
-            cout << "MODE " << m_eMode << endl;
+            std::cout << "MODE " << m_eMode << std::endl;
 
+            std::cout << "Class 0.3 DirectML" << std::endl;
             if (m_eMode == TensorRT)
             {
 #ifdef TENSORRT
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
 #else
-                cout << "Ai4prod not compiled with Tensorrt Execution Provider" << endl;
+                std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
 #endif 
                 
+            }
+            std::cout << "Class 0.4 DirectML" << std::endl;
+             if (m_eMode == DirectML)
+            {
+                 std::cout << "Class 0.5 DirectML" << std::endl;
+#ifdef DIRECTML
+                 std::cout << "Class 1" << std::endl;
+                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(m_OrtSessionOptions, 0));
+                 std::cout << "Class 2" << std::endl;
+#else
+             
+                 std::cout << "Ai4prod not compiled with DirectML Execution Provider" << std::endl;
+#endif
             }
         }
 
@@ -234,7 +254,7 @@ namespace ai4prod
 
             //in windows devo inizializzarlo in questo modo
 
-            cout << "MODEL PATH " << m_sModelOnnxPath.c_str() << endl;
+            std::cout << "MODEL PATH " << m_sModelOnnxPath.c_str() << std::endl;
             std::wstring widestr = std::wstring(m_sModelOnnxPath.begin(), m_sModelOnnxPath.end());
             //session = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
 
@@ -265,61 +285,65 @@ namespace ai4prod
                     if (!aut.createFolderIfNotExist(modelTr_path))
                     {
 
-                        cout << "cannot create folder" << endl;
+                        std::cout << "cannot create folder" << std::endl;
 
                         return false;
                     }
 
-                    cout << "INIT MODE " << t << endl;
+                    std::cout << "INIT MODE " << t << std::endl;
 
                     if(!createYamlConfig(modelPath, width, height, numClasses, NumberOfReturnedPrediction, t, modelTr_path)){
                         
-                        cout<<m_sMessage<<endl;
+                        std::cout<<m_sMessage<< std::endl;
                         return false;
                     };
 
                     if (!aut.checkMode(m_eMode, m_sMessage))
                     {
 
-                        cout << m_sMessage << endl;
+                        std::cout << m_sMessage << std::endl;
                         return false;
                     }
 
                     //ENV VARIABLE CANNOT BE SET INTO FUNCTION MUST BE ON MAIN THREAD
-                    //I cannot set this code into a function
+                    if (m_eMode == TensorRT) {
+
+                        //I cannot set this code into a function
 #ifdef __linux__
 
-                    string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+                        std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
-                    int cacheLenght = cacheModel.length();
-                    char cacheModelchar[cacheLenght + 1];
-                    strcpy(cacheModelchar, cacheModel.c_str());
-                    putenv(cacheModelchar);
+                        int cacheLenght = cacheModel.length();
+                        char cacheModelchar[cacheLenght + 1];
+                        strcpy(cacheModelchar, cacheModel.c_str());
+                        putenv(cacheModelchar);
 
-                    string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-                    int fp16Lenght = cacheModel.length();
-                    char fp16char[cacheLenght + 1];
-                    strcpy(fp16char, fp16.c_str());
-                    putenv(fp16char);
+                        string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                        int fp16Lenght = cacheModel.length();
+                        char fp16char[cacheLenght + 1];
+                        strcpy(fp16char, fp16.c_str());
+                        putenv(fp16char);
 
-                    string modelTrTmp;
+                        std::string modelTrTmp;
 
-                    modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
-                    int n = modelTrTmp.length();
-                    char modelSavePath[n + 1];
-                    strcpy(modelSavePath, modelTrTmp.c_str());
-                    //esporto le path del modello di Tensorrt
+                        modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+                        int n = modelTrTmp.length();
+                        char modelSavePath[n + 1];
+                        strcpy(modelSavePath, modelTrTmp.c_str());
+                        //esporto le path del modello di Tensorrt
 
-                    putenv(modelSavePath);
+                        putenv(modelSavePath);
 
 #elif _WIN32
 
-                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
-                    _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
+                        _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                        _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+                        _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
+                    }
 
+                    std::cout << "Class 0.1 Mode" << std::endl;
                     //OnnxRuntime set Env
                     setOnnxRuntimeEnv();
 
@@ -342,11 +366,11 @@ namespace ai4prod
             else
             {
                 m_sMessage = "Is not possibile to call init() twice. Class already initialized";
-                cout << "Is not possibile to call init() twice. Class already initialized" << endl;
+                std::cout << "Is not possibile to call init() twice. Class already initialized" << std::endl;
             }
         }
 
-        void ResNet50::preprocessing(Mat &Image)
+        void ResNet50::preprocessing(cv::Mat &Image)
         {
 
             //ResNet50::model=data;
@@ -354,11 +378,11 @@ namespace ai4prod
             {
 
                 //resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
-                resize(Image, Image, Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
+                resize(Image, Image, cv::Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
                 const int cropSize = m_iCropImage;
                 const int offsetW = (Image.cols - cropSize) / 2;
                 const int offsetH = (Image.rows - cropSize) / 2;
-                const Rect roi(offsetW, offsetH, cropSize, cropSize);
+                const cv::Rect roi(offsetW, offsetH, cropSize, cropSize);
 
                 Image = Image(roi).clone();
                 inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
@@ -398,7 +422,7 @@ namespace ai4prod
             else
             {
                 m_sMessage = "call init() before";
-                cout << "call init() before" << endl;
+                std::cout << "call init() before" << std::endl;
             }
         }
 
@@ -488,7 +512,7 @@ namespace ai4prod
             else
             {
                 m_sMessage = "Cannot call run model without preprocessing";
-                cout << "Cannot call run model without preprocessing" << endl;
+                std::cout << "Cannot call run model without preprocessing" << std::endl;
             }
         }
 
@@ -544,7 +568,7 @@ namespace ai4prod
                 torch::Tensor n;
                 std::tuple<torch::Tensor, torch::Tensor> nullTensor = {n, m};
                 m_sMessage = "call run model before postprocessing";
-                cout << "call run model before postprocessing" << endl;
+                std::cout << "call run model before postprocessing" << std::endl;
                 return nullTensor;
             }
         }

@@ -105,7 +105,7 @@ namespace ai4prod
 
             //MESSAGE/ERROR HANDLING
 
-            string m_sMessage;
+            std::string m_sMessage;
 
             //FUNCTION
 
@@ -132,7 +132,7 @@ namespace ai4prod
 
         public:
             //string to save image id for accuracy detection
-            string m_sAccurayImagePath;
+            std::string m_sAccurayImagePath;
 
             Yolov3();
 
@@ -140,7 +140,7 @@ namespace ai4prod
 
             bool init(std::string modelPathOnnx, int input_h, int input_w,int numClasses, MODE t, std::string model_path = NULL);
 
-            void preprocessing(Mat &Image);
+            void preprocessing(cv::Mat &Image);
             torch::Tensor postprocessing();
             void runmodel();
 
@@ -159,7 +159,7 @@ namespace ai4prod
                 return m_iInput_h;
             }
 
-            string getMessage()
+            std::string getMessage()
             {
 
                 return m_sMessage;

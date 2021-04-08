@@ -22,7 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 //inference time detection
-//#define TIME_EVAL
+#define TIME_EVAL
 
 #include <iostream>
 #include <iostream>
@@ -49,6 +49,7 @@ using namespace std::chrono;
 namespace fs = std::experimental::filesystem;
 
 using namespace std;
+using namespace cv;
 
 int main()
 {
@@ -60,11 +61,11 @@ int main()
     resnet = new ResNet50();
 	
 	cout << "INIT SESSION: Could take some time if TensorRT Mode selected" << endl;
-    resnet->init("../../../../../../Model/Resnet50/resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel");
+    resnet->init("../resnet50.onnx", 256, 256, 1000, 5, DirectML, "../model_directML");
     //resnet = new ResNet50();
-    std::string AccurayFolderPath = "../../../../../Dataset/Imagenet2012/val2012";
+    std::string AccurayFolderPath = "C:/Users/erict/Desktop/Dataset/Imagenet/Validation-2012/val2012";
 
-	
+	 
 
 	vector<double> infTime;
 

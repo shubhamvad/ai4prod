@@ -107,7 +107,7 @@ namespace ai4prod
          //ERROR HANDLING
 
          // message
-         string m_sMessage;
+         std::string m_sMessage;
 
 
          // FUNCTION
@@ -131,13 +131,13 @@ namespace ai4prod
 
          bool init(std::string modelPath, int width, int height, int numClasses, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path = NULL);
 
-         string m_sAccurayImagePath;
+         std::string m_sAccurayImagePath;
 
-         void preprocessing(Mat &Image);
+         void preprocessing(cv::Mat &Image);
          std::tuple<torch::Tensor, torch::Tensor> postprocessing();
          void runmodel();
 
-         string getMessage(){
+         std::string getMessage(){
 
             return m_sMessage;
 

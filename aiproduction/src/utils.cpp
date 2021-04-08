@@ -23,7 +23,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "utils.h"
 
-using namespace cv;
+//using namespace cv;
 
 //LIBTORCH
 
@@ -42,10 +42,10 @@ Each pixel value is in range [0,1]
 return: torch::Tensor with the right order of input dimension(B,C,W,H)
 
 */
-    torch::Tensor aiutils::convertMatToTensor(Mat ImageBGR, int width, int height, int channel, int batch, bool gpu)
+    torch::Tensor aiutils::convertMatToTensor(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu)
     {
 
-        cv::cvtColor(ImageBGR, ImageBGR, COLOR_BGR2RGB);
+        cv::cvtColor(ImageBGR, ImageBGR, cv::COLOR_BGR2RGB);
         cv::Mat img_float;
 
         //Conversione dei valori nell'intervallo [0,1] tipico del tensore di Pytorch
@@ -74,10 +74,10 @@ Each pixel value is in range [0,255]
 return: torch::Tensor with the right order of input dimension(B,C,W,H)
 
 */
-    torch::Tensor aiutils::convertMatToTensor8bit(Mat ImageBGR, int width, int height, int channel, int batch, bool gpu)
+    torch::Tensor aiutils::convertMatToTensor8bit(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu)
     {
 
-        cv::cvtColor(ImageBGR, ImageBGR, COLOR_BGR2RGB);
+        cv::cvtColor(ImageBGR, ImageBGR, cv::COLOR_BGR2RGB);
         cv::Mat img_float;
         
         ImageBGR.convertTo(img_float, CV_32F, 1.0);
@@ -137,11 +137,11 @@ return: Image BGR
 verify if 2 Mat are equal
 
 */
-    bool aiutils::equalImage(const Mat &a, const Mat &b)
+    bool aiutils::equalImage(const cv::Mat &a, const cv::Mat &b)
     {
         if ((a.rows != b.rows) || (a.cols != b.cols))
             return false;
-        Scalar s = sum(a - b);
+        cv::Scalar s = cv::sum(a - b);
 
         std::cout << s << std::endl;
 
@@ -154,7 +154,7 @@ verify if 2 Mat are equal
         if (input[0].size() == 0)
         {
 
-            cout << "empty value" << endl;
+            std::cout << "empty value" << std::endl;
             auto tensor = torch::empty({200, 200, 3});
             return tensor;
         }
@@ -184,12 +184,12 @@ verify if 2 Mat are equal
     // }
 
     //convert string to enum
-    MODE aiutils::setMode(string Mode)
+    MODE aiutils::setMode(std::string Mode)
     {
 
         if (Mode == "TensorRT")
         {
-            cout << "setMode" << endl;
+            
             return TensorRT;
         }
 
@@ -198,12 +198,16 @@ verify if 2 Mat are equal
 
             return Cpu;
         }
+
+        if (Mode == "DirectML") {
+            return DirectML;
+        }
     }
     //convert enum to string
-    string aiutils::setYamlMode(MODE t)
+    std::string aiutils::setYamlMode(MODE t)
     {
 
-        cout << "setYamMode " << t << endl;
+        std::cout << "setYamMode " << t << std::endl;
         if (t == TensorRT)
         {
 
@@ -215,10 +219,16 @@ verify if 2 Mat are equal
 
             return "Cpu";
         }
+
+        if (t == DirectML)
+        {
+
+            return "DirectML";
+        }
     }
 
     //This fuction check if Mode is implementend before instantiate onnxruntime Session
-    bool aiutils::checkMode(MODE m, string &Message)
+    bool aiutils::checkMode(MODE m, std::string &Message)
     {
 
         bool value;
@@ -234,6 +244,10 @@ verify if 2 Mat are equal
             Message = "Mode selected Cpu";
             value = true;
             break;
+        case DirectML:
+            Message = "Mode selected DirectMl";
+            value = true;
+            break;
         default:
             Message = "Mode NOT IMPLEMENTED cannot continue";
             value = false;
@@ -243,7 +257,7 @@ verify if 2 Mat are equal
         return value;
     }
 
-    bool aiutils::createFolderIfNotExist(string folderPath)
+    bool aiutils::createFolderIfNotExist(std::string folderPath)
     {
 
         if (cv::utils::fs::exists(folderPath))

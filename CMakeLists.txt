@@ -176,7 +176,6 @@ endif()
 #TEST
 
 
-
 if(ADDTEST STREQUAL "ON")
     message("ADD TEST")
     add_executable(catch_test test/testClassification.cpp ${MY_SRCS_INCLUDE} )
