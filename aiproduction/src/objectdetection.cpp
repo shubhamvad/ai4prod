@@ -44,7 +44,8 @@ namespace ai4prod
     namespace objectDetection
     {
 
-        //costruttore di default
+        //
+     
         Yolov3::Yolov3()
         {
             m_bInit = false;
@@ -63,7 +64,7 @@ namespace ai4prod
             {
 
                 m_OrtSessionOptions.SetIntraOpNumThreads(1);
-                //ORT_ENABLE_ALL sembra avere le performance migliori
+                //ORT_ENABLE_ALL seems to have better perforamance
                 m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
             }
 
@@ -588,7 +589,7 @@ namespace ai4prod
 
                                     if (std::get<2>(bboxIndex[i]) > std::get<2>(bboxIndex[j]))
                                     {
-                                        //ritorno gli indici del vettore dei bounding box
+                                        //return indeces of bbox
                                         // indexAfterNms.push_back(std::get<0>(bboxIndex[i]));
                                         indexAfterNms.push_back(j);
                                         noDetectionNms = false;
@@ -602,7 +603,7 @@ namespace ai4prod
                                     }
                                 }
                             }
-                            //calcolo iou
+                            // iou
                         }
                     }
 
@@ -610,12 +611,9 @@ namespace ai4prod
 
                     auto duration1 = duration_cast<microseconds>(stop1 - start1);
 
-                    //cout << "SINGLE TIME INFERENCE 2 " << (double)duration1.count() / (1000000) << "Sec" << endl;
-
+                    
                     if (noDetectionNms)
                     {
-                        //cout << "NO DETECTION " << noDetection << endl;
-                        //cout << "0Detection" << endl;
 
                         auto tensor = torch::ones({0});
                         m_bCheckRun = false;
@@ -769,8 +767,6 @@ namespace ai4prod
 
                         auto duration2 = duration_cast<microseconds>(stop2 - start2);
 
-                        //cout << "SINGLE TIME INFERENCE 2 " << (double)duration2.count() / (1000000) << "Sec" << endl;
-
                         return m_TOutputTensor;
                     }
                 }
@@ -779,7 +775,6 @@ namespace ai4prod
             {
 
                 torch::Tensor nullTensor;
-
                 m_sMessage = "call run model before postprocessing";
                 std::cout << "call run model before postprocessing" << std::endl;
                 return nullTensor;
@@ -889,6 +884,308 @@ namespace ai4prod
                 m_OrtEnv.reset();
             }
         }
+
+
+    //YOLO V4
+
+            Yolov4::Yolov4()
+        {
+            m_bInit = false;
+            m_bCheckInit = false;
+            m_bCheckPre = false;
+            m_bCheckRun = false;
+            m_bCheckPost = true;
+        }
+
+        void Yolov4::setOnnxRuntimeEnv()
+        {
+
+            m_OrtEnv = std::make_unique<Ort::Env>(Ort::Env(ORT_LOGGING_LEVEL_ERROR, "test"));
+
+            if (m_eMode == Cpu)
+            {
+
+                m_OrtSessionOptions.SetIntraOpNumThreads(1);
+                //ORT_ENABLE_ALL seems to have better performance
+                m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+            }
+
+            if (m_eMode == TensorRT)
+            {
+#ifdef TENSORRT
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
+#else
+                std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
+#endif 
+               
+            }
+            
+            if (m_eMode == DirectML)
+            {
+
+#ifdef DIRECTML
+
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(m_OrtSessionOptions, 0));
+
+#else
+
+                std::cout << "Ai4prod not compiled with DirectML Execution Provider" << std::endl;
+#endif
+            }
+        }
+
+        void Yolov4::setOnnxRuntimeModelInputOutput()
+        {
+
+            num_input_nodes = m_OrtSession->GetInputCount();
+            input_node_names = std::vector<const char *>(num_input_nodes);
+
+            num_out_nodes = m_OrtSession->GetOutputCount();
+        }
+
+        bool Yolov4::checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
+        {
+            if (m_eMode != t)
+            {
+                m_sMessage = "ERROR: mode initialization is different from configuration file. Please choose another save directory.";
+                return false;
+            }
+
+            if (input_h != m_iInput_h)
+            {
+                m_sMessage = "ERROR: Image input height is different from configuration file.";
+                return false;
+            }
+
+            if (input_w != m_iInput_w)
+            {
+                m_sMessage = "ERROR: Image input width is different from configuration file. ";
+                return false;
+            }
+
+            if (m_iNumClasses != numClasses)
+            {
+                m_sMessage = "ERROR: Number of model class is different from configuration file.";
+                return false;
+            }
+
+            if (m_eMode == TensorRT)
+            {
+
+                if (m_sModelOnnxPath != modelPathOnnx && m_sEngineCache == "1")
+                {
+
+                    m_sMessage = "WARNING: Use cache tensorrt engine file with different onnx Model";
+                    return true;
+                }
+            }
+
+            return true;
+        }
+
+        bool Yolov4::createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
+        {
+
+            //retrive or create config yaml file
+            if (aut.checkFileExists(model_path + "/config.yaml"))
+            {
+
+                m_ymlConfig = YAML::LoadFile(model_path + "/config.yaml");
+
+                m_sEngineFp = m_ymlConfig["fp16"].as<std::string>();
+                m_sEngineCache = m_ymlConfig["engine_cache"].as<std::string>();
+                m_sModelTrPath = m_ymlConfig["engine_path"].as<std::string>();
+                m_fNmsThresh = m_ymlConfig["Nms"].as<float>();
+                m_fDetectionThresh = m_ymlConfig["DetectionThresh"].as<float>();
+                m_iInput_w = m_ymlConfig["width"].as<int>();
+                m_iInput_h = m_ymlConfig["height"].as<int>();
+                m_eMode = aut.setMode(m_ymlConfig["Mode"].as<std::string>());
+                m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
+                m_iNumClasses = m_ymlConfig["numClasses"].as<int>();
+
+                if (!checkParameterConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
+                {
+                    return false;
+                }
+                return true;
+            }
+
+            else
+            {
+                //first time parameter are initialized by default
+                m_sEngineFp = "0";
+                m_sEngineCache = "1";
+                m_sModelTrPath = model_path;
+                m_fNmsThresh = 0.5;
+                m_fDetectionThresh = 0.01;
+                m_iInput_w = input_w;
+                m_iInput_h = input_h;
+                m_eMode = t;
+                m_sModelOnnxPath = modelPathOnnx;
+                m_iNumClasses = numClasses;
+
+                m_ymlConfig["fp16"] = m_sEngineFp;
+                m_ymlConfig["engine_cache"] = m_sEngineCache;
+                m_ymlConfig["engine_path"] = m_sModelTrPath;
+                m_ymlConfig["Nms"] = m_fNmsThresh;
+                m_ymlConfig["DetectionThresh"] = m_fDetectionThresh;
+                m_ymlConfig["width"] = m_iInput_w;
+                m_ymlConfig["height"] = m_iInput_h;
+                m_ymlConfig["Mode"] = aut.setYamlMode(m_eMode);
+                m_ymlConfig["modelOnnxPath"] = m_sModelOnnxPath;
+                m_ymlConfig["numClasses"] = m_iNumClasses;
+
+                std::ofstream fout(m_sModelTrPath + "/config.yaml");
+                fout << m_ymlConfig;
+
+                return true;
+            }
+        }
+
+        void Yolov4::setEnvVariable()
+        {
+
+            if (m_eMode == TensorRT)
+            {
+#ifdef __linux__
+
+                std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+
+                int cacheLenght = cacheModel.length();
+                char cacheModelchar[cacheLenght + 1];
+                strcpy(cacheModelchar, cacheModel.c_str());
+                putenv(cacheModelchar);
+
+                std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                int fp16Lenght = cacheModel.length();
+                char fp16char[cacheLenght + 1];
+                strcpy(fp16char, fp16.c_str());
+                putenv(fp16char);
+
+                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+                int n = m_sModelTrPath.length();
+                char modelSavePath[n + 1];
+                strcpy(modelSavePath, m_sModelTrPath.c_str());
+                //esporto le path del modello di Tensorrt
+                putenv(modelSavePath);
+
+#elif _WIN32
+
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
+
+#endif
+            }
+        }
+
+        void Yolov4::setSession()
+        {
+#ifdef __linux__
+
+            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, m_sModelOnnxPath.c_str(), m_OrtSessionOptions));
+
+#elif _WIN32
+
+            //in windows devo inizializzarlo in questo modo
+            std::wstring widestr = std::wstring(m_sModelOnnxPath.begin(), m_sModelOnnxPath.end());
+            //session = new Ort::Session(*env, widestr.c_str(), m_OrtSessionOptions);
+            m_OrtSession = std::make_unique<Ort::Session>(Ort::Session(*m_OrtEnv, widestr.c_str(), m_OrtSessionOptions));
+
+#endif
+        }
+
+        //function to initialize on Linux
+        bool Yolov4::init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
+        {
+            if (!m_bCheckInit)
+            {
+                try
+                {
+
+                    if (!aut.createFolderIfNotExist(model_path))
+                    {
+
+                        std::cout << "cannot create folder" << std::endl;
+
+                        return false;
+                    }
+
+                    std::cout << "INIT MODE " << t << std::endl;
+
+                    if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
+                    {
+
+                        return false;
+                    }
+
+                    if (!aut.checkMode(m_eMode, m_sMessage))
+                    {
+
+                        std::cout << m_sMessage << std::endl;
+                        return false;
+                    }
+
+                    //set enviromental variable
+
+                    //setEnvVariable();
+
+#ifdef __linux__
+
+                    std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+
+                    int cacheLenght = cacheModel.length();
+                    char cacheModelchar[cacheLenght + 1];
+                    strcpy(cacheModelchar, cacheModel.c_str());
+                    putenv(cacheModelchar);
+
+                    std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                    int fp16Lenght = cacheModel.length();
+                    char fp16char[cacheLenght + 1];
+                    strcpy(fp16char, fp16.c_str());
+                    putenv(fp16char);
+
+                    m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+                    int n = m_sModelTrPath.length();
+                    char modelSavePath[n + 1];
+                    strcpy(modelSavePath, m_sModelTrPath.c_str());
+                    //export path of tensorrt Model
+                    putenv(modelSavePath);
+
+#elif _WIN32
+
+                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+                    _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
+
+#endif
+                    //OnnxRuntime set Env
+                    setOnnxRuntimeEnv();
+
+                    setSession();
+
+                    //model input output
+                    setOnnxRuntimeModelInputOutput();
+                    m_bInit = true;
+                    m_bCheckInit = true;
+                    return true;
+                }
+
+                catch (const std::exception &e)
+                {
+                    std::cerr << e.what() << '\n';
+                    return false;
+                }
+            }
+            else
+            {
+                m_sMessage = "Is not possibile to call init() twice. Class already initialized";
+                std::cout << "Is not possibile to call init() twice. Class already initialized" << std::endl;
+            }
+        }
+
+
+
 
     } // namespace objectDetection
 } // namespace ai4prod

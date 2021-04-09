@@ -47,6 +47,7 @@ using namespace std::chrono;
 namespace fs = std::experimental::filesystem;
 
 using namespace std;
+using namespace cv;
 
 int main()
 {
@@ -64,7 +65,7 @@ int main()
     // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,NumClasses,Mode,TensortFoldersavedModel)
     yolov3 = new Yolov3();
 
-    if (!yolov3->init("/home/aistudios/Develop/Official/ai4prod/Model/Yolov3/yolov3-spp.onnx", 608, 608, 80, TensorRT, "tensorrtModel"))
+    if (!yolov3->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/object_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "tensorrtModel_yolov4"))
     {
 
         return 0;

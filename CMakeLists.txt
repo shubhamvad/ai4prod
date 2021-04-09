@@ -11,6 +11,8 @@ project(aiprod)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
+
+set(EXECUTION_PROVIDER "tensorrt")
 # check for execution provider 
 # default cpu
 if( NOT DEFINED EXECUTION_PROVIDER)

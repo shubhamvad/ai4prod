@@ -172,7 +172,102 @@ namespace ai4prod
             float iou(float lbox[4], float rbox[4]);
         };
 
+        class AIPRODUCTION_EXPORT Yolov4 : ai4prod::modelInterfaceObjectDetection
+        {
+        private:
+            YAML::Node m_ymlConfig;
+            std::string m_sModelTrPath;
+            std::string m_sModelOnnxPath;
+            std::string m_sEngineFp;
+            std::string m_sEngineCache;
 
+            MODE m_eMode;
+
+            //neural network input dimension
+            int m_iInput_h;
+            int m_iInput_w;
+            //original image width and height
+            int m_iMrows;
+            int m_iMcols;
+
+            int m_iNumClasses;
+            float m_fNmsThresh;
+            float m_fDetectionThresh;
+
+            //ONNX RUNTIME
+
+            Ort::SessionOptions m_OrtSessionOptions;
+            Ort::AllocatorWithDefaultOptions allocator;
+
+            std::unique_ptr<Ort::Session> m_OrtSession;
+            std::unique_ptr<Ort::Env> m_OrtEnv;
+
+            //OnnxRuntime Input Model
+
+            size_t num_input_nodes;
+            std::vector<const char *> input_node_names;
+
+            //OnnxRuntime Output Model
+
+            size_t num_out_nodes;
+
+            // onnx runtime data
+            float *m_fpInputOnnxRuntime;
+            float *m_fpOutOnnxRuntime[2];
+
+            //Model Out
+            std::vector<int64_t> m_viNumberOfBoundingBox;
+
+            //Input dimension onnx model
+            size_t m_InputTorchTensorSize;
+
+            //LIBTORCH
+            torch::Tensor m_TInputTorchTensor;
+            torch::Tensor m_TOutputTensor;
+
+            //THREAD SAFE
+
+            //handle initialization
+            bool m_bInit;
+            //used to call init only one time per instances
+            bool m_bCheckInit;
+            //used to verify if preprocess is called on the same run
+            bool m_bCheckPre;
+            //used to verify if run model is called on the same run
+            bool m_bCheckRun;
+            //used to verify id post process is called
+            bool m_bCheckPost;
+
+            //UTILS
+
+            ai4prod::aiutils aut;
+
+            //MESSAGE/ERROR HANDLING
+
+            std::string m_sMessage;
+
+            //FUNCTION
+
+            //init
+
+            void setOnnxRuntimeEnv();
+            void setOnnxRuntimeModelInputOutput();
+            bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
+            bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
+            void setEnvVariable();
+            void setSession();
+
+        public:
+            //string to save image id for accuracy detection
+            std::string m_sAccurayImagePath;
+            
+            Yolov4();
+
+            virtual ~Yolov4();
+
+            bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL);
+            
+        };
 
     } // namespace objectDetection
 
