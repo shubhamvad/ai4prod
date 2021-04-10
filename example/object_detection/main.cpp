@@ -199,7 +199,7 @@ int main()
         auto stop = high_resolution_clock::now();
 
         auto duration = duration_cast<microseconds>(stop - start);
-
+        cout << "SINGLE TIME INFERENCE 1 " << (float) duration.count() / (1000000 * 1) << "Sec" << endl;
         infTime.push_back((double)duration.count());
 #endif
 
@@ -223,13 +223,13 @@ int main()
             {
 
                 cv::Rect brect;
-                cout << result[i] << endl;
+                
 
                 float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
 
                 brect = yolov4->getRect(img, tmp);
 
-                std::cout<< "RECT "<< brect.x << " "<<brect.x<<  std::endl; 
+               
                 string category = to_string(result[i][4].item<float>());
                 cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
                 cv::putText(img,                         //target image

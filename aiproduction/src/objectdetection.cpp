@@ -1187,30 +1187,31 @@ namespace ai4prod
 
             img.copyTo(Image);
 
-            resize(Image, Image, cv::Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
+            //resize(Image, Image, cv::Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
 
-            // int w, h, x, y;
-            // float r_w = width / (img.cols * 1.0);
-            // float r_h = height / (img.rows * 1.0);
-            // if (r_h > r_w)
-            // {
-            //     w = width;
-            //     h = r_w * img.rows;
-            //     x = 0;
-            //     y = (height - h) / 2;
-            // }
-            // else
-            // {
-            //     w = r_h * img.cols;
-            //     h = height;
-            //     x = (width - w) / 2;
-            //     y = 0;
-            // }
-            // cv::Mat re(h, w, CV_8UC3);
-            // cv::resize(img, re, re.size(), 0, 0, cv::INTER_CUBIC);
-            // cv::Mat out(height, width, CV_8UC3, cv::Scalar(128, 128, 128));
-            // re.copyTo(out(cv::Rect(x, y, re.cols, re.rows)));
-            return Image;
+            int w, h, x, y;
+            float r_w = width / (Image.cols * 1.0);
+            float r_h = height / (Image.rows * 1.0);
+            if (r_h > r_w)
+            {
+                w = width;
+                h = r_w * Image.rows;
+                x = 0;
+                y = (height - h) / 2;
+            }
+            else
+            {
+                w = r_h * Image.cols;
+                h = height;
+                x = (width - w) / 2;
+                y = 0;
+            }
+            cv::Mat re(h, w, CV_8UC3);
+            cv::resize(Image, re, re.size(), 0, 0, cv::INTER_CUBIC);
+            cv::Mat out(height, width, CV_8UC3, cv::Scalar(128, 128, 128));
+            re.copyTo(out(cv::Rect(x, y, re.cols, re.rows)));
+            
+            return out;
         }
 
         void Yolov4::preprocessing(cv::Mat &Image)
@@ -1308,7 +1309,7 @@ namespace ai4prod
                 m_fpOutOnnxRuntime[1] = output_tensors[1].GetTensorMutableData<float>();
 
                 m_viNumberOfBoundingBox = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
-                std::cout << "YOLOV4 number of boxes " << m_viNumberOfBoundingBox[1] << std::endl;
+                //std::cout << "YOLOV4 number of boxes " << m_viNumberOfBoundingBox[1] << std::endl;
                 m_bCheckRun = true;
             }
 
@@ -1323,11 +1324,10 @@ namespace ai4prod
         torch::Tensor Yolov4::cpuNms(torch::Tensor boxes, torch::Tensor confs, float nmsThresh)
         {
 
-            //std::cout<<" yolov4 5 "<<std::endl;
+            
             torch::Tensor x1 = boxes.index({torch::indexing::Slice(None), 0});
-            //std::cout<<" yolov4 6 "<<std::endl;
             torch::Tensor y1 = boxes.index({torch::indexing::Slice(None), 1});
-            //std::cout<<" yolov4 7 "<<std::endl;
+        
             torch::Tensor x2 = boxes.index({torch::indexing::Slice(None), 2});
             torch::Tensor y2 = boxes.index({torch::indexing::Slice(None), 3});
 
@@ -1370,12 +1370,7 @@ namespace ai4prod
                 std::cout << "order " << order << std::endl;
             }
 
-            if (keep.size() > 0)
-            {
-
-                std::cout << "arrayKeep INSIDE " << keep << std::endl;
-                std::cout << "arrayKeep SIZE INSIDE " << keep.size() << std::endl;
-            }
+            
             //python equivalent order = order[::-1]-> reverse the orider [1,2,3]-> [3,2,1]
 
             //order= order.index({torch::indexing::Slice(None,None,-1)});
@@ -1402,8 +1397,6 @@ namespace ai4prod
             //[batch, num, num_classes] --> [batch, num]
             auto [max_conf, max_id] = torch::max(confs, 2);
 
-            std::cout << "max_conf " << max_conf.sizes() << std::endl;
-            std::cout << "max_id " << max_id.sizes() << std::endl;
 
             std::vector<std::vector<float>> bboxes;
 
@@ -1416,39 +1409,36 @@ namespace ai4prod
                 torch::Tensor l_max_conf = max_conf.index({i, argwhere});
                 torch::Tensor l_max_id = max_id.index({i, argwhere});
 
-                std::cout << "Size1 " << l_box_array.sizes() << std::endl;
-                std::cout << "Size2 " << l_max_conf.sizes() << std::endl;
-                std::cout << "Size3 " << l_max_id.sizes() << std::endl;
+
 
                 for (int j = 0; j < m_iNumClasses; j++)
                 {
-                    //std::cout<<" yolov4 1 "<<std::endl;
+                  
                     torch::Tensor cls_argwhere = l_max_id == j;
-                    //std::cout<<" yolov4 2 "<<std::endl;
+                  
                     torch::Tensor ll_box_array = l_box_array.index({cls_argwhere, torch::indexing::Slice(None)});
-                    //std::cout<<" yolov4 3 "<<std::endl;
+                   
                     torch::Tensor ll_max_conf = l_max_conf.index({cls_argwhere});
-                    //std::cout<<" yolov4 4 "<<std::endl;
+                   
                     torch::Tensor ll_max_id = l_max_id.index({cls_argwhere});
-                    //std::cout<<" yolov4 5 "<<std::endl;
+                    
                     torch::Tensor keep = cpuNms(ll_box_array, ll_max_conf, nms_threshold);
 
                     if (keep.sizes()[0] > 0)
                     {
-                        std::cout << " yolov4 4 " << std::endl;
+                   
                         ll_box_array = ll_box_array.index({keep, torch::indexing::Slice(None)});
                         ll_max_conf = ll_max_conf.index({keep});
                         ll_max_id = ll_max_id.index({keep});
 
-                        std::cout << " yolov4 5 " << std::endl;
+                    
                         for (int k = 0; k < ll_box_array.sizes()[0]; k++)
                         {
 
-                            std::cout << " yolov4 6 " << std::endl;
+                           
                             std::vector<float> tmpBbox = {ll_box_array.index({k, 0}).item<float>(), ll_box_array.index({k, 1}).item<float>(),
                                                           ll_box_array.index({k, 2}).item<float>(), ll_box_array.index({k, 3}).item<float>(), ll_max_conf[k].item<float>(), ll_max_id[k].item<float>()};
-                            std::cout << " yolov4 7 " << std::endl;
-                            std::cout << " ARRAY BOX " << tmpBbox << std::endl;
+
 
                             bboxes.push_back(tmpBbox);
                         }
