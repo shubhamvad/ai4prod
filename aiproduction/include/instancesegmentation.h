@@ -22,7 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "modelInterface.h"
-using namespace torch::indexing;
+
 using namespace std::chrono;
 
 namespace ai4prod

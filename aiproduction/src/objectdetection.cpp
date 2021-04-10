@@ -28,14 +28,13 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 
-#endif 
+#endif
 
 #ifdef DIRECTML
 #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
 #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
 
 #endif
-
 
 using namespace std::chrono;
 
@@ -45,7 +44,7 @@ namespace ai4prod
     {
 
         //
-     
+
         Yolov3::Yolov3()
         {
             m_bInit = false;
@@ -74,10 +73,9 @@ namespace ai4prod
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
 #else
                 std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
-#endif 
-               
+#endif
             }
-            
+
             if (m_eMode == DirectML)
             {
 
@@ -354,6 +352,7 @@ namespace ai4prod
                 h = r_w * img.rows;
                 x = 0;
                 y = (height - h) / 2;
+                
             }
             else
             {
@@ -474,7 +473,7 @@ namespace ai4prod
                 m_sMessage = "Cannot call run model without preprocessing";
                 std::cout << "Cannot call run model without preprocessing" << std::endl;
             }
-        } // namespace objectDetection
+        }
 
         torch::Tensor Yolov3::postprocessing()
         {
@@ -611,7 +610,6 @@ namespace ai4prod
 
                     auto duration1 = duration_cast<microseconds>(stop1 - start1);
 
-                    
                     if (noDetectionNms)
                     {
 
@@ -885,10 +883,9 @@ namespace ai4prod
             }
         }
 
+        //YOLO V4
 
-    //YOLO V4
-
-            Yolov4::Yolov4()
+        Yolov4::Yolov4()
         {
             m_bInit = false;
             m_bCheckInit = false;
@@ -916,10 +913,9 @@ namespace ai4prod
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
 #else
                 std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
-#endif 
-               
+#endif
             }
-            
+
             if (m_eMode == DirectML)
             {
 
@@ -1098,94 +1094,435 @@ namespace ai4prod
         //function to initialize on Linux
         bool Yolov4::init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
         {
-            if (!m_bCheckInit)
+            // if (!m_bCheckInit)
+            // {
+            try
             {
-                try
+
+                if (!aut.createFolderIfNotExist(model_path))
                 {
 
-                    if (!aut.createFolderIfNotExist(model_path))
-                    {
+                    std::cout << "cannot create folder" << std::endl;
 
-                        std::cout << "cannot create folder" << std::endl;
+                    return false;
+                }
 
-                        return false;
-                    }
+                std::cout << "INIT MODE " << t << std::endl;
 
-                    std::cout << "INIT MODE " << t << std::endl;
+                if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
+                {
 
-                    if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
-                    {
+                    return false;
+                }
 
-                        return false;
-                    }
+                if (!aut.checkMode(m_eMode, m_sMessage))
+                {
 
-                    if (!aut.checkMode(m_eMode, m_sMessage))
-                    {
+                    std::cout << m_sMessage << std::endl;
+                    return false;
+                }
 
-                        std::cout << m_sMessage << std::endl;
-                        return false;
-                    }
+                //set enviromental variable
 
-                    //set enviromental variable
-
-                    //setEnvVariable();
+                //setEnvVariable();
 
 #ifdef __linux__
 
-                    std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+                std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
-                    int cacheLenght = cacheModel.length();
-                    char cacheModelchar[cacheLenght + 1];
-                    strcpy(cacheModelchar, cacheModel.c_str());
-                    putenv(cacheModelchar);
+                int cacheLenght = cacheModel.length();
+                char cacheModelchar[cacheLenght + 1];
+                strcpy(cacheModelchar, cacheModel.c_str());
+                putenv(cacheModelchar);
 
-                    std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-                    int fp16Lenght = cacheModel.length();
-                    char fp16char[cacheLenght + 1];
-                    strcpy(fp16char, fp16.c_str());
-                    putenv(fp16char);
+                std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                int fp16Lenght = cacheModel.length();
+                char fp16char[cacheLenght + 1];
+                strcpy(fp16char, fp16.c_str());
+                putenv(fp16char);
 
-                    m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
-                    int n = m_sModelTrPath.length();
-                    char modelSavePath[n + 1];
-                    strcpy(modelSavePath, m_sModelTrPath.c_str());
-                    //export path of tensorrt Model
-                    putenv(modelSavePath);
+                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+                int n = m_sModelTrPath.length();
+                char modelSavePath[n + 1];
+                strcpy(modelSavePath, m_sModelTrPath.c_str());
+                //export path of tensorrt Model
+                putenv(modelSavePath);
 
 #elif _WIN32
 
-                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
-                    _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
-                    //OnnxRuntime set Env
-                    setOnnxRuntimeEnv();
+                //OnnxRuntime set Env
+                setOnnxRuntimeEnv();
 
-                    setSession();
+                setSession();
 
-                    //model input output
-                    setOnnxRuntimeModelInputOutput();
-                    m_bInit = true;
-                    m_bCheckInit = true;
-                    return true;
-                }
-
-                catch (const std::exception &e)
-                {
-                    std::cerr << e.what() << '\n';
-                    return false;
-                }
+                //model input output
+                setOnnxRuntimeModelInputOutput();
+                m_bInit = true;
+                m_bCheckInit = true;
+                return true;
             }
+
+            catch (const std::exception &e)
+            {
+                std::cerr << e.what() << '\n';
+                return false;
+            }
+            //}
+            // else
+            // {
+            //     m_sMessage = "Is not possibile to call init() twice. Class already initialized";
+            //     std::cout << "Is not possibile to call init() twice. Class already initialized" << std::endl;
+            // }
+        }
+
+        cv::Mat Yolov4::padding(cv::Mat &img, int width, int height)
+        {   
+            
+            cv::Mat Image;
+
+            img.copyTo(Image);
+
+            resize(Image, Image, cv::Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
+
+            // int w, h, x, y;
+            // float r_w = width / (img.cols * 1.0);
+            // float r_h = height / (img.rows * 1.0);
+            // if (r_h > r_w)
+            // {
+            //     w = width;
+            //     h = r_w * img.rows;
+            //     x = 0;
+            //     y = (height - h) / 2;
+            // }
+            // else
+            // {
+            //     w = r_h * img.cols;
+            //     h = height;
+            //     x = (width - w) / 2;
+            //     y = 0;
+            // }
+            // cv::Mat re(h, w, CV_8UC3);
+            // cv::resize(img, re, re.size(), 0, 0, cv::INTER_CUBIC);
+            // cv::Mat out(height, width, CV_8UC3, cv::Scalar(128, 128, 128));
+            // re.copyTo(out(cv::Rect(x, y, re.cols, re.rows)));
+            return Image;
+        }
+
+        void Yolov4::preprocessing(cv::Mat &Image)
+        {
+            // if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
+            // {
+
+            m_iMcols = Image.cols;
+            m_iMrows = Image.rows;
+
+            //free all resources allocated
+
+            m_viNumberOfBoundingBox.clear();
+
+            Image = padding(Image, m_iInput_w, m_iInput_h);
+
+            m_TInputTorchTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
+
+            m_InputTorchTensorSize = Image.cols * Image.rows * Image.channels();
+
+            m_bCheckPre = true;
+            // }
+            // else
+            // {
+            //     m_sMessage = "call init() before";
+            //     std::cout << "call init() before" << std::endl;
+            // }
+        }
+
+        void Yolov4::runmodel()
+        {
+
+            if (m_TInputTorchTensor.is_contiguous() && m_bCheckPre)
+            {
+                //conversione del tensore a onnx runtime
+                m_fpInputOnnxRuntime = static_cast<float *>(m_TInputTorchTensor.storage().data());
+
+                std::vector<int64_t> input_node_dims;
+
+                for (int i = 0; i < num_input_nodes; i++)
+                {
+                    // print input node names
+                    char *input_name = m_OrtSession->GetInputName(i, allocator);
+                    //printf("Input %d : name=%s\n", i, input_name);
+                    input_node_names[i] = input_name;
+
+                    // print input node types
+                    Ort::TypeInfo type_info = m_OrtSession->GetInputTypeInfo(i);
+                    auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+
+                    ONNXTensorElementDataType type = tensor_info.GetElementType();
+                    //printf("Input %d : type=%d\n", i, type);
+
+                    // print input shapes/dims
+
+                    input_node_dims = tensor_info.GetShape();
+                    //printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
+                    //for (int j = 0; j < input_node_dims.size(); j++)
+                    //printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
+                }
+
+                // for (int i = 0; i < num_out_nodes; i++)
+                // {
+                //     // print input node names
+                //     char *input_name = m_OrtSession->GetOutputName(i, allocator);
+                //     //printf("Output %d : name=%s\n", i, input_name);
+
+                //     Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
+                //     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+
+                //     ONNXTensorElementDataType type = tensor_info.GetElementType();
+                //     //printf("Output %d : type=%d\n", i, type);
+
+                //     // print input shapes/dims
+                //     //out_node_dims = tensor_info.GetShape();
+                //     //printf("Output %d : num_dims=%zu\n", i, out_node_dims.size());
+                //     //for (int j = 0; j < out_node_dims.size(); j++)
+                //     //printf("Output %d : dim %d=%jd\n", i, j, out_node_dims[j]);
+                // }
+
+                //https://github.com/microsoft/onnxruntime/issues/3170#issuecomment-596613449
+                std::vector<const char *> output_node_names = {"boxes", "confs"};
+
+                static const char *output_names[] = {"boxes", "confs"};
+                static const size_t NUM_OUTPUTS = sizeof(output_names) / sizeof(output_names[0]);
+
+                auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+                Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, m_fpInputOnnxRuntime, m_InputTorchTensorSize, input_node_dims.data(), 4);
+
+                assert(input_tensor.IsTensor());
+
+                std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 2);
+
+                m_fpOutOnnxRuntime[0] = output_tensors[0].GetTensorMutableData<float>();
+                m_fpOutOnnxRuntime[1] = output_tensors[1].GetTensorMutableData<float>();
+
+                m_viNumberOfBoundingBox = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
+                std::cout << "YOLOV4 number of boxes " << m_viNumberOfBoundingBox[1] << std::endl;
+                m_bCheckRun = true;
+            }
+
             else
             {
-                m_sMessage = "Is not possibile to call init() twice. Class already initialized";
-                std::cout << "Is not possibile to call init() twice. Class already initialized" << std::endl;
+
+                m_sMessage = "Cannot call run model without preprocessing";
+                std::cout << "Cannot call run model without preprocessing" << std::endl;
             }
         }
 
+        torch::Tensor Yolov4::cpuNms(torch::Tensor boxes, torch::Tensor confs, float nmsThresh)
+        {
 
+            //std::cout<<" yolov4 5 "<<std::endl;
+            torch::Tensor x1 = boxes.index({torch::indexing::Slice(None), 0});
+            //std::cout<<" yolov4 6 "<<std::endl;
+            torch::Tensor y1 = boxes.index({torch::indexing::Slice(None), 1});
+            //std::cout<<" yolov4 7 "<<std::endl;
+            torch::Tensor x2 = boxes.index({torch::indexing::Slice(None), 2});
+            torch::Tensor y2 = boxes.index({torch::indexing::Slice(None), 3});
 
+            torch::Tensor areas = (x2 - x1) * (y2 - y1);
+
+            //get ind in descending order
+            torch::Tensor order = torch::argsort(confs, -1, true);
+
+            std::vector<int> keep;
+
+            while (order.sizes()[0] > 0)
+            {
+
+                int idx_self = order[0].item<int>();
+                torch::Tensor idx_other = order.index({torch::indexing::Slice(1, None)});
+
+                keep.push_back(idx_self);
+
+                torch::Tensor xx1 = torch::max(x1.index({idx_self}), x1.index({idx_other}));
+                torch::Tensor yy1 = torch::max(y1.index({idx_self}), y1.index({idx_other}));
+
+                torch::Tensor xx2 = torch::min(x2.index({idx_self}), x2.index({idx_other}));
+                torch::Tensor yy2 = torch::min(y2.index({idx_self}), y2.index({idx_other}));
+
+                torch::Tensor minValue = torch::zeros({xx2.sizes()[0]});
+
+                torch::Tensor w = torch::max(xx2 - xx1, minValue);
+                torch::Tensor h = torch::max(yy2 - yy1, minValue);
+
+                torch::Tensor inter = w * h;
+
+                //intersection over unit
+                torch::Tensor over = inter / (areas.index({idx_self}) + areas.index({idx_other}) - inter);
+
+                torch::Tensor inds = torch::where(over <= nmsThresh)[0];
+
+                inds = inds + 1;
+                order = order.index({inds});
+
+                std::cout << "order " << order << std::endl;
+            }
+
+            if (keep.size() > 0)
+            {
+
+                std::cout << "arrayKeep INSIDE " << keep << std::endl;
+                std::cout << "arrayKeep SIZE INSIDE " << keep.size() << std::endl;
+            }
+            //python equivalent order = order[::-1]-> reverse the orider [1,2,3]-> [3,2,1]
+
+            //order= order.index({torch::indexing::Slice(None,None,-1)});
+
+            auto opts = torch::TensorOptions().dtype(torch::kInt32);
+            torch::Tensor keep_idx = torch::from_blob(keep.data(), {(long int)keep.size()}, opts).to(torch::kInt64);
+
+            return keep_idx;
+        }
+
+        torch::Tensor Yolov4::postprocessing()
+        {
+            float conf_threshold = 0.4;
+            float nms_threshold = 0.6;
+
+            //This value need to be changed for different yolov4 resolution 608,416,312
+            //m_viNumberOfBoundingBox[1] 608= num=22743
+            torch::Tensor boxes = torch::from_blob((float *)(m_fpOutOnnxRuntime[0]), {1, m_viNumberOfBoundingBox[1], 1, 4}).clone();
+            torch::Tensor confs = torch::from_blob((float *)(m_fpOutOnnxRuntime[1]), {1, m_viNumberOfBoundingBox[1], m_iNumClasses}).clone();
+
+            //python equivalent box_array = boxes[:, :, 0]
+            torch::Tensor box_array = boxes.index({torch::indexing::Slice(None), torch::indexing::Slice(None), 0});
+
+            //[batch, num, num_classes] --> [batch, num]
+            auto [max_conf, max_id] = torch::max(confs, 2);
+
+            std::cout << "max_conf " << max_conf.sizes() << std::endl;
+            std::cout << "max_id " << max_id.sizes() << std::endl;
+
+            std::vector<std::vector<float>> bboxes;
+
+            for (int i = 0; i < box_array.sizes()[0]; i++)
+            {
+
+                torch::Tensor argwhere = max_conf[0] > conf_threshold;
+
+                torch::Tensor l_box_array = box_array.index({i, argwhere, torch::indexing::Slice(None)});
+                torch::Tensor l_max_conf = max_conf.index({i, argwhere});
+                torch::Tensor l_max_id = max_id.index({i, argwhere});
+
+                std::cout << "Size1 " << l_box_array.sizes() << std::endl;
+                std::cout << "Size2 " << l_max_conf.sizes() << std::endl;
+                std::cout << "Size3 " << l_max_id.sizes() << std::endl;
+
+                for (int j = 0; j < m_iNumClasses; j++)
+                {
+                    //std::cout<<" yolov4 1 "<<std::endl;
+                    torch::Tensor cls_argwhere = l_max_id == j;
+                    //std::cout<<" yolov4 2 "<<std::endl;
+                    torch::Tensor ll_box_array = l_box_array.index({cls_argwhere, torch::indexing::Slice(None)});
+                    //std::cout<<" yolov4 3 "<<std::endl;
+                    torch::Tensor ll_max_conf = l_max_conf.index({cls_argwhere});
+                    //std::cout<<" yolov4 4 "<<std::endl;
+                    torch::Tensor ll_max_id = l_max_id.index({cls_argwhere});
+                    //std::cout<<" yolov4 5 "<<std::endl;
+                    torch::Tensor keep = cpuNms(ll_box_array, ll_max_conf, nms_threshold);
+
+                    if (keep.sizes()[0] > 0)
+                    {
+                        std::cout << " yolov4 4 " << std::endl;
+                        ll_box_array = ll_box_array.index({keep, torch::indexing::Slice(None)});
+                        ll_max_conf = ll_max_conf.index({keep});
+                        ll_max_id = ll_max_id.index({keep});
+
+                        std::cout << " yolov4 5 " << std::endl;
+                        for (int k = 0; k < ll_box_array.sizes()[0]; k++)
+                        {
+
+                            std::cout << " yolov4 6 " << std::endl;
+                            std::vector<float> tmpBbox = {ll_box_array.index({k, 0}).item<float>(), ll_box_array.index({k, 1}).item<float>(),
+                                                          ll_box_array.index({k, 2}).item<float>(), ll_box_array.index({k, 3}).item<float>(), ll_max_conf[k].item<float>(), ll_max_id[k].item<float>()};
+                            std::cout << " yolov4 7 " << std::endl;
+                            std::cout << " ARRAY BOX " << tmpBbox << std::endl;
+
+                            bboxes.push_back(tmpBbox);
+                        }
+                    }
+                }
+            }
+
+            if (bboxes.size() > 0)
+            {
+
+                return aut.convert2dVectorToTensor(bboxes);
+            }
+            else
+            {
+
+                torch::Tensor nullTensor;
+                return nullTensor;
+            }
+
+            
+        }
+
+        cv::Rect Yolov4::getRect(cv::Mat &img, float bbox[4])
+        {
+            // int l, r, t, b;
+            // float r_w = m_iInput_w / (img.cols * 1.0);
+            // float r_h = m_iInput_h / (img.rows * 1.0);
+            // if (r_h > r_w)
+            // {
+            //     l = bbox[0] - bbox[2] / 2.f;
+            //     r = bbox[0] + bbox[2] / 2.f;
+            //     t = bbox[1] - bbox[3] / 2.f - (m_iInput_h - r_w * img.rows) / 2;
+            //     b = bbox[1] + bbox[3] / 2.f - (m_iInput_h - r_w * img.rows) / 2;
+            //     l = l / r_w;
+            //     r = r / r_w;
+            //     t = t / r_w;
+            //     b = b / r_w;
+
+            //     std::cout << "RH"<<std::endl;
+            // }
+            // else
+            // {
+            //     // l = bbox[0] - bbox[2] / 2.f - (m_iInput_w - r_h * img.cols) / 2;
+            //     // r = bbox[0] + bbox[2] / 2.f - (m_iInput_w - r_h * img.cols) / 2;
+            //     // t = bbox[1] - bbox[3] / 2.f;
+            //     // b = bbox[1] + bbox[3] / 2.f;
+
+            //     l = bbox[0] *(m_iInput_w - r_h * img.cols);
+            //     r = bbox[2] *(m_iInput_w - r_h * img.cols);
+            //     t = bbox[1] - bbox[3] / 2.f;
+            //     b = bbox[3] + bbox[3] / 2.f;
+
+            //     l = l / r_h;
+            //     r = r / r_h;
+            //     t = t / r_h;
+            //     b = b / r_h;
+            //     std::cout << "RW"<<std::endl;
+            // }
+            float x1= bbox[0]*img.cols; 
+            float y1= bbox[1]*img.rows; 
+            float x2= bbox[2]*img.cols; 
+            float y2= bbox[3]*img.rows; 
+
+            return cv::Rect(x1, y1, x2-x1, y2-y1);
+        }
+        Yolov4::~Yolov4()
+        {
+            if (m_bCheckInit)
+            {
+
+                m_OrtSession.reset();
+                m_OrtEnv.reset();
+            }
+        }
 
     } // namespace objectDetection
 } // namespace ai4prod

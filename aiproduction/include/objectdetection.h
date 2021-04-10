@@ -175,6 +175,7 @@ namespace ai4prod
         class AIPRODUCTION_EXPORT Yolov4 : ai4prod::modelInterfaceObjectDetection
         {
         private:
+
             YAML::Node m_ymlConfig;
             std::string m_sModelTrPath;
             std::string m_sModelOnnxPath;
@@ -257,6 +258,12 @@ namespace ai4prod
             void setEnvVariable();
             void setSession();
 
+            //preprocessing
+            cv::Mat padding(cv::Mat &img, int width, int weight);
+
+            torch::Tensor cpuNms(torch::Tensor boxes, torch::Tensor confs,float nmsThresh=0.5);
+
+
         public:
             //string to save image id for accuracy detection
             std::string m_sAccurayImagePath;
@@ -266,6 +273,14 @@ namespace ai4prod
             virtual ~Yolov4();
 
             bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL);
+
+            void preprocessing(cv::Mat &Image);
+
+            void runmodel();
+            cv::Rect getRect(cv::Mat &image,  float bbox[4] );
+
+            torch::Tensor postprocessing();
+
             
         };
 

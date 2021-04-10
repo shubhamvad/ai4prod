@@ -51,7 +51,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include <algorithm>
 
 namespace fs = std::experimental::filesystem;
-
+using namespace torch::indexing;
 
 //using namespace cv;
 
