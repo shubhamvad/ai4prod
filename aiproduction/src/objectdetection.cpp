@@ -352,7 +352,6 @@ namespace ai4prod
                 h = r_w * img.rows;
                 x = 0;
                 y = (height - h) / 2;
-                
             }
             else
             {
@@ -883,7 +882,7 @@ namespace ai4prod
             }
         }
 
-        //YOLO V4
+        //-------------------------------------------YOLO V4---------------------------------------------
 
         Yolov4::Yolov4()
         {
@@ -1181,36 +1180,47 @@ namespace ai4prod
         }
 
         cv::Mat Yolov4::padding(cv::Mat &img, int width, int height)
-        {   
-            
-            cv::Mat Image;
-
-            img.copyTo(Image);
+        {
 
             //resize(Image, Image, cv::Size(m_iInput_h, m_iInput_w), 0, 0, cv::INTER_LINEAR);
 
             int w, h, x, y;
-            float r_w = width / (Image.cols * 1.0);
-            float r_h = height / (Image.rows * 1.0);
+            float r_w = width / (img.cols * 1.0);
+            float r_h = height / (img.rows * 1.0);
             if (r_h > r_w)
             {
                 w = width;
-                h = r_w * Image.rows;
+                h = r_w * img.rows;
                 x = 0;
                 y = (height - h) / 2;
+
+                std::cout << " Padding Rh" << std::endl;
             }
             else
             {
-                w = r_h * Image.cols;
+                w = r_h * img.cols;
                 h = height;
                 x = (width - w) / 2;
                 y = 0;
+
+                std::cout << " Padding Rw" << std::endl;
             }
             cv::Mat re(h, w, CV_8UC3);
-            cv::resize(Image, re, re.size(), 0, 0, cv::INTER_CUBIC);
+            cv::resize(img, re, re.size(), 0, 0, cv::INTER_CUBIC);
+
+            if (r_h > r_w)
+            {
+                m_iPaddingDimension = re.size().height;
+            }
+            else
+            {
+
+                m_iPaddingDimension = re.size().width;
+            }
+
+           
             cv::Mat out(height, width, CV_8UC3, cv::Scalar(128, 128, 128));
             re.copyTo(out(cv::Rect(x, y, re.cols, re.rows)));
-            
             return out;
         }
 
@@ -1324,10 +1334,9 @@ namespace ai4prod
         torch::Tensor Yolov4::cpuNms(torch::Tensor boxes, torch::Tensor confs, float nmsThresh)
         {
 
-            
             torch::Tensor x1 = boxes.index({torch::indexing::Slice(None), 0});
             torch::Tensor y1 = boxes.index({torch::indexing::Slice(None), 1});
-        
+
             torch::Tensor x2 = boxes.index({torch::indexing::Slice(None), 2});
             torch::Tensor y2 = boxes.index({torch::indexing::Slice(None), 3});
 
@@ -1366,15 +1375,9 @@ namespace ai4prod
 
                 inds = inds + 1;
                 order = order.index({inds});
-
-                std::cout << "order " << order << std::endl;
             }
 
-            
-            //python equivalent order = order[::-1]-> reverse the orider [1,2,3]-> [3,2,1]
-
-            //order= order.index({torch::indexing::Slice(None,None,-1)});
-
+            //convert vector<int> to Tensor libtorch
             auto opts = torch::TensorOptions().dtype(torch::kInt32);
             torch::Tensor keep_idx = torch::from_blob(keep.data(), {(long int)keep.size()}, opts).to(torch::kInt64);
 
@@ -1397,7 +1400,6 @@ namespace ai4prod
             //[batch, num, num_classes] --> [batch, num]
             auto [max_conf, max_id] = torch::max(confs, 2);
 
-
             std::vector<std::vector<float>> bboxes;
 
             for (int i = 0; i < box_array.sizes()[0]; i++)
@@ -1409,36 +1411,31 @@ namespace ai4prod
                 torch::Tensor l_max_conf = max_conf.index({i, argwhere});
                 torch::Tensor l_max_id = max_id.index({i, argwhere});
 
-
-
                 for (int j = 0; j < m_iNumClasses; j++)
                 {
-                  
+
                     torch::Tensor cls_argwhere = l_max_id == j;
-                  
+
                     torch::Tensor ll_box_array = l_box_array.index({cls_argwhere, torch::indexing::Slice(None)});
-                   
+
                     torch::Tensor ll_max_conf = l_max_conf.index({cls_argwhere});
-                   
+
                     torch::Tensor ll_max_id = l_max_id.index({cls_argwhere});
-                    
+
                     torch::Tensor keep = cpuNms(ll_box_array, ll_max_conf, nms_threshold);
 
                     if (keep.sizes()[0] > 0)
                     {
-                   
+
                         ll_box_array = ll_box_array.index({keep, torch::indexing::Slice(None)});
                         ll_max_conf = ll_max_conf.index({keep});
                         ll_max_id = ll_max_id.index({keep});
 
-                    
                         for (int k = 0; k < ll_box_array.sizes()[0]; k++)
                         {
 
-                           
                             std::vector<float> tmpBbox = {ll_box_array.index({k, 0}).item<float>(), ll_box_array.index({k, 1}).item<float>(),
                                                           ll_box_array.index({k, 2}).item<float>(), ll_box_array.index({k, 3}).item<float>(), ll_max_conf[k].item<float>(), ll_max_id[k].item<float>()};
-
 
                             bboxes.push_back(tmpBbox);
                         }
@@ -1457,52 +1454,47 @@ namespace ai4prod
                 torch::Tensor nullTensor;
                 return nullTensor;
             }
-
-            
         }
 
         cv::Rect Yolov4::getRect(cv::Mat &img, float bbox[4])
         {
-            // int l, r, t, b;
-            // float r_w = m_iInput_w / (img.cols * 1.0);
-            // float r_h = m_iInput_h / (img.rows * 1.0);
-            // if (r_h > r_w)
-            // {
-            //     l = bbox[0] - bbox[2] / 2.f;
-            //     r = bbox[0] + bbox[2] / 2.f;
-            //     t = bbox[1] - bbox[3] / 2.f - (m_iInput_h - r_w * img.rows) / 2;
-            //     b = bbox[1] + bbox[3] / 2.f - (m_iInput_h - r_w * img.rows) / 2;
-            //     l = l / r_w;
-            //     r = r / r_w;
-            //     t = t / r_w;
-            //     b = b / r_w;
 
-            //     std::cout << "RH"<<std::endl;
-            // }
-            // else
-            // {
-            //     // l = bbox[0] - bbox[2] / 2.f - (m_iInput_w - r_h * img.cols) / 2;
-            //     // r = bbox[0] + bbox[2] / 2.f - (m_iInput_w - r_h * img.cols) / 2;
-            //     // t = bbox[1] - bbox[3] / 2.f;
-            //     // b = bbox[1] + bbox[3] / 2.f;
+            float x1 = bbox[0] * m_iInput_w;
+            float y1 = bbox[1] * m_iInput_h;
+            float x2 = bbox[2] * m_iInput_w;
+            float y2 = bbox[3] * m_iInput_h;
 
-            //     l = bbox[0] *(m_iInput_w - r_h * img.cols);
-            //     r = bbox[2] *(m_iInput_w - r_h * img.cols);
-            //     t = bbox[1] - bbox[3] / 2.f;
-            //     b = bbox[3] + bbox[3] / 2.f;
+            float r_w = m_iInput_w / (img.cols * 1.0);
+            float r_h = m_iInput_h / (img.rows * 1.0);
 
-            //     l = l / r_h;
-            //     r = r / r_h;
-            //     t = t / r_h;
-            //     b = b / r_h;
-            //     std::cout << "RW"<<std::endl;
-            // }
-            float x1= bbox[0]*img.cols; 
-            float y1= bbox[1]*img.rows; 
-            float x2= bbox[2]*img.cols; 
-            float y2= bbox[3]*img.rows; 
+            if (r_h > r_w)
+            {
 
-            return cv::Rect(x1, y1, x2-x1, y2-y1);
+                //this convert coordinate from image with padding to image without padding
+                y1 = y1 - ((m_iInput_h - m_iPaddingDimension) / 2);
+                y2 = y2 - ((m_iInput_h - m_iPaddingDimension) / 2);
+
+                //this scale coordinate to original image dimension
+                x1 = x1 / r_w;
+                x2 = x2 / r_w;
+                y1 = y1 / r_w;
+                y2 = y2 / r_w;
+
+            }
+            else
+            {
+
+                x1 = x1 - ((m_iInput_w - m_iPaddingDimension) / 2);
+                x2 = x2 - ((m_iInput_w - m_iPaddingDimension) / 2);
+
+                x1 = x1 / r_h;
+                x2 = x2 / r_h;
+                y1 = y1 / r_h;
+                y2 = y2 / r_h;
+
+            }
+
+            return cv::Rect(x1, y1, (x2 - x1), (y2 - y1));
         }
         Yolov4::~Yolov4()
         {

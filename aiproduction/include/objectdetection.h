@@ -187,6 +187,7 @@ namespace ai4prod
             //neural network input dimension
             int m_iInput_h;
             int m_iInput_w;
+            int m_iPaddingDimension;
             //original image width and height
             int m_iMrows;
             int m_iMcols;
