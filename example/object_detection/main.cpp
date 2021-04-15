@@ -183,10 +183,10 @@ int main()
         string image_id = entry.path();
 
         Mat img;
-        Mat Image;
+
         img = imread(image_id.c_str());
 
-        img.copyTo(Image);
+       
 
         yolov4->preprocessing(img);
 #ifdef TIME_EVAL
@@ -226,12 +226,14 @@ int main()
                 
 
                 float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+                
 
-                brect = yolov4->getRect(Image, tmp);
+                cv::waitKey(0);
+                brect = yolov4->getRect(img, tmp);
                 
                 string category = to_string(result[i][4].item<float>());
-                cv::rectangle(Image, brect, cv::Scalar(255, 0, 0));
-                cv::putText(Image,                         //target image
+                cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+                cv::putText(img,                         //target image
                             category.c_str(),            //text
                             cv::Point(brect.x, brect.y), //top-left position
                             cv::FONT_HERSHEY_DUPLEX,
@@ -241,7 +243,7 @@ int main()
                 //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
             }
 
-            imshow("image", Image);
+            imshow("image", img);
             waitKey(0);
         }
     }

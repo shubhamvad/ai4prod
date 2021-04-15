@@ -1069,7 +1069,7 @@ namespace ai4prod
                 x = 0;
                 y = (height - h) / 2;
 
-                std::cout << " Padding Rh" << std::endl;
+                
             }
             else
             {
@@ -1078,7 +1078,7 @@ namespace ai4prod
                 x = (width - w) / 2;
                 y = 0;
 
-                std::cout << " Padding Rw" << std::endl;
+                
             }
             cv::Mat re(h, w, CV_8UC3);
             cv::resize(img, re, re.size(), 0, 0, cv::INTER_CUBIC);
@@ -1107,15 +1107,18 @@ namespace ai4prod
             m_iMcols = Image.cols;
             m_iMrows = Image.rows;
 
+            cv::Mat tmpImage;
+
+            tmpImage=Image.clone();
             //free all resources allocated
 
             m_viNumberOfBoundingBox.clear();
 
-            Image = padding(Image, m_iInput_w, m_iInput_h);
+            tmpImage = padding(tmpImage, m_iInput_w, m_iInput_h);
 
-            m_TInputTorchTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
+            m_TInputTorchTensor = aut.convertMatToTensor(tmpImage, tmpImage.cols, tmpImage.rows, Image.channels(), 1);
 
-            m_InputTorchTensorSize = Image.cols * Image.rows * Image.channels();
+            m_InputTorchTensorSize = tmpImage.cols * tmpImage.rows * tmpImage.channels();
 
             m_bCheckPre = true;
             // }
@@ -1261,8 +1264,8 @@ namespace ai4prod
 
         torch::Tensor Yolov4::postprocessing(std::string imagePathAccuracy)
         {
-            float conf_threshold = 0.4;
-            float nms_threshold = 0.6;
+            // float conf_threshold = 0.4;
+            // float nms_threshold = 0.6;
 
             //This value need to be changed for different yolov4 resolution 608,416,312
             //m_viNumberOfBoundingBox[1] 608= num=22743
@@ -1280,7 +1283,7 @@ namespace ai4prod
             for (int i = 0; i < box_array.sizes()[0]; i++)
             {
 
-                torch::Tensor argwhere = max_conf[0] > conf_threshold;
+                torch::Tensor argwhere = max_conf[0] > m_fDetectionThresh;
 
                 torch::Tensor l_box_array = box_array.index({i, argwhere, torch::indexing::Slice(None)});
                 torch::Tensor l_max_conf = max_conf.index({i, argwhere});
@@ -1297,7 +1300,7 @@ namespace ai4prod
 
                     torch::Tensor ll_max_id = l_max_id.index({cls_argwhere});
 
-                    torch::Tensor keep = cpuNms(ll_box_array, ll_max_conf, nms_threshold);
+                    torch::Tensor keep = cpuNms(ll_box_array, ll_max_conf, m_fNmsThresh);
 
                     if (keep.sizes()[0] > 0)
                     {
@@ -1318,11 +1321,7 @@ namespace ai4prod
                 }
             }
 
-            std::cout <<"1"<<std::endl;
-            std::cout <<"BBOX CLASS " << bboxes[0][5]<<std::endl;
-            std::cout <<"BBOX CLASS " << bboxes[1][5]<<std::endl;
-            std::cout <<"BBOX CLASS " << bboxes[2][5]<<std::endl;
-            std::cout <<"2"<<std::endl;
+
 
 #ifdef EVAL_ACCURACY
 
@@ -1352,8 +1351,9 @@ namespace ai4prod
                 // Json::Value categoryIdJson;
                 // Json::Value bboxJson;
                 // Json::Value score;
+                
                 root["image_id"] = std::stoi(image_id);
-
+                
                 int cocoCategory = 0;
                 //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
                 //1

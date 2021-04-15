@@ -22,7 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 //inference time detection
-#define TIME_EVAL
+//#define TIME_EVAL
 
 #include <iostream>
 
@@ -47,6 +47,7 @@ using namespace std::chrono;
 namespace fs = std::experimental::filesystem;
 
 using namespace std;
+using namespace cv;
 
 int main()
 {
@@ -54,18 +55,22 @@ int main()
     //YOLO MAP ---------------------------------------------------------------------
 
     //setup image folder of Coco dataset
+    //Change class Yolov3 o Yolov4 to Test Accuracy and inference Time
+    std::string AccurayFolderPath = "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Dataset/Coco2017/validation/val2017";
+    //Yolov3 *yolov3;
+    Yolov4 *yolov4;
 
-    std::string AccurayFolderPath = "/media/mic-710aix/dataDisk1/data/Coco2017/validation/val2017";
-    Yolov3 *yolov3;
 
     //linux
     // Check our api for full description
     // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,Mode,TensortFoldersavedModel)
-    yolov3 = new Yolov3();
+    //yolov3 = new Yolov3();
+
+    yolov4 = new Yolov4();
 
     cout << "INIT SESSION" << endl;
 
-    yolov3->init("../yolov3-spp.onnx", 608, 608,80,TensorRT, "../tensorrtModel");
+    yolov4->init("../yolov4_608.onnx", 608, 608,80,TensorRT, "../tensorrtModelYolov4");
 
     cout << "START PROCESSING" << endl;
 
@@ -90,16 +95,18 @@ int main()
 
         auto start1 = high_resolution_clock::now();
 
-        yolov3->m_sAccurayImagePath = image_id.c_str();
+        
 
-        yolov3->preprocessing(img);
+        //yolov3->preprocessing(img);
+        yolov4->preprocessing(img);
 
 #ifdef TIME_EVAL
 
         auto start = high_resolution_clock::now();
 
 #endif
-        yolov3->runmodel();
+        yolov4->runmodel();
+        //yolov3->runmodel();
 
 #ifdef TIME_EVAL
         auto stop = high_resolution_clock::now();
@@ -109,7 +116,8 @@ int main()
        
 #endif
 
-        torch::Tensor result = yolov3->postprocessing();
+        //torch::Tensor result = yolov3->postprocessing(image_id.c_str());
+        torch::Tensor result = yolov4->postprocessing(image_id.c_str());
 
 
 #ifdef TIME_EVAL
@@ -135,7 +143,7 @@ int main()
         }
         else
         {
-
+//----------------------------------YOLOV3-------------------------------------------------------------------------
             //if you want to see output results. This slow down the processing
 
             // for (int i = 0; i < result.sizes()[0]; i++)
@@ -160,6 +168,30 @@ int main()
             //     //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
             // }
 
+//-------------------------------------------YOLOV4-------------------------------------------
+
+            // for (int i = 0; i < result.sizes()[0]; i++)
+            // {
+
+            //     cv::Rect brect;
+                
+
+            //     float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+
+            //     brect = yolov4->getRect(img, tmp);
+                
+            //     string category = to_string(result[i][4].item<float>());
+            //     cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+            //     cv::putText(img,                         //target image
+            //                 category.c_str(),            //text
+            //                 cv::Point(brect.x, brect.y), //top-left position
+            //                 cv::FONT_HERSHEY_DUPLEX,
+            //                 1.0,
+            //                 CV_RGB(118, 185, 0), //font color
+            //                 2);
+                
+            // }
+
             // imshow("immagine", img);
             // waitKey(0);
         }
@@ -178,7 +210,8 @@ int main()
 
 #endif
     
-    yolov3->createAccuracyFile();
+    yolov4->createAccuracyFile();
+    //yolov3->createAccuracyFile();
 
     cout << "create yoloVal.json" << endl;
 

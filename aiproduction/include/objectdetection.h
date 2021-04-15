@@ -266,7 +266,7 @@ namespace ai4prod
             //MAP
 
             cv::Rect getRectMap(float bbox[4]);
-            void createAccuracyFile();
+            
             //array with all detection accuracy
             Json::Value m_JsonRootArray;
 
@@ -287,6 +287,8 @@ namespace ai4prod
             cv::Rect getRect(cv::Mat &image,  float bbox[4] );
 
             torch::Tensor postprocessing(std::string imagePathAccuracy="");
+
+            void createAccuracyFile();
 
             
         };
