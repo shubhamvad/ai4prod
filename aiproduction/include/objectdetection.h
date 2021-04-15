@@ -114,7 +114,6 @@ namespace ai4prod
             void setOnnxRuntimeModelInputOutput();
             bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
             bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
-            void setEnvVariable();
             void setSession();
 
             //Preprocessing
@@ -140,7 +139,7 @@ namespace ai4prod
             bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL);
 
             void preprocessing(cv::Mat &Image);
-            torch::Tensor postprocessing();
+            torch::Tensor postprocessing(std::string imagePathAccuracy="");
             void runmodel();
 
             void createAccuracyFile();
@@ -256,13 +255,20 @@ namespace ai4prod
             void setOnnxRuntimeModelInputOutput();
             bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
             bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
-            void setEnvVariable();
+           
             void setSession();
 
             //preprocessing
             cv::Mat padding(cv::Mat &img, int width, int weight);
 
             torch::Tensor cpuNms(torch::Tensor boxes, torch::Tensor confs,float nmsThresh=0.5);
+            
+            //MAP
+
+            cv::Rect getRectMap(float bbox[4]);
+            void createAccuracyFile();
+            //array with all detection accuracy
+            Json::Value m_JsonRootArray;
 
 
         public:
@@ -280,7 +286,7 @@ namespace ai4prod
             void runmodel();
             cv::Rect getRect(cv::Mat &image,  float bbox[4] );
 
-            torch::Tensor postprocessing();
+            torch::Tensor postprocessing(std::string imagePathAccuracy="");
 
             
         };

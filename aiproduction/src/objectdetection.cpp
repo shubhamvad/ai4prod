@@ -198,42 +198,6 @@ namespace ai4prod
             }
         }
 
-        void Yolov3::setEnvVariable()
-        {
-
-            if (m_eMode == TensorRT)
-            {
-#ifdef __linux__
-
-                std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
-
-                int cacheLenght = cacheModel.length();
-                char cacheModelchar[cacheLenght + 1];
-                strcpy(cacheModelchar, cacheModel.c_str());
-                putenv(cacheModelchar);
-
-                std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-                int fp16Lenght = cacheModel.length();
-                char fp16char[cacheLenght + 1];
-                strcpy(fp16char, fp16.c_str());
-                putenv(fp16char);
-
-                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
-                int n = m_sModelTrPath.length();
-                char modelSavePath[n + 1];
-                strcpy(modelSavePath, m_sModelTrPath.c_str());
-                //esporto le path del modello di Tensorrt
-                putenv(modelSavePath);
-
-#elif _WIN32
-
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
-                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
-
-#endif
-            }
-        }
 
         void Yolov3::setSession()
         {
@@ -284,7 +248,7 @@ namespace ai4prod
 
                     //set enviromental variable
 
-                    //setEnvVariable();
+                
 
 #ifdef __linux__
 
@@ -474,7 +438,7 @@ namespace ai4prod
             }
         }
 
-        torch::Tensor Yolov3::postprocessing()
+        torch::Tensor Yolov3::postprocessing(std::string imagePathAccuracy)
         {
             if (m_bCheckRun)
             {
@@ -644,7 +608,7 @@ namespace ai4prod
                         //need for handling image path for COCO DATASET
                         //for every image
 
-                        std::string image_id = m_sAccurayImagePath;
+                        std::string image_id = imagePathAccuracy;
 
                         const size_t last_slash_idx = image_id.find_last_of("\\/");
                         if (std::string::npos != last_slash_idx)
@@ -673,63 +637,11 @@ namespace ai4prod
                             // Json::Value score;
                             root["image_id"] = std::stoi(image_id);
 
-                            int cocoCategory = 0;
+                            
                             //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
                             //1
-                            if ((int)bboxValuesNms[i][4] > 0 && (int)bboxValuesNms[i][4] <= 11)
-                            {
 
-                                cocoCategory = (int)bboxValuesNms[i][4];
-                            }
-
-                            //2
-                            if ((int)bboxValuesNms[i][4] > 11 && (int)bboxValuesNms[i][4] <= 24)
-                            {
-
-                                cocoCategory = (int)bboxValuesNms[i][4] + 1;
-                            }
-                            //3
-                            if ((int)bboxValuesNms[i][4] > 24 && (int)bboxValuesNms[i][4] <= 26)
-                            {
-
-                                cocoCategory = (int)bboxValuesNms[i][4] + 2;
-                            }
-                            //4
-                            if ((int)bboxValuesNms[i][4] > 26 && (int)bboxValuesNms[i][4] <= 40)
-                            {
-
-                                cocoCategory = (int)bboxValuesNms[i][4] + 4;
-                            }
-                            //5
-                            if ((int)bboxValuesNms[i][4] > 40 && (int)bboxValuesNms[i][4] <= 60)
-                            {
-
-                                cocoCategory = (int)bboxValuesNms[i][4] + 5;
-                            }
-                            //6
-                            if ((int)bboxValuesNms[i][4] == 61)
-                            {
-
-                                cocoCategory = (int)bboxValuesNms[i][4] + 6;
-                            }
-                            //7
-                            if ((int)bboxValuesNms[i][4] == 62)
-                            {
-
-                                cocoCategory = (int)bboxValuesNms[i][4] + 8;
-                            }
-                            //8
-                            if ((int)bboxValuesNms[i][4] > 62 && (int)bboxValuesNms[i][4] <= 73)
-                            {
-
-                                cocoCategory = (int)bboxValuesNms[i][4] + 9;
-                            }
-                            //9
-                            if ((int)bboxValuesNms[i][4] > 73 && (int)bboxValuesNms[i][4] <= 80)
-                            {
-
-                                cocoCategory = (int)bboxValuesNms[i][4] + 10;
-                            }
+                            int cocoCategory= CocoMap[(int)bboxValuesNms[i][4]];
 
                             root["category_id"] = cocoCategory;
 
@@ -867,7 +779,7 @@ namespace ai4prod
             //std::cout << json_file << std::endl;
 
             std::ofstream myfile;
-            myfile.open("yoloVal.json", std::ios::in | std::ios::out | std::ios::app);
+            myfile.open("yoloV3Val.json", std::ios::in | std::ios::out | std::ios::app);
             myfile << json_file + "\n";
             myfile.close();
         }
@@ -1037,42 +949,6 @@ namespace ai4prod
             }
         }
 
-        void Yolov4::setEnvVariable()
-        {
-
-            if (m_eMode == TensorRT)
-            {
-#ifdef __linux__
-
-                std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
-
-                int cacheLenght = cacheModel.length();
-                char cacheModelchar[cacheLenght + 1];
-                strcpy(cacheModelchar, cacheModel.c_str());
-                putenv(cacheModelchar);
-
-                std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-                int fp16Lenght = cacheModel.length();
-                char fp16char[cacheLenght + 1];
-                strcpy(fp16char, fp16.c_str());
-                putenv(fp16char);
-
-                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
-                int n = m_sModelTrPath.length();
-                char modelSavePath[n + 1];
-                strcpy(modelSavePath, m_sModelTrPath.c_str());
-                //esporto le path del modello di Tensorrt
-                putenv(modelSavePath);
-
-#elif _WIN32
-
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
-                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
-
-#endif
-            }
-        }
 
         void Yolov4::setSession()
         {
@@ -1121,9 +997,8 @@ namespace ai4prod
                     return false;
                 }
 
-                //set enviromental variable
-
-                //setEnvVariable();
+                
+                
 
 #ifdef __linux__
 
@@ -1384,7 +1259,7 @@ namespace ai4prod
             return keep_idx;
         }
 
-        torch::Tensor Yolov4::postprocessing()
+        torch::Tensor Yolov4::postprocessing(std::string imagePathAccuracy)
         {
             float conf_threshold = 0.4;
             float nms_threshold = 0.6;
@@ -1443,6 +1318,75 @@ namespace ai4prod
                 }
             }
 
+            std::cout <<"1"<<std::endl;
+            std::cout <<"BBOX CLASS " << bboxes[0][5]<<std::endl;
+            std::cout <<"BBOX CLASS " << bboxes[1][5]<<std::endl;
+            std::cout <<"BBOX CLASS " << bboxes[2][5]<<std::endl;
+            std::cout <<"2"<<std::endl;
+
+#ifdef EVAL_ACCURACY
+
+            std::string image_id = imagePathAccuracy;
+
+            const size_t last_slash_idx = image_id.find_last_of("\\/");
+            if (std::string::npos != last_slash_idx)
+            {
+                image_id.erase(0, last_slash_idx + 1);
+            }
+
+            // Remove extension if present.
+            const size_t period_idx = image_id.rfind('.');
+            if (std::string::npos != period_idx)
+            {
+                image_id.erase(period_idx);
+            }
+
+            image_id.erase(0, image_id.find_first_not_of('0'));
+
+            //cout << image_id << endl;
+            
+
+            for (int i = 0; i < bboxes.size(); i++)
+            {
+                 Json::Value root;
+                // Json::Value categoryIdJson;
+                // Json::Value bboxJson;
+                // Json::Value score;
+                root["image_id"] = std::stoi(image_id);
+
+                int cocoCategory = 0;
+                //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
+                //1
+
+                cocoCategory = CocoMap[(int)bboxes[i][5]];
+
+                root["category_id"] = cocoCategory;
+
+                Json::Value valueBBoxjson(Json::arrayValue);
+
+                float tmp[4] = {bboxes[i][0], bboxes[i][1], bboxes[i][2], bboxes[i][3]};
+
+                cv::Rect rect;
+                
+                rect = getRectMap(tmp);
+
+                //add coordinate to annotation
+                valueBBoxjson.append(rect.x);
+                valueBBoxjson.append(rect.y);
+                valueBBoxjson.append(rect.width);
+                valueBBoxjson.append(rect.height);
+
+                root["bbox"] = valueBBoxjson;
+                root["score"] = bboxes[i][4];
+
+                m_JsonRootArray.append(root);
+
+
+
+            }
+
+#endif
+
             if (bboxes.size() > 0)
             {
 
@@ -1496,6 +1440,65 @@ namespace ai4prod
 
             return cv::Rect(x1, y1, (x2 - x1), (y2 - y1));
         }
+
+        cv::Rect Yolov4::getRectMap(float bbox[4]){
+
+              {
+
+            float x1 = bbox[0] * m_iInput_w;
+            float y1 = bbox[1] * m_iInput_h;
+            float x2 = bbox[2] * m_iInput_w;
+            float y2 = bbox[3] * m_iInput_h;
+
+            float r_w = m_iInput_w / (m_iMcols * 1.0);
+            float r_h = m_iInput_h / (m_iMrows * 1.0);
+
+            if (r_h > r_w)
+            {
+
+                //this convert coordinate from image with padding to image without padding
+                y1 = y1 - ((m_iInput_h - m_iPaddingDimension) / 2);
+                y2 = y2 - ((m_iInput_h - m_iPaddingDimension) / 2);
+
+                //this scale coordinate to original image dimension
+                x1 = x1 / r_w;
+                x2 = x2 / r_w;
+                y1 = y1 / r_w;
+                y2 = y2 / r_w;
+
+            }
+            else
+            {
+
+                x1 = x1 - ((m_iInput_w - m_iPaddingDimension) / 2);
+                x2 = x2 - ((m_iInput_w - m_iPaddingDimension) / 2);
+
+                x1 = x1 / r_h;
+                x2 = x2 / r_h;
+                y1 = y1 / r_h;
+                y2 = y2 / r_h;
+
+            }
+
+            return cv::Rect(x1, y1, (x2 - x1), (y2 - y1));
+        }
+
+        }
+
+         void Yolov4::createAccuracyFile()
+        {
+
+            Json::StreamWriterBuilder builder;
+            const std::string json_file = Json::writeString(builder, m_JsonRootArray);
+            //std::cout << json_file << std::endl;
+
+            std::ofstream myfile;
+            myfile.open("yoloV4Val.json", std::ios::in | std::ios::out | std::ios::app);
+            myfile << json_file + "\n";
+            myfile.close();
+        }
+
+
         Yolov4::~Yolov4()
         {
             if (m_bCheckInit)

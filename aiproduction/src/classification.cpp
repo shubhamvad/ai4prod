@@ -23,22 +23,18 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "classification.h"
 
-
-
 #ifdef TENSORRT
 
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 
-#endif 
-
-#ifdef DIRECTML
-    #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
-    #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
-
 #endif
 
+#ifdef DIRECTML
+#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
+#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
 
+#endif
 
 using namespace onnxruntime;
 
@@ -80,7 +76,7 @@ namespace ai4prod
             if (m_iNumClasses != numClasses)
             {
                 m_sMessage = "ERROR: Number of model class is different from configuration file.";
-                
+
                 return false;
             }
 
@@ -118,8 +114,7 @@ namespace ai4prod
                 m_sModelOnnxPath = m_ymlConfig["modelOnnxPath"].as<std::string>();
                 m_eMode = aut.setMode(m_ymlConfig["Mode"].as<std::string>());
 
-
-               if (!checkParameterConfig(modelPathOnnx, input_w, input_h, numClasses, t))
+                if (!checkParameterConfig(modelPathOnnx, input_w, input_h, numClasses, t))
                 {
                     return false;
                 }
@@ -163,46 +158,6 @@ namespace ai4prod
             }
         }
 
-        void ResNet50::setEnvVariable()
-        {
-
-            if (m_eMode == TensorRT)
-            {
-#ifdef __linux__
-
-                std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
-
-                int cacheLenght = cacheModel.length();
-                char cacheModelchar[cacheLenght + 1];
-                strcpy(cacheModelchar, cacheModel.c_str());
-                putenv(cacheModelchar);
-
-                std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-                int fp16Lenght = cacheModel.length();
-                char fp16char[cacheLenght + 1];
-                strcpy(fp16char, fp16.c_str());
-                putenv(fp16char);
-
-                std::string modelTrTmp;
-
-                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
-                int n = modelTrTmp.length();
-                char modelSavePath[n + 1];
-                strcpy(modelSavePath, modelTrTmp.c_str());
-                //esporto le path del modello di Tensorrt
-
-                putenv(modelSavePath);
-
-#elif _WIN32
-                int Cache = stoi(m_sEngineCache);
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", std::to_string(Cache).c_str());
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
-                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
-
-#endif
-            }
-        }
-
         void ResNet50::setOnnxRuntimeEnv()
         {
 
@@ -210,7 +165,7 @@ namespace ai4prod
 
             if (m_eMode == Cpu)
             {
-             
+
                 m_OrtSessionOptions.SetIntraOpNumThreads(1);
                 //ORT_ENABLE_ALL sembra avere le performance migliori
                 m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
@@ -218,27 +173,26 @@ namespace ai4prod
 
             std::cout << "MODE " << m_eMode << std::endl;
 
-
             if (m_eMode == TensorRT)
             {
+
 #ifdef TENSORRT
                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
 #else
                 std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
-#endif 
-                
+#endif
             }
-           
-             if (m_eMode == DirectML)
+
+            if (m_eMode == DirectML)
             {
-                
+
 #ifdef DIRECTML
-                 
-                 Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(m_OrtSessionOptions, 0));
-                
+
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_DML(m_OrtSessionOptions, 0));
+
 #else
-             
-                 std::cout << "Ai4prod not compiled with DirectML Execution Provider" << std::endl;
+
+                std::cout << "Ai4prod not compiled with DirectML Execution Provider" << std::endl;
 #endif
             }
         }
@@ -292,9 +246,10 @@ namespace ai4prod
 
                     std::cout << "INIT MODE " << t << std::endl;
 
-                    if(!createYamlConfig(modelPath, width, height, numClasses, NumberOfReturnedPrediction, t, modelTr_path)){
-                        
-                        std::cout<<m_sMessage<< std::endl;
+                    if (!createYamlConfig(modelPath, width, height, numClasses, NumberOfReturnedPrediction, t, modelTr_path))
+                    {
+
+                        std::cout << m_sMessage << std::endl;
                         return false;
                     };
 
@@ -306,24 +261,23 @@ namespace ai4prod
                     }
 
                     //ENV VARIABLE CANNOT BE SET INTO FUNCTION MUST BE ON MAIN THREAD
-                    if (m_eMode == TensorRT) {
 
-                        //I cannot set this code into a function
+                    //I cannot set this code into a function and inside if
 #ifdef __linux__
-
+                   
+                        int ret;
                         std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
                         int cacheLenght = cacheModel.length();
                         char cacheModelchar[cacheLenght + 1];
                         strcpy(cacheModelchar, cacheModel.c_str());
-                        putenv(cacheModelchar);
+                        ret = putenv(cacheModelchar);
 
                         std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
                         int fp16Lenght = cacheModel.length();
                         char fp16char[cacheLenght + 1];
                         strcpy(fp16char, fp16.c_str());
                         putenv(fp16char);
-
                         std::string modelTrTmp;
 
                         modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
@@ -336,14 +290,12 @@ namespace ai4prod
 
 #elif _WIN32
 
-                        _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-                        _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
-                        _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
+                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+                    _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+                    _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
-                    }
-
-                   
+                    
                     //OnnxRuntime set Env
                     setOnnxRuntimeEnv();
 
@@ -368,7 +320,7 @@ namespace ai4prod
                 m_sMessage = "Is not possibile to call init() twice. Class already initialized";
                 std::cout << "Is not possibile to call init() twice. Class already initialized" << std::endl;
             }
-        }
+        } // namespace classification
 
         void ResNet50::preprocessing(cv::Mat &Image)
         {
@@ -387,23 +339,10 @@ namespace ai4prod
                 Image = Image(roi).clone();
                 inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
-                //definisco la dimensione di input
+                //define input size
 
                 input_tensor_size = Image.cols * Image.rows * Image.channels();
 
-                //Mat testImage;
-
-                //testImage = convertTensortToMat(inputTensor, 224, 224);
-
-                //imshow("test image", testImage);
-                //imshow("original", Image);
-                //waitKey(0);
-
-                //verifico che immagine sia la stessa
-                //equalImage(Image, testImage);
-
-                //se le 2 immagini sono uguali allora noramlizzo il tensore
-                //questi sono i valori di ImageNet
 
                 inputTensor[0][0] = inputTensor[0][0].sub_(0.485).div_(0.229);
                 inputTensor[0][1] = inputTensor[0][1].sub_(0.456).div_(0.224);
@@ -411,13 +350,7 @@ namespace ai4prod
 
                 m_bCheckPre = true;
 
-                //cout << "preprocessing" << endl;
-
-                //cout<<session->GetInputCount()<<endl;
-
-                //cout<<session.GetInputCount()<<endl;
-
-                //Preprocessig Image
+               
             }
             else
             {
@@ -533,8 +466,8 @@ namespace ai4prod
 
 #ifdef EVAL_ACCURACY
 
-                cout << "EVAL_ACCURACY" << endl;
-                ofstream myfile;
+                std::cout << "EVAL_ACCURACY" << std::endl;
+                std::ofstream myfile;
                 myfile.open("classification-Detection.csv", std::ios::in | std::ios::out | std::ios::app);
 
                 //remove file extension

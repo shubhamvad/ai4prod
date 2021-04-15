@@ -82,7 +82,7 @@ namespace ai4prod
 
         virtual void runmodel() = 0;
 
-        virtual torch::Tensor postprocessing()=0;
+        virtual torch::Tensor postprocessing(std::string imagePathAccuracy="")=0;
     };
 
     class modelInterfaceInstanceSegmentation{

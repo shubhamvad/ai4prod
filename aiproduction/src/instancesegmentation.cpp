@@ -27,7 +27,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
 #include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
 
-#endif 
+#endif
 
 #ifdef DIRECTML
 #include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
@@ -53,32 +53,33 @@ namespace ai4prod
                 m_sMessage = "ERROR: mode initialization is different from configuration file. Please choose another save directory.";
                 return false;
             }
-            
+
             if (input_h != m_iInput_h)
             {
                 m_sMessage = "ERROR: Image input height is different from configuration file.";
                 return false;
             }
-            
+
             if (input_w != m_iInput_w)
             {
                 m_sMessage = "ERROR: Image input width is different from configuration file. ";
                 return false;
             }
-            
+
             if (m_iNumClasses != numClasses)
             {
                 m_sMessage = "ERROR: Number of model class is different from configuration file.";
                 return false;
             }
 
-            if(m_eMode==TensorRT){
-                
-                
-                if (m_sModelOnnxPath!=modelPathOnnx && m_sEngineCache=="1"){
+            if (m_eMode == TensorRT)
+            {
 
-                m_sMessage = "WARNING: Use cache tensorrt engine file with different onnx Model";
-                return true;
+                if (m_sModelOnnxPath != modelPathOnnx && m_sEngineCache == "1")
+                {
+
+                    m_sMessage = "WARNING: Use cache tensorrt engine file with different onnx Model";
+                    return true;
                 }
             }
 
@@ -161,11 +162,10 @@ namespace ai4prod
             if (m_eMode == TensorRT)
             {
 #ifdef TENSORRT
-                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));            
+                Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_Tensorrt(m_OrtSessionOptions, 0));
 #else
                 std::cout << "Ai4prod not compiled with Tensorrt Execution Provider" << std::endl;
-#endif 
-
+#endif
             }
             if (m_eMode == DirectML)
             {
@@ -220,7 +220,7 @@ namespace ai4prod
             //create config file and check for configuration error
             if (!createYamlConfig(modelPathOnnx, input_h, input_w, numClasses, t, model_path))
             {
-                
+
                 std::cout << m_sMessage << std::endl;
                 return false;
             }
@@ -228,43 +228,41 @@ namespace ai4prod
             //verify if Mode is implemented
             if (!m_aut.checkMode(m_eMode, m_sMessage))
             {
-               
+
                 std::cout << m_sMessage << std::endl;
                 return false;
             }
 
-            if (m_eMode == TensorRT) {
 #ifdef __linux__
 
-                std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
+            std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
-                int cacheLenght = cacheModel.length();
-                char cacheModelchar[cacheLenght + 1];
-                strcpy(cacheModelchar, cacheModel.c_str());
-                putenv(cacheModelchar);
+            int cacheLenght = cacheModel.length();
+            char cacheModelchar[cacheLenght + 1];
+            strcpy(cacheModelchar, cacheModel.c_str());
+            putenv(cacheModelchar);
 
-                std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-                int fp16Lenght = cacheModel.length();
-                char fp16char[cacheLenght + 1];
-                strcpy(fp16char, fp16.c_str());
-                putenv(fp16char);
+            std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+            int fp16Lenght = cacheModel.length();
+            char fp16char[cacheLenght + 1];
+            strcpy(fp16char, fp16.c_str());
+            putenv(fp16char);
 
-                m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
-                int n = m_sModelTrPath.length();
-                char modelSavePath[n + 1];
-                strcpy(modelSavePath, m_sModelTrPath.c_str());
-                //esporto le path del modello di Tensorrt
-                putenv(modelSavePath);
+            m_sModelTrPath = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+            int n = m_sModelTrPath.length();
+            char modelSavePath[n + 1];
+            strcpy(modelSavePath, m_sModelTrPath.c_str());
+            //esporto le path del modello di Tensorrt
+            putenv(modelSavePath);
 
 #elif _WIN32
 
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
-                _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
-                _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_ENABLE", m_sEngineCache.c_str());
+            _putenv_s("ORT_TENSORRT_ENGINE_CACHE_PATH", m_sModelTrPath.c_str());
+            _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
 
-            }
             setOnnxRuntimeEnv();
 
             setSession();
@@ -284,12 +282,11 @@ namespace ai4prod
             m_ImageHeightOrig = tmpImage.rows;
             m_ImageWidhtOrig = tmpImage.cols;
 
-
             resize(tmpImage, tmpImage, cv::Size(m_iInput_w, m_iInput_h), 0, 0, cv::INTER_LINEAR);
             //tensor with RGB channel
-            
+
             m_TInputTensor = m_aut.convertMatToTensor8bit(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
-            
+
             //m_TInputTensor = m_aut.convertMatToTensor8bit(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
             //m_TInputTensor = torch::nn::functional::interpolate(m_TInputTensor, torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>{m_iInput_w, m_iInput_h}).mode(torch::kBilinear).align_corners(false));
 

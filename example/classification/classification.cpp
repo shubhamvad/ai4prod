@@ -68,7 +68,7 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	if(!resnet->init("../resnet50.onnx", 256, 256, 1000, 5, DirectML, "../tensorrtModel_directml")){
+	if(!resnet->init("../resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel_test")){
 		cout << "exit" << endl;
 		getchar();
 		return 0;

@@ -119,7 +119,6 @@ namespace ai4prod
          void setOnnxRuntimeModelInputOutput();
          bool checkParameterConfig(std::string modelPathOnnx, int input_w, int input_h, int numClasses, MODE t);
          bool createYamlConfig(std::string modelPathOnnx, int input_w, int input_h, int numClasses, int NumberOfReturnedPrediction, MODE t, std::string modelTr_path);
-         void setEnvVariable();
          void setSession();
 
 

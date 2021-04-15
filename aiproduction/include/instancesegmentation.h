@@ -94,11 +94,7 @@ namespace ai4prod
 
             //imageDimension Original
             int m_ImageWidhtOrig;
-            int m_ImageHeightOrig;
-
-            //Test VARIABLE TO BE ELIMNATED
-
-        
+            int m_ImageHeightOrig;        
 
             //FUNCTION
             void setOnnxRuntimeEnv();
