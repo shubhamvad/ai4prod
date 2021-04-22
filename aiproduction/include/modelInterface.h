@@ -96,6 +96,17 @@ namespace ai4prod
 
     };
 
+    class modelInterfacePoseEstimation{
+
+        virtual void preprocessing(cv::Mat &Image) = 0;
+
+        virtual void runmodel() = 0;
+
+        virtual torch::Tensor postprocessing(std::string imagePathAccuracy="")=0;
+
+
+    };
+
 //#endif
 
 } // namespace ai4prod
