@@ -96,7 +96,7 @@ namespace ai4prod
             int m_ImageWidhtOrig;
             int m_ImageHeightOrig;        
 
-            //FUNCTION
+            //------------------METHOD--------------------------
             void setOnnxRuntimeEnv();
             bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses,MODE t, std::string model_path);
             bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses,MODE t, std::string model_path);
