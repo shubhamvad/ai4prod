@@ -122,14 +122,14 @@ aiproduction/include/utils.h
 aiproduction/include/aiproduction_export.h 
 aiproduction/include/modelInterface.h
 aiproduction/include/customDataType.h
-aiproduction/include/poseestimation.h
+aiproduction/include/posedetection.h
 )
 
 FILE(GLOB MY_SRCS 
 aiproduction/src/classification.cpp 
 aiproduction/src/objectdetection.cpp
 aiproduction/src/instancesegmentation.cpp
-aiproduction/src/poseestimation.cpp 
+aiproduction/src/posedetection.cpp 
 aiproduction/src/utils.cpp )
 
 #ai4production Library

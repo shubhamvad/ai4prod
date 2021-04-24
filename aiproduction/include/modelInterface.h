@@ -96,9 +96,9 @@ namespace ai4prod
 
     };
 
-    class modelInterfacePoseEstimation{
+    class modelInterfacePoseDetection{
 
-        virtual void preprocessing(cv::Mat &Image) = 0;
+        virtual void preprocessing(cv::Mat &Image,torch::Tensor result) = 0;
 
         virtual void runmodel() = 0;
 

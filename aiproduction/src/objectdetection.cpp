@@ -198,7 +198,6 @@ namespace ai4prod
             }
         }
 
-
         void Yolov3::setSession()
         {
 #ifdef __linux__
@@ -247,8 +246,6 @@ namespace ai4prod
                     }
 
                     //set enviromental variable
-
-                
 
 #ifdef __linux__
 
@@ -637,11 +634,10 @@ namespace ai4prod
                             // Json::Value score;
                             root["image_id"] = std::stoi(image_id);
 
-                            
                             //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
                             //1
 
-                            int cocoCategory= CocoMap[(int)bboxValuesNms[i][4]];
+                            int cocoCategory = CocoMap[(int)bboxValuesNms[i][4]];
 
                             root["category_id"] = cocoCategory;
 
@@ -949,7 +945,6 @@ namespace ai4prod
             }
         }
 
-
         void Yolov4::setSession()
         {
 #ifdef __linux__
@@ -996,9 +991,6 @@ namespace ai4prod
                     std::cout << m_sMessage << std::endl;
                     return false;
                 }
-
-                
-                
 
 #ifdef __linux__
 
@@ -1068,8 +1060,6 @@ namespace ai4prod
                 h = r_w * img.rows;
                 x = 0;
                 y = (height - h) / 2;
-
-                
             }
             else
             {
@@ -1077,8 +1067,6 @@ namespace ai4prod
                 h = height;
                 x = (width - w) / 2;
                 y = 0;
-
-                
             }
             cv::Mat re(h, w, CV_8UC3);
             cv::resize(img, re, re.size(), 0, 0, cv::INTER_CUBIC);
@@ -1093,7 +1081,6 @@ namespace ai4prod
                 m_iPaddingDimension = re.size().width;
             }
 
-           
             cv::Mat out(height, width, CV_8UC3, cv::Scalar(128, 128, 128));
             re.copyTo(out(cv::Rect(x, y, re.cols, re.rows)));
             return out;
@@ -1109,7 +1096,7 @@ namespace ai4prod
 
             cv::Mat tmpImage;
 
-            tmpImage=Image.clone();
+            tmpImage = Image.clone();
             //free all resources allocated
 
             m_viNumberOfBoundingBox.clear();
@@ -1321,8 +1308,6 @@ namespace ai4prod
                 }
             }
 
-
-
 #ifdef EVAL_ACCURACY
 
             std::string image_id = imagePathAccuracy;
@@ -1343,17 +1328,16 @@ namespace ai4prod
             image_id.erase(0, image_id.find_first_not_of('0'));
 
             //cout << image_id << endl;
-            
 
             for (int i = 0; i < bboxes.size(); i++)
             {
-                 Json::Value root;
+                Json::Value root;
                 // Json::Value categoryIdJson;
                 // Json::Value bboxJson;
                 // Json::Value score;
-                
+
                 root["image_id"] = std::stoi(image_id);
-                
+
                 int cocoCategory = 0;
                 //darknet has 80 class while coco has 90 classes. We need to handle different number of classes on output
                 //1
@@ -1367,7 +1351,7 @@ namespace ai4prod
                 float tmp[4] = {bboxes[i][0], bboxes[i][1], bboxes[i][2], bboxes[i][3]};
 
                 cv::Rect rect;
-                
+
                 rect = getRectMap(tmp);
 
                 //add coordinate to annotation
@@ -1380,17 +1364,29 @@ namespace ai4prod
                 root["score"] = bboxes[i][4];
 
                 m_JsonRootArray.append(root);
-
-
-
             }
 
 #endif
 
             if (bboxes.size() > 0)
             {
+                //convert bbox coordinate respect to original image size
+                //bbox with coordinate respect to orginal image width and height
+                std::vector<std::vector<float>> imageOrigBboxes;
 
-                return aut.convert2dVectorToTensor(bboxes);
+                for (int i = 0; i < bboxes.size(); i++)
+                {
+
+                    float tmp[4] = {bboxes[i][0], bboxes[i][1], bboxes[i][2], bboxes[i][3]};
+                    cv::Rect tmpRect = getRectMap(tmp);
+
+                    std::vector<float> tmpOrig = {(float)tmpRect.x, (float)tmpRect.y, (float)tmpRect.width, (float)tmpRect.height, bboxes[i][4], bboxes[i][5]};
+
+                    imageOrigBboxes.push_back(tmpOrig);
+                }
+                //imageOrigbboxes(x,y,width,height,conf,id_class)
+                return aut.convert2dVectorToTensor(imageOrigBboxes);
+            
             }
             else
             {
@@ -1423,7 +1419,6 @@ namespace ai4prod
                 x2 = x2 / r_w;
                 y1 = y1 / r_w;
                 y2 = y2 / r_w;
-
             }
             else
             {
@@ -1435,57 +1430,54 @@ namespace ai4prod
                 x2 = x2 / r_h;
                 y1 = y1 / r_h;
                 y2 = y2 / r_h;
-
             }
 
             return cv::Rect(x1, y1, (x2 - x1), (y2 - y1));
         }
 
-        cv::Rect Yolov4::getRectMap(float bbox[4]){
+        cv::Rect Yolov4::getRectMap(float bbox[4])
+        {
 
-              {
-
-            float x1 = bbox[0] * m_iInput_w;
-            float y1 = bbox[1] * m_iInput_h;
-            float x2 = bbox[2] * m_iInput_w;
-            float y2 = bbox[3] * m_iInput_h;
-
-            float r_w = m_iInput_w / (m_iMcols * 1.0);
-            float r_h = m_iInput_h / (m_iMrows * 1.0);
-
-            if (r_h > r_w)
             {
 
-                //this convert coordinate from image with padding to image without padding
-                y1 = y1 - ((m_iInput_h - m_iPaddingDimension) / 2);
-                y2 = y2 - ((m_iInput_h - m_iPaddingDimension) / 2);
+                float x1 = bbox[0] * m_iInput_w;
+                float y1 = bbox[1] * m_iInput_h;
+                float x2 = bbox[2] * m_iInput_w;
+                float y2 = bbox[3] * m_iInput_h;
 
-                //this scale coordinate to original image dimension
-                x1 = x1 / r_w;
-                x2 = x2 / r_w;
-                y1 = y1 / r_w;
-                y2 = y2 / r_w;
+                float r_w = m_iInput_w / (m_iMcols * 1.0);
+                float r_h = m_iInput_h / (m_iMrows * 1.0);
 
+                if (r_h > r_w)
+                {
+
+                    //this convert coordinate from image with padding to image without padding
+                    y1 = y1 - ((m_iInput_h - m_iPaddingDimension) / 2);
+                    y2 = y2 - ((m_iInput_h - m_iPaddingDimension) / 2);
+
+                    //this scale coordinate to original image dimension
+                    x1 = x1 / r_w;
+                    x2 = x2 / r_w;
+                    y1 = y1 / r_w;
+                    y2 = y2 / r_w;
+                }
+                else
+                {
+
+                    x1 = x1 - ((m_iInput_w - m_iPaddingDimension) / 2);
+                    x2 = x2 - ((m_iInput_w - m_iPaddingDimension) / 2);
+
+                    x1 = x1 / r_h;
+                    x2 = x2 / r_h;
+                    y1 = y1 / r_h;
+                    y2 = y2 / r_h;
+                }
+
+                return cv::Rect(x1, y1, (x2 - x1), (y2 - y1));
             }
-            else
-            {
-
-                x1 = x1 - ((m_iInput_w - m_iPaddingDimension) / 2);
-                x2 = x2 - ((m_iInput_w - m_iPaddingDimension) / 2);
-
-                x1 = x1 / r_h;
-                x2 = x2 / r_h;
-                y1 = y1 / r_h;
-                y2 = y2 / r_h;
-
-            }
-
-            return cv::Rect(x1, y1, (x2 - x1), (y2 - y1));
         }
 
-        }
-
-         void Yolov4::createAccuracyFile()
+        void Yolov4::createAccuracyFile()
         {
 
             Json::StreamWriterBuilder builder;
@@ -1497,7 +1489,6 @@ namespace ai4prod
             myfile << json_file + "\n";
             myfile.close();
         }
-
 
         Yolov4::~Yolov4()
         {

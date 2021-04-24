@@ -202,9 +202,9 @@ int main()
         cout << "SINGLE TIME INFERENCE 1 " << (float) duration.count() / (1000000 * 1) << "Sec" << endl;
         infTime.push_back((double)duration.count());
 #endif
-
+        
         torch::Tensor result = yolov4->postprocessing();
-
+        
 #ifdef TIME_EVAL
         // if (numDetection == 1000)
         //     break;
@@ -217,6 +217,7 @@ int main()
         else
         {
 
+            
             //if you want to see output results. This slow down the processing
 
             for (int i = 0; i < result.sizes()[0]; i++)
@@ -224,11 +225,12 @@ int main()
 
                 cv::Rect brect;
                 
+                
 
                 float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
                 
 
-                cv::waitKey(0);
+                
                 brect = yolov4->getRect(img, tmp);
                 
                 string category = to_string(result[i][4].item<float>());
@@ -242,8 +244,9 @@ int main()
                             2);
                 //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
             }
-
+           
             imshow("image", img);
+            
             waitKey(0);
         }
     }
