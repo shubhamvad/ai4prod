@@ -36,9 +36,10 @@ example/object_detection/tensorrtModel/*
 example/instance_segmentation/build
 example/instance_segmentation/Install
 example/instance_segmentation/tensorrtModel
-example/pose_estimation/build
-example/pose_estimation/Install
-example/pose_estimation/tensorrtModel
+example/pose_detection/build
+example/pose_detection/hrnet.onnx
+example/pose_detection/Install
+example/pose_detection/tensorrtModel
 Model/
 testAccuracy/Dataset
 onnxConversion/Yolov3/models
