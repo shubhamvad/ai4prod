@@ -279,28 +279,31 @@ namespace ai4prod
                 float x = result[i][0].item<float>();
                 float y = result[i][1].item<float>();
                 float box_width = result[i][2].item<float>();
-                float box_height = result[i][2].item<float>();
+                float box_height = result[i][3].item<float>();
 
                 float center_x = x + box_width * 0.5;
                 float center_y = y + box_height * 0.5;
 
                 //parameter of the network
-                int pixel_std = 200;
+                float pixel_std = 200.0;
 
-                float aspect_ratio = m_iInputOrig_w / m_iInputOrig_h;
+                float aspect_ratio = (float)m_iInput_w / (float)m_iInput_h;
+
+                std::cout <<"Aspect ratio "<< aspect_ratio<<std::endl;
 
                 if (box_width > aspect_ratio * box_height)
                 {
-
+                    std::cout <<"width "<< aspect_ratio<<std::endl;
                     box_height = box_width / aspect_ratio;
                 }
                 else
-                {
+                {   
+                    std::cout <<"height "<< aspect_ratio<<std::endl;
                     box_width = box_height * aspect_ratio;
                 }
 
                 if (center_x != -1)
-                    scales.push_back(cv::Point2f((box_width / pixel_std) * 1.25, (box_height / pixel_std)) * 1.25);
+                    scales.push_back(cv::Point2f((box_width / pixel_std), (box_height / pixel_std)) * 1.25);
 
                 centers.push_back(cv::Point2f(center_x, center_y));
             }
@@ -314,7 +317,7 @@ namespace ai4prod
             cv::Point2f resultPoint;
 
             resultPoint.x= srcPoint.x*cs - srcPoint.y*sn;
-            resultPoint.y= srcPoint.x*sn - srcPoint.y*cs;
+            resultPoint.y= srcPoint.x*sn + srcPoint.y*cs;
 
             return resultPoint;
 
@@ -324,7 +327,7 @@ namespace ai4prod
 
             cv::Point2f direct= first -second;
 
-            return second + cv::Point2f(-direct.x,-direct.y);
+            return second + cv::Point2f(-direct.y,direct.x);
             
         }
         /*
@@ -339,13 +342,13 @@ namespace ai4prod
 
             float src_w= tmpScale.x;
 
-            float dst_w= m_iInput_w;
-            float dst_h= m_iInput_h;
+            float dst_w= (float)m_iInput_w;
+            float dst_h= (float)m_iInput_h;
             
 
             float rot_rad= 3.141592 * rot/180;
 
-            cv::Point2f src_dir= getDir(cv::Point2f(0,src_w*(-0.5)),rot);
+            cv::Point2f src_dir= getDir(cv::Point2f(0,src_w*(-0.5)),rot_rad);
 
             cv::Point2f dst_dir= cv::Point2f(0,dst_w*(-0.5));
 
@@ -361,6 +364,11 @@ namespace ai4prod
             dstTri[1]= cv::Point2f(dst_w*0.5,dst_h*0.5) +dst_dir;
             dstTri[2]= get3rdPoint( dstTri[0],dstTri[1]);
 
+            for(int i=0; i < 3;i++){
+
+                std::cout<< "SRC "<< srcTri[i].x<< " " << srcTri[i].y<<std::endl;
+                std::cout<< "DST "<< dstTri[i].x<< " " << dstTri[i].y<<std::endl;
+            }
 
             return cv::getAffineTransform(srcTri,dstTri);
 
@@ -386,23 +394,33 @@ namespace ai4prod
 
             boxToCenterScale(result,centers,scales);
 
+
+
             std::vector<cv::Mat> bboxWarp;
             for (int i=0; i< centers.size();i++){
+                
+                std::cout <<"CENTER "<< centers[i].x << " " <<centers[i].y<<std::endl;
+                std::cout <<"SCALES " <<scales[i].x << " " <<scales[i].y<<std::endl;
 
                 cv::Mat trans= getAffineTransform(centers[i],scales[i]);
 
-                cv::Mat tmp= cv::Mat::zeros( Image.rows, Image.cols, Image.type() );
+                std::cout << "TRANS "<< trans<<std::endl;
+                cv::Mat tmp= cv::Mat::zeros( m_iInput_w, m_iInput_w, Image.type() );
                 
                 cv::warpAffine(Image,tmp,trans,cv::Size(m_iInput_w,m_iInput_h));
 
                 bboxWarp.push_back(tmp);
 
-                cv::imshow("bboxWarped",tmp);
+               
+            }
+
+            std::cout << bboxWarp.size()<<std::endl;
+            for (int i=0;i< bboxWarp.size();i++){
+
+                 cv::imshow("bboxWarped",bboxWarp[i]);
                 cv::waitKey(0);
             }
 
-            
-            
         }
 
         void Hrnet::runmodel()

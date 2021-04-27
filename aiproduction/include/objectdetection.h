@@ -23,6 +23,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 #include "modelInterface.h"
 #include "math.h"
+#include "algorithm"
 
 namespace ai4prod
 {
@@ -116,6 +117,8 @@ namespace ai4prod
             bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
             bool createYamlConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);
             void setSession();
+            
+            std::vector<int> *m_setReturnClass;
 
             //Preprocessing
             //to preserve aspect ratio of image
@@ -137,7 +140,7 @@ namespace ai4prod
 
             virtual ~Yolov3();
 
-            bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL);
+            bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL,std::vector<int> *returnClass = nullptr);
 
             void preprocessing(cv::Mat &Image);
             torch::Tensor postprocessing(std::string imagePathAccuracy="");
@@ -259,6 +262,10 @@ namespace ai4prod
            
             void setSession();
 
+            //set to exclude some class from output
+
+            std::vector<int> *m_setReturnClass;
+
             //preprocessing
             cv::Mat padding(cv::Mat &img, int width, int weight);
 
@@ -280,7 +287,7 @@ namespace ai4prod
 
             virtual ~Yolov4();
 
-            bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL);
+            bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL, std::vector<int> *returnClass = nullptr);
 
             void preprocessing(cv::Mat &Image);
 

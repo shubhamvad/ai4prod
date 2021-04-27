@@ -215,7 +215,7 @@ namespace ai4prod
         }
 
         //function to initialize on Linux
-        bool Yolov3::init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
+        bool Yolov3::init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path, std::vector<int> *m_setReturnClass)
         {
             if (!m_bCheckInit)
             {
@@ -276,6 +276,10 @@ namespace ai4prod
                     _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
+
+                    //set exclude class
+                    m_setReturnClass = m_setReturnClass;
+
                     //OnnxRuntime set Env
                     setOnnxRuntimeEnv();
 
@@ -542,7 +546,7 @@ namespace ai4prod
 
                                 float iouValue = iou(ar1, ar2);
 
-                                //confronto intersezione bbox
+                                //check bbox intersection
                                 if (iouValue > m_ymlConfig["Nms"].as<float>())
                                 {
 
@@ -661,16 +665,37 @@ namespace ai4prod
 
 #endif
 
-                        m_TOutputTensor = aut.convert2dVectorToTensor(bboxValuesNms);
+                        //remove exclude class if m_setExcludeClass is set
+                        std::vector<std::vector<float>> bboxValuesNmsWithExclude;
+
+                        if (m_setReturnClass!= nullptr)
+                        {
+                            for (int k = 0; k < bboxValuesNms.size(); k++)
+                            {   
+                                
+                               
+                                //add only class not includete in set m_setExcludeClass
+                                if (std::find(m_setReturnClass->begin(), m_setReturnClass->end(), (int)bboxValuesNms[k][4]) != m_setReturnClass->end())
+                                {
+                                    bboxValuesNmsWithExclude.push_back(bboxValuesNms[k]);
+                                }
+                                else
+                                {
+                                    
+                                }
+                            }
+                        }
+                        else
+                        {
+                            bboxValuesNmsWithExclude = bboxValuesNms;
+                        }
+
+                        m_TOutputTensor = aut.convert2dVectorToTensor(bboxValuesNmsWithExclude);
 
                         //this verify that you can only run pre run e post once for each new data
                         m_bCheckRun = false;
                         m_bCheckPre = false;
                         m_bCheckPost = true;
-
-                        auto stop2 = high_resolution_clock::now();
-
-                        auto duration2 = duration_cast<microseconds>(stop2 - start2);
 
                         return m_TOutputTensor;
                     }
@@ -962,7 +987,7 @@ namespace ai4prod
         }
 
         //function to initialize on Linux
-        bool Yolov4::init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path)
+        bool Yolov4::init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path, std::vector<int> *returnClass)
         {
             // if (!m_bCheckInit)
             // {
@@ -1021,6 +1046,8 @@ namespace ai4prod
                 _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
+
+                m_setReturnClass = returnClass;
                 //OnnxRuntime set Env
                 setOnnxRuntimeEnv();
 
@@ -1382,11 +1409,31 @@ namespace ai4prod
 
                     std::vector<float> tmpOrig = {(float)tmpRect.x, (float)tmpRect.y, (float)tmpRect.width, (float)tmpRect.height, bboxes[i][4], bboxes[i][5]};
 
-                    imageOrigBboxes.push_back(tmpOrig);
+                    //add only class not included in Set
+                    if (m_setReturnClass!=nullptr)
+                    {
+                        
+                        
+                        if (std::find(m_setReturnClass->begin(), m_setReturnClass->end(), (int)tmpOrig[5]) != m_setReturnClass->end())
+                        {   
+                            
+                            //add bbox only if in m_setReturnClass
+                            imageOrigBboxes.push_back(tmpOrig);
+                            
+                        }
+                        else
+                        {
+                            
+                        }
+                    }else{
+                        
+                        imageOrigBboxes.push_back(tmpOrig);
+
+                    }
+                    
                 }
                 //imageOrigbboxes(x,y,width,height,conf,id_class)
                 return aut.convert2dVectorToTensor(imageOrigBboxes);
-            
             }
             else
             {
