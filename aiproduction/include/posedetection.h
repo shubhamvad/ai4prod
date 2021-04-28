@@ -57,6 +57,18 @@ namespace ai4prod
             size_t m_num_out_nodes;
             std::vector<const char *> m_output_node_names;
 
+            //session IN/OUT
+
+            float *m_fpInputOnnxRuntime;
+            float *m_fpOutOnnxRuntime;
+
+           std::vector<size_t> m_InputTorchTensorSize;
+
+            //LIBTORCH vector Tensor
+
+            std::vector<torch::Tensor> m_TInputTensor;
+
+
             //------------------METHOD------------------------------
             void setOnnxRuntimeEnv();
             bool checkParameterConfig(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path);

@@ -421,10 +421,30 @@ namespace ai4prod
                 cv::waitKey(0);
             }
 
+            //convert each bbox to a tensor
+            
+            for (int i=0; i< bboxWarp.size();i++){
+
+                torch::Tensor tmp=m_aut.convertMatToTensor(bboxWarp[i],bboxWarp[i].cols,bboxWarp[i].rows,bboxWarp[i].channels(),1);
+                
+
+                
+                //Normalize
+                tmp[0][0] = tmp[0][0].sub_(0.485).div_(0.229);
+                tmp[0][1] = tmp[0][1].sub_(0.456).div_(0.224);
+                tmp[0][2] = tmp[0][2].sub_(0.406).div_(0.225);
+
+
+                m_TInputTensor.push_back(tmp);
+            }
+
+
         }
 
         void Hrnet::runmodel()
         {
+
+
         }
 
         torch::Tensor Hrnet::postprocessing(std::string imagePathAccuracy)
