@@ -37,7 +37,7 @@ int main()
     //this retrive only class person from detection result tensor
     vector<int> includeClass= {0};
 
-    cv::Mat image = cv::imread("../image/2person.jpg");
+    cv::Mat image = cv::imread("../image/sinner.jpg");
 
     if (!yolov4->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/object_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "../tensorrtModel_yolov4",&includeClass))
     {
@@ -60,14 +60,13 @@ int main()
 
         cv::Rect brect = cv::Rect(x,y,width,height);
 
-        cv::rectangle(image, brect, cv::Scalar(255, 0, 0));
+        //cv::rectangle(image, brect, cv::Scalar(255, 0, 0));
         
         cout<< "class "<< result[i][5]<<endl;
 
     }
 
-    cv::imshow("bbox",image);
-    cv::waitKey(0);
+
 
     //filter bbox with person id
 
@@ -79,6 +78,20 @@ int main()
     hrnet->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "../tensorrtModel");
 
     hrnet->preprocessing(image, result);
+    cout <<"run model"<<endl;
+    hrnet->runmodel();
+
+    torch::Tensor poseResult=hrnet->postprocessing();
+    
+    for(int i=0; i< 17;i++){
+
+        cv::Point2f joint= cv::Point2f(poseResult[0][i][0].item<float>(),poseResult[0][i][1].item<float>());
+
+        cv::circle(image,joint,5,(255,255,255),1);
+    }
+
+    cv::imshow("bbox",image);
+    cv::waitKey(0);
 
     cout << "program end" << endl;
     return 0;

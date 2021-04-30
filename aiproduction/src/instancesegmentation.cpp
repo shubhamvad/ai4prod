@@ -351,7 +351,7 @@ namespace ai4prod
 
                 auto tensortData = input_tensor.GetTensorMutableData<float>();
 
-                auto tensorINput_test = torch::from_blob((float *)(tensortData), {1, 3, 550, 550}).clone();
+                //auto tensorINput_test = torch::from_blob((float *)(tensortData), {1, 3, 550, 550}).clone();
 
                 assert(input_tensor.IsTensor());
 
@@ -364,6 +364,7 @@ namespace ai4prod
                 m_fpOutOnnxRuntime[2] = output_tensors[2].GetTensorMutableData<float>();
                 m_fpOutOnnxRuntime[3] = output_tensors[3].GetTensorMutableData<float>();
                 m_fpOutOnnxRuntime[4] = output_tensors[4].GetTensorMutableData<float>();
+            
             }
             else
             {

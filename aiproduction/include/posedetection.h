@@ -60,14 +60,18 @@ namespace ai4prod
             //session IN/OUT
 
             float *m_fpInputOnnxRuntime;
-            float *m_fpOutOnnxRuntime;
+            std::vector<float *> m_fpOutOnnxRuntime;
 
-           std::vector<size_t> m_InputTorchTensorSize;
+            size_t m_InputTorchTensorSize;
 
             //LIBTORCH vector Tensor
 
             std::vector<torch::Tensor> m_TInputTensor;
 
+            //PROCESSING
+
+            std::vector<cv::Point2f> m_vCvPCenters;
+            std::vector<cv::Point2f> m_vCvPScales;
 
             //------------------METHOD------------------------------
             void setOnnxRuntimeEnv();
@@ -77,19 +81,25 @@ namespace ai4prod
             void setSession();
             void setOnnxRuntimeModelInputOutput();
 
-
             //PREPROCESSING
 
-            void boxToCenterScale(torch::Tensor &result, std::vector<cv::Point2f> &centers,std::vector<cv::Point2f> &scales);
-            cv::Mat getAffineTransform(cv::Point2f center,cv::Point2f scale);
-            cv::Point2f getDir(cv::Point2f srcPoint,float rot);
+            void boxToCenterScale(torch::Tensor &result, std::vector<cv::Point2f> &centers, std::vector<cv::Point2f> &scales);
+            cv::Mat getAffineTransformPose(cv::Point2f center, cv::Point2f scale,int width, int height, int inv = 0);
+            cv::Point2f getDir(cv::Point2f srcPoint, float rot);
             cv::Point2f get3rdPoint(cv::Point2f first, cv::Point2f second);
-        
+
+            //POST PROCESSING
+
+            void getMaxPreds(torch::Tensor &heatMapPose, torch::Tensor &preds, torch::Tensor &maxvals);
+            void transformPreds(torch::Tensor &preds, torch::Tensor &coords, int heatmapWidth, int heatmapHeight);
+            torch::Tensor affineTransformPoint(torch::Tensor point, cv::Mat trans);
+
+
         public:
             Hrnet();
             virtual ~Hrnet();
             bool init(std::string modelPathOnnx, int input_h, int input_w, int numClasses, MODE t, std::string model_path = NULL);
-            void preprocessing(cv::Mat &Image,torch::Tensor result);
+            void preprocessing(cv::Mat &Image, torch::Tensor result);
             void runmodel();
             torch::Tensor postprocessing(std::string imagePathAccuracy = "");
 
