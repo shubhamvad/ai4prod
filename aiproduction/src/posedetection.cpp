@@ -452,6 +452,7 @@ namespace ai4prod
 
             for (int i = 0; i < m_TInputTensor.size(); i++)
             {
+                std::cout <<"RUN MODEL "<< i<<std::endl;
 
                 if (m_TInputTensor[i].is_contiguous())
                 {
@@ -507,8 +508,6 @@ namespace ai4prod
 
                     //for every bbox create pointer to data to persist across function
                     m_fpOutOnnxRuntime.push_back(output_tensors[0].GetTensorMutableData<float>());
-
-                    std::cout << "TENSOR SHAPE " << output_tensors[0].GetTensorTypeAndShapeInfo().GetShape() << std::endl;
                 }
             }
         }
@@ -550,16 +549,14 @@ namespace ai4prod
         torch::Tensor Hrnet::affineTransformPoint(torch::Tensor point, cv::Mat trans)
         {
 
-            
             cv::Vec3d pointCvNorm(point[0].item<float>(), point[1].item<float>(), 1.0);
             cv::Mat pointAffine = trans * cv::Mat(pointCvNorm);
 
             //need to cast value to float from double otherwise value are not coorect
             float tmp[] = {(float)pointAffine.at<double>(0), (float)pointAffine.at<double>(1)};
 
+            // we nedd .clone() otherwise data are not persistent
             torch::Tensor newPt = torch::from_blob(tmp, {2}).clone().contiguous();
-
-            std::cout << "NEW PT " << newPt << std::endl;
 
             return newPt;
         }
@@ -571,38 +568,13 @@ namespace ai4prod
             {
 
                 torch::Tensor targetCoords = torch::zeros({coords[i].sizes()});
-
-                std::cout << "TARGET COORDS " << targetCoords.sizes() << std::endl;
-
                 cv::Mat trans = getAffineTransformPose(m_vCvPCenters[i], m_vCvPScales[i], heatmapWidth, heatmapHeight, 1);
-                //cv::Mat trans = getAffineTransformPose(cv::Point2f(1062.7771,588.029), cv::Point2f(8.007,10.67), heatmapWidth, heatmapHeight, 1);
 
-                std::cout << "COORDS SIZE " << coords.sizes()[0] << std::endl;
-
-                std::cout << "AFFINE PREDS" << std::endl;
-
-                std::cout << m_vCvPCenters[i] << std::endl;
-
-                std::cout << m_vCvPScales[i] << std::endl;
-                std::cout << heatmapWidth << std::endl;
-                std::cout << heatmapHeight << std::endl;
-
-                std::cout << "TRANS PREDS " << trans << std::endl;
                 for (int p = 0; p < coords[i].sizes()[0]; p++)
                 {
 
-                
                     torch::Tensor tmpPoint = affineTransformPoint(coords[i].index({p, torch::indexing::Slice(0, 2)}), trans);
-
-                    //std::cout << "COORDS " << coords[i].index({p, torch::indexing::Slice(0, 2)}) << std::endl;
-
-                    std::cout << "TMP POINT "<< tmpPoint<<std::endl;
-                    
                     targetCoords.index({p, torch::indexing::Slice(0, 2)}) = tmpPoint;
-                   
-                    std::cout << "TARGET COORDS 2 "<< targetCoords[p][0]<<std::endl;
-     
-                    std::cout << "TMP POINT "<< tmpPoint<<std::endl;
                 }
 
                 std::cout << "ITERATION i " << i << std::endl;
@@ -614,12 +586,17 @@ namespace ai4prod
 
             std::cout << "N out " << m_fpOutOnnxRuntime.size() << std::endl;
             //process all output
+
+            torch::Tensor batchPreds = torch::zeros({(int)m_fpOutOnnxRuntime.size(), 17, 2});
+
             for (int i = 0; i < m_fpOutOnnxRuntime.size(); i++)
             {
                 torch::Tensor coords;
                 torch::Tensor maxvals;
 
                 torch::Tensor heatMapPose = torch::from_blob((float *)(m_fpOutOnnxRuntime[i]), {1, 17, 64, 48}).clone();
+
+                std::cout <<"POINTER VALUE "<<m_fpOutOnnxRuntime[i]<<std::endl;
 
                 //std::cout << "OUTPUT " << heatMapPose[0][0][0] << std::endl;
 
@@ -666,11 +643,13 @@ namespace ai4prod
                 std::cout << "PREDS SIZES " << preds.sizes() << std::endl;
                 std::cout << "pred VALUE " << preds[0][0] << std::endl;
 
-                return preds;
+                preds = preds.view({17, 2}).contiguous();
+
+                batchPreds[i] = preds.clone();
             }
 
-            torch::Tensor t;            
-            return t;
+            std::cout << "BATCH PREDS SIZE " << batchPreds.sizes() << std::endl;
+            return batchPreds;
         }
 
         Hrnet::~Hrnet()
