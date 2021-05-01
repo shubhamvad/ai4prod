@@ -37,6 +37,12 @@ int main()
     //this retrive only class person from detection result tensor
     vector<int> includeClass = {0};
 
+    //Pose detection
+    Hrnet *hrnet;
+
+    hrnet = new Hrnet();
+
+    hrnet->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "../tensorrtModel");
     cv::Mat image = cv::imread("../image/2person.jpg");
 
     if (!yolov4->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/object_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "../tensorrtModel_yolov4", &includeClass))
@@ -60,37 +66,35 @@ int main()
 
         cv::Rect brect = cv::Rect(x, y, width, height);
 
+        hrnet->preprocessing(image, brect);
+
+        hrnet->runmodel();
+
+        torch::Tensor poseResult = hrnet->postprocessing();
+
+        for (int j = 0; j < poseResult.sizes()[0]; j++)
+        {
+            for (int i = 0; i < 17; i++)
+            {
+
+                cv::Point2f joint = cv::Point2f(poseResult[j][i][0].item<float>(), poseResult[j][i][1].item<float>());
+
+                cv::circle(image, joint, 5, (255, 255, 255), 1);
+            }
+        }
+
         //cv::rectangle(image, brect, cv::Scalar(255, 0, 0));
 
         cout << "class " << result[i][5] << endl;
     }
 
-    //filter bbox with person id
-
-    Hrnet *hrnet;
-
-    hrnet = new Hrnet();
-
-    hrnet->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "../tensorrtModel");
-
-    hrnet->preprocessing(image, result);
-    cout << "run model" << endl;
-    hrnet->runmodel();
-
-    //return (b,17,2) b= corrspond a number of people found in image
-    torch::Tensor poseResult = hrnet->postprocessing();
-    for (int j = 0; j < poseResult.sizes()[0]; j++)
-    {
-        for (int i = 0; i < 17; i++)
-        {
-
-            cv::Point2f joint = cv::Point2f(poseResult[j][i][0].item<float>(), poseResult[j][i][1].item<float>());
-
-            cv::circle(image, joint, 5, (255, 255, 255), 1);
-        }
-    }
     cv::imshow("bbox", image);
     cv::waitKey(0);
+    //filter bbox with person id
+
+    cout << "run model" << endl;
+
+    //return (b,17,2) b= corrspond a number of people found in image
 
     cout << "program end" << endl;
     return 0;

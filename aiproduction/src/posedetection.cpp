@@ -270,43 +270,42 @@ namespace ai4prod
             return true;
         }
 
-        void Hrnet::boxToCenterScale(torch::Tensor &result, std::vector<cv::Point2f> &centers, std::vector<cv::Point2f> &scales)
+        void Hrnet::boxToCenterScale(cv::Rect bbox, cv::Point2f &center, cv::Point2f &scale)
         {
 
-            for (int i = 0; i < result.sizes()[0]; i++)
+            float x = bbox.x;
+            float y = bbox.y;
+            float box_width = bbox.width;
+            float box_height = bbox.height;
+
+            float center_x = x + box_width * 0.5;
+            float center_y = y + box_height * 0.5;
+
+            //parameter of the network
+            float pixel_std = 200.0;
+
+            float aspect_ratio = (float)m_iInput_w / (float)m_iInput_h;
+
+            std::cout << "Aspect ratio " << aspect_ratio << std::endl;
+
+            if (box_width > aspect_ratio * box_height)
             {
-
-                float x = result[i][0].item<float>();
-                float y = result[i][1].item<float>();
-                float box_width = result[i][2].item<float>();
-                float box_height = result[i][3].item<float>();
-
-                float center_x = x + box_width * 0.5;
-                float center_y = y + box_height * 0.5;
-
-                //parameter of the network
-                float pixel_std = 200.0;
-
-                float aspect_ratio = (float)m_iInput_w / (float)m_iInput_h;
-
-                std::cout << "Aspect ratio " << aspect_ratio << std::endl;
-
-                if (box_width > aspect_ratio * box_height)
-                {
-                    std::cout << "width " << aspect_ratio << std::endl;
-                    box_height = box_width / aspect_ratio;
-                }
-                else
-                {
-                    std::cout << "height " << aspect_ratio << std::endl;
-                    box_width = box_height * aspect_ratio;
-                }
-
-                if (center_x != -1)
-                    scales.push_back(cv::Point2f((box_width / pixel_std), (box_height / pixel_std)) * 1.25);
-
-                centers.push_back(cv::Point2f(center_x, center_y));
+                std::cout << "width " << aspect_ratio << std::endl;
+                box_height = box_width / aspect_ratio;
             }
+            else
+            {
+                std::cout << "height " << aspect_ratio << std::endl;
+                box_width = box_height * aspect_ratio;
+            }
+
+            if (center_x != -1)
+            {
+                //scales.push_back(cv::Point2f((box_width / pixel_std), (box_height / pixel_std)) * 1.25);
+                scale = cv::Point2f((box_width / pixel_std), (box_height / pixel_std)) * 1.25;
+            }
+
+            center = cv::Point2f(center_x, center_y);
         }
 
         cv::Point2f Hrnet::getDir(cv::Point2f srcPoint, float rot)
@@ -389,7 +388,7 @@ namespace ai4prod
             Image: Image to be processed
             result:  list of all people detected bbox usually from an object detector. Coordinate must be respect of the original image size
         */
-        void Hrnet::preprocessing(cv::Mat &Image, torch::Tensor result)
+        void Hrnet::preprocessing(cv::Mat &Image, cv::Rect bbox)
         {
 
             m_iInputOrig_h = Image.cols;
@@ -397,52 +396,34 @@ namespace ai4prod
 
             //computer bbox center and scales
 
-            boxToCenterScale(result, m_vCvPCenters, m_vCvPScales);
+            boxToCenterScale(bbox, m_vCvPCenters, m_vCvPScales);
 
-            std::vector<cv::Mat> bboxWarp;
-            for (int i = 0; i < m_vCvPCenters.size(); i++)
-            {
+            //std::cout << "CENTER " << m_vCvPCenters[i].x << " " << m_vCvPCenters[i].y << std::endl;
+            //std::cout << "SCALES " << m_vCvPScales[i].x << " " << m_vCvPScales[i].y << std::endl;
 
-                //std::cout << "CENTER " << m_vCvPCenters[i].x << " " << m_vCvPCenters[i].y << std::endl;
-                //std::cout << "SCALES " << m_vCvPScales[i].x << " " << m_vCvPScales[i].y << std::endl;
+            cv::Mat trans = getAffineTransformPose(m_vCvPCenters, m_vCvPScales, m_iInput_w, m_iInput_h);
 
-                cv::Mat trans = getAffineTransformPose(m_vCvPCenters[i], m_vCvPScales[i], m_iInput_w, m_iInput_h);
+            std::cout << "TRANS " << trans << std::endl;
+            cv::Mat tmpImage = cv::Mat::zeros(m_iInput_w, m_iInput_w, Image.type());
 
-                std::cout << "TRANS " << trans << std::endl;
-                cv::Mat tmp = cv::Mat::zeros(m_iInput_w, m_iInput_w, Image.type());
+            cv::warpAffine(Image, tmpImage, trans, cv::Size(m_iInput_w, m_iInput_h));
 
-                cv::warpAffine(Image, tmp, trans, cv::Size(m_iInput_w, m_iInput_h));
-
-                bboxWarp.push_back(tmp);
-            }
-
-            std::cout << bboxWarp.size() << std::endl;
-            for (int i = 0; i < bboxWarp.size(); i++)
-            {
-
-                std::cout << "IMAGE DIMENSION" << bboxWarp[i].cols << " " << bboxWarp[i].cols << std::endl;
-                cv::imshow("bboxWarped", bboxWarp[i]);
-                cv::waitKey(0);
-            }
+            std::cout << "IMAGE DIMENSION" << tmpImage.cols << " " << tmpImage.cols << std::endl;
+            cv::imshow("bboxWarped", tmpImage);
+            cv::waitKey(0);
 
             //convert each bbox to a tensor
 
-            for (int i = 0; i < bboxWarp.size(); i++)
-            {
+            m_TInputTensor = m_aut.convertMatToTensor(tmpImage, tmpImage.cols, tmpImage.rows, tmpImage.channels(), 1);
 
-                torch::Tensor tmp = m_aut.convertMatToTensor(bboxWarp[i], bboxWarp[i].cols, bboxWarp[i].rows, bboxWarp[i].channels(), 1);
+            auto size = m_TInputTensor.sizes();
+            //image width *image_height * channels
+            m_InputTorchTensorSize = size[1] * size[2] * size[3];
 
-                auto size = tmp.sizes();
-                //image width *image_height * channels
-                m_InputTorchTensorSize = size[1] * size[2] * size[3];
-
-                //Normalize
-                tmp[0][0] = tmp[0][0].sub_(0.485).div_(0.229);
-                tmp[0][1] = tmp[0][1].sub_(0.456).div_(0.224);
-                tmp[0][2] = tmp[0][2].sub_(0.406).div_(0.225);
-
-                m_TInputTensor.push_back(tmp);
-            }
+            //Normalize
+            m_TInputTensor[0][0] = m_TInputTensor[0][0].sub_(0.485).div_(0.229);
+            m_TInputTensor[0][1] = m_TInputTensor[0][1].sub_(0.456).div_(0.224);
+            m_TInputTensor[0][2] = m_TInputTensor[0][2].sub_(0.406).div_(0.225);
         }
 
         void Hrnet::runmodel()
@@ -450,65 +431,60 @@ namespace ai4prod
 
             //cycle over all bbox
 
-            for (int i = 0; i < m_TInputTensor.size(); i++)
+            if (m_TInputTensor.is_contiguous())
             {
-                std::cout <<"RUN MODEL "<< i<<std::endl;
 
-                if (m_TInputTensor[i].is_contiguous())
+                m_fpInputOnnxRuntime = static_cast<float *>(m_TInputTensor.storage().data());
+
+                std::vector<int64_t> input_node_dims;
+                std::vector<int64_t> output_node_dims;
+
+                //set input variable onnxruntime
+                for (int i = 0; i < m_num_input_nodes; i++)
+                {
+                    //get input node name
+                    char *input_name = m_OrtSession->GetInputName(i, allocator);
+                    //printf("Output %d : name=%s\n", i, input_name);
+                    m_input_node_names[i] = input_name;
+
+                    //save input node dimension
+                    Ort::TypeInfo type_info = m_OrtSession->GetInputTypeInfo(i);
+
+                    auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+
+                    input_node_dims = tensor_info.GetShape();
+                }
+
+                // set variable output onnxruntime
+
+                for (int i = 0; i < m_num_out_nodes; i++)
                 {
 
-                    m_fpInputOnnxRuntime = static_cast<float *>(m_TInputTensor[i].storage().data());
+                    //get input node name
+                    char *output_name = m_OrtSession->GetOutputName(i, allocator);
 
-                    std::vector<int64_t> input_node_dims;
-                    std::vector<int64_t> output_node_dims;
-
-                    //set input variable onnxruntime
-                    for (int i = 0; i < m_num_input_nodes; i++)
-                    {
-                        //get input node name
-                        char *input_name = m_OrtSession->GetInputName(i, allocator);
-                        //printf("Output %d : name=%s\n", i, input_name);
-                        m_input_node_names[i] = input_name;
-
-                        //save input node dimension
-                        Ort::TypeInfo type_info = m_OrtSession->GetInputTypeInfo(i);
-
-                        auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
-
-                        input_node_dims = tensor_info.GetShape();
-                    }
-
-                    // set variable output onnxruntime
-
-                    for (int i = 0; i < m_num_out_nodes; i++)
-                    {
-
-                        //get input node name
-                        char *output_name = m_OrtSession->GetOutputName(i, allocator);
-
-                        //printf("Output %d : name=%s\n", i, output_name);
-                        //m_input_node_names[i] = output_name;
-                        m_output_node_names[i] = output_name;
-                        //save input node dimension
-                        Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
-                        auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
-                        output_node_dims = tensor_info.GetShape();
-                    }
-
-                    //Session Inference
-
-                    auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-                    Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, m_fpInputOnnxRuntime, m_InputTorchTensorSize, input_node_dims.data(), 4);
-
-                    auto tensortData = input_tensor.GetTensorMutableData<float>();
-
-                    assert(input_tensor.IsTensor());
-
-                    std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, m_input_node_names.data(), &input_tensor, 1, m_output_node_names.data(), 1);
-
-                    //for every bbox create pointer to data to persist across function
-                    m_fpOutOnnxRuntime.push_back(output_tensors[0].GetTensorMutableData<float>());
+                    //printf("Output %d : name=%s\n", i, output_name);
+                    //m_input_node_names[i] = output_name;
+                    m_output_node_names[i] = output_name;
+                    //save input node dimension
+                    Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
+                    auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+                    output_node_dims = tensor_info.GetShape();
                 }
+
+                //Session Inference
+
+                auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+                Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, m_fpInputOnnxRuntime, m_InputTorchTensorSize, input_node_dims.data(), 4);
+
+                auto tensortData = input_tensor.GetTensorMutableData<float>();
+
+                assert(input_tensor.IsTensor());
+
+                std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, m_input_node_names.data(), &input_tensor, 1, m_output_node_names.data(), 1);
+
+                //for every bbox create pointer to data to persist across function
+                m_fpOutOnnxRuntime = output_tensors[0].GetTensorMutableData<float>();
             }
         }
 
@@ -568,7 +544,7 @@ namespace ai4prod
             {
 
                 torch::Tensor targetCoords = torch::zeros({coords[i].sizes()});
-                cv::Mat trans = getAffineTransformPose(m_vCvPCenters[i], m_vCvPScales[i], heatmapWidth, heatmapHeight, 1);
+                cv::Mat trans = getAffineTransformPose(m_vCvPCenters, m_vCvPScales, heatmapWidth, heatmapHeight, 1);
 
                 for (int p = 0; p < coords[i].sizes()[0]; p++)
                 {
@@ -584,72 +560,61 @@ namespace ai4prod
         torch::Tensor Hrnet::postprocessing(std::string imagePathAccuracy)
         {
 
-            std::cout << "N out " << m_fpOutOnnxRuntime.size() << std::endl;
+            //std::cout << "N out " << m_fpOutOnnxRuntime.size() << std::endl;
             //process all output
 
-            torch::Tensor batchPreds = torch::zeros({(int)m_fpOutOnnxRuntime.size(), 17, 2});
+            torch::Tensor batchPreds = torch::zeros({(int)1, 17, 2});
+            torch::Tensor coords;
+            torch::Tensor maxvals;
 
-            for (int i = 0; i < m_fpOutOnnxRuntime.size(); i++)
+            torch::Tensor heatMapPose = torch::from_blob((float *)(m_fpOutOnnxRuntime), {1, 17, 64, 48}).clone();
+
+            //std::cout << "OUTPUT " << heatMapPose[0][0][0] << std::endl;
+
+            int heatMapHeight = heatMapPose.sizes()[2];
+            int heatMapWidth = heatMapPose.sizes()[3];
+
+            //get max value and index
+            getMaxPreds(heatMapPose, coords, maxvals);
+
+            std::cout << "POST PREDS " << coords.sizes() << std::endl;
+
+            for (int n = 0; n < coords.sizes()[0]; n++)
             {
-                torch::Tensor coords;
-                torch::Tensor maxvals;
 
-                torch::Tensor heatMapPose = torch::from_blob((float *)(m_fpOutOnnxRuntime[i]), {1, 17, 64, 48}).clone();
-
-                std::cout <<"POINTER VALUE "<<m_fpOutOnnxRuntime[i]<<std::endl;
-
-                //std::cout << "OUTPUT " << heatMapPose[0][0][0] << std::endl;
-
-                int heatMapHeight = heatMapPose.sizes()[2];
-                int heatMapWidth = heatMapPose.sizes()[3];
-
-                //get max value and index
-                getMaxPreds(heatMapPose, coords, maxvals);
-
-                std::cout << "POST PREDS " << coords.sizes() << std::endl;
-
-                for (int n = 0; n < coords.sizes()[0]; n++)
+                for (int p = 0; p < coords.sizes()[1]; p++)
                 {
 
-                    for (int p = 0; p < coords.sizes()[1]; p++)
+                    torch::Tensor hm = heatMapPose[n][p];
+                    //std::cout << "HM " << hm.sizes() << std::endl;
+                    int px = torch::floor(coords[n][p][0] + 0.5).item<int>();
+                    int py = torch::floor(coords[n][p][1] + 0.5).item<int>();
+
+                    if (1 < px < heatMapWidth - 1 && 1 < py < heatMapHeight - 1)
                     {
+                        float data[] = {
+                            hm[py][px + 1].item<float>() - hm[py][px - 1].item<float>(),
+                            hm[py + 1][px].item<float>() - hm[py - 1][px].item<float>()};
 
-                        torch::Tensor hm = heatMapPose[n][p];
-                        //std::cout << "HM " << hm.sizes() << std::endl;
-                        int px = torch::floor(coords[n][p][0] + 0.5).item<int>();
-                        int py = torch::floor(coords[n][p][1] + 0.5).item<int>();
+                        torch::Tensor diff = torch::from_blob(data, {2});
 
-                        if (1 < px < heatMapWidth - 1 && 1 < py < heatMapHeight - 1)
-                        {
-                            float data[] = {
-                                hm[py][px + 1].item<float>() - hm[py][px - 1].item<float>(),
-                                hm[py + 1][px].item<float>() - hm[py - 1][px].item<float>()};
+                        coords[n][p] += torch::sign(diff) * 0.25;
 
-                            torch::Tensor diff = torch::from_blob(data, {2});
-
-                            coords[n][p] += torch::sign(diff) * 0.25;
-
-                            //std::cout<<coords[n][p]<<std::endl;
-                        }
+                        //std::cout<<coords[n][p]<<std::endl;
                     }
                 }
-
-                torch::Tensor preds = coords.clone();
-
-                std::cout << "CENTER SIZE " << m_vCvPCenters.size() << std::endl;
-
-                transformPreds(preds, coords, heatMapWidth, heatMapHeight);
-
-                std::cout << "PREDS SIZES " << preds.sizes() << std::endl;
-                std::cout << "pred VALUE " << preds[0][0] << std::endl;
-
-                preds = preds.view({17, 2}).contiguous();
-
-                batchPreds[i] = preds.clone();
             }
 
-            std::cout << "BATCH PREDS SIZE " << batchPreds.sizes() << std::endl;
-            return batchPreds;
+            torch::Tensor preds = coords.clone();
+
+            transformPreds(preds, coords, heatMapWidth, heatMapHeight);
+
+            std::cout << "PREDS SIZES " << preds.sizes() << std::endl;
+            std::cout << "pred VALUE " << preds[0][0] << std::endl;
+
+            preds = preds.view({1, 17, 2}).contiguous();
+
+            return preds;
         }
 
         Hrnet::~Hrnet()
