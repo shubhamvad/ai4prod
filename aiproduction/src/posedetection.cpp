@@ -260,13 +260,13 @@ namespace ai4prod
             _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
-            std::cout << "1" << std::endl;
+
             setOnnxRuntimeEnv();
-            std::cout << "2" << std::endl;
+
             setSession();
-            std::cout << "3" << std::endl;
+
             setOnnxRuntimeModelInputOutput();
-            std::cout << "initDone" << std::endl;
+
             return true;
         }
 
@@ -286,16 +286,14 @@ namespace ai4prod
 
             float aspect_ratio = (float)m_iInput_w / (float)m_iInput_h;
 
-            std::cout << "Aspect ratio " << aspect_ratio << std::endl;
-
             if (box_width > aspect_ratio * box_height)
             {
-                std::cout << "width " << aspect_ratio << std::endl;
+
                 box_height = box_width / aspect_ratio;
             }
             else
             {
-                std::cout << "height " << aspect_ratio << std::endl;
+
                 box_width = box_height * aspect_ratio;
             }
 
@@ -366,13 +364,6 @@ namespace ai4prod
             dstTri[1] = cv::Point2f(dst_w * 0.5, dst_h * 0.5) + dst_dir;
             dstTri[2] = get3rdPoint(dstTri[0], dstTri[1]);
 
-            // for (int i = 0; i < 3; i++)
-            // {
-
-            //     std::cout << "SRC " << srcTri[i].x << " " << srcTri[i].y << std::endl;
-            //     std::cout << "DST " << dstTri[i].x << " " << dstTri[i].y << std::endl;
-            // }
-
             if (inv)
             {
 
@@ -398,19 +389,15 @@ namespace ai4prod
 
             boxToCenterScale(bbox, m_vCvPCenters, m_vCvPScales);
 
-            //std::cout << "CENTER " << m_vCvPCenters[i].x << " " << m_vCvPCenters[i].y << std::endl;
-            //std::cout << "SCALES " << m_vCvPScales[i].x << " " << m_vCvPScales[i].y << std::endl;
-
             cv::Mat trans = getAffineTransformPose(m_vCvPCenters, m_vCvPScales, m_iInput_w, m_iInput_h);
 
-            std::cout << "TRANS " << trans << std::endl;
             cv::Mat tmpImage = cv::Mat::zeros(m_iInput_w, m_iInput_w, Image.type());
 
             cv::warpAffine(Image, tmpImage, trans, cv::Size(m_iInput_w, m_iInput_h));
 
-            std::cout << "IMAGE DIMENSION" << tmpImage.cols << " " << tmpImage.cols << std::endl;
-            cv::imshow("bboxWarped", tmpImage);
-            cv::waitKey(0);
+            //show warped image
+            // cv::imshow("bboxWarped", tmpImage);
+            // cv::waitKey(0);
 
             //convert each bbox to a tensor
 
@@ -499,25 +486,17 @@ namespace ai4prod
 
             torch::Tensor heatMapReshaped = heatMapPose.view({batchSize, numJoints, -1}).contiguous();
 
-            //std::cout << "REshape " << heatMapReshaped.sizes() << std::endl;
-
             auto [maxvalstmp, idx] = torch::max(heatMapReshaped, 2);
-
-            //std::cout << "IDX" << idx << std::endl;
 
             maxvals = maxvalstmp.view({batchSize, numJoints, 1}).to(torch::kFloat32);
             idx = idx.view({batchSize, numJoints, 1});
 
             preds = idx.repeat({1, 1, 2}).contiguous().to(torch::kFloat32);
 
-            //std::cout << "PREDS SHAPE" << preds.sizes() << std::endl;
-
             preds.index({torch::indexing::Slice(None), torch::indexing::Slice(None), 0}) = (preds.index({torch::indexing::Slice(None), torch::indexing::Slice(None), 0})) % width;
             preds.index({torch::indexing::Slice(None), torch::indexing::Slice(None), 1}) = torch::floor(preds.index({torch::indexing::Slice(None), torch::indexing::Slice(None), 1}) / width);
 
             torch::Tensor predMask = torch::gt(maxvals, 0.0).repeat({1, 1, 2});
-
-            //std::cout << "PREDS" << preds << std::endl;
 
             preds *= predMask;
         }
@@ -553,31 +532,22 @@ namespace ai4prod
                     targetCoords.index({p, torch::indexing::Slice(0, 2)}) = tmpPoint;
                 }
 
-                std::cout << "ITERATION i " << i << std::endl;
                 preds[i] = targetCoords;
             }
         }
         torch::Tensor Hrnet::postprocessing(std::string imagePathAccuracy)
         {
 
-            //std::cout << "N out " << m_fpOutOnnxRuntime.size() << std::endl;
-            //process all output
-
-            torch::Tensor batchPreds = torch::zeros({(int)1, 17, 2});
             torch::Tensor coords;
             torch::Tensor maxvals;
 
             torch::Tensor heatMapPose = torch::from_blob((float *)(m_fpOutOnnxRuntime), {1, 17, 64, 48}).clone();
-
-            //std::cout << "OUTPUT " << heatMapPose[0][0][0] << std::endl;
 
             int heatMapHeight = heatMapPose.sizes()[2];
             int heatMapWidth = heatMapPose.sizes()[3];
 
             //get max value and index
             getMaxPreds(heatMapPose, coords, maxvals);
-
-            std::cout << "POST PREDS " << coords.sizes() << std::endl;
 
             for (int n = 0; n < coords.sizes()[0]; n++)
             {
@@ -586,7 +556,7 @@ namespace ai4prod
                 {
 
                     torch::Tensor hm = heatMapPose[n][p];
-                    //std::cout << "HM " << hm.sizes() << std::endl;
+
                     int px = torch::floor(coords[n][p][0] + 0.5).item<int>();
                     int py = torch::floor(coords[n][p][1] + 0.5).item<int>();
 
@@ -599,8 +569,6 @@ namespace ai4prod
                         torch::Tensor diff = torch::from_blob(data, {2});
 
                         coords[n][p] += torch::sign(diff) * 0.25;
-
-                        //std::cout<<coords[n][p]<<std::endl;
                     }
                 }
             }
@@ -608,9 +576,6 @@ namespace ai4prod
             torch::Tensor preds = coords.clone();
 
             transformPreds(preds, coords, heatMapWidth, heatMapHeight);
-
-            std::cout << "PREDS SIZES " << preds.sizes() << std::endl;
-            std::cout << "pred VALUE " << preds[0][0] << std::endl;
 
             preds = preds.view({1, 17, 2}).contiguous();
 
