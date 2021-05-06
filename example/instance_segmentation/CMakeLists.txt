@@ -35,6 +35,15 @@ if (MSVC)
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different
                      ${TORCH_DLLS}
                      $<TARGET_FILE_DIR:inference>)
+	
+	file(GLOB OPENCV_DLLS "Install/deps/opencv/x64/vc15/bin/*.dll")
+	add_custom_command(TARGET inference
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${OPENCV_DLLS}
+                     $<TARGET_FILE_DIR:inference>)
+					 
+					 
      #tensorrt 
    file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
    add_custom_command(TARGET inference
