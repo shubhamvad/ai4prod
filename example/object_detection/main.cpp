@@ -220,34 +220,34 @@ int main()
             
             //if you want to see output results. This slow down the processing
 
-            for (int i = 0; i < result.sizes()[0]; i++)
-            {
+            // for (int i = 0; i < result.sizes()[0]; i++)
+            // {
 
-                cv::Rect brect;
+            //     cv::Rect brect;
                 
-                
-
-                float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
                 
 
+            //     float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
                 
-                brect = yolov4->getRect(img, tmp);
+
                 
-                string category = to_string(result[i][4].item<float>());
-                cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
-                cv::putText(img,                         //target image
-                            category.c_str(),            //text
-                            cv::Point(brect.x, brect.y), //top-left position
-                            cv::FONT_HERSHEY_DUPLEX,
-                            1.0,
-                            CV_RGB(118, 185, 0), //font color
-                            2);
-                //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
-            }
+            //     brect = yolov4->getRect(img, tmp);
+                
+            //     string category = to_string(result[i][4].item<float>());
+            //     cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+            //     cv::putText(img,                         //target image
+            //                 category.c_str(),            //text
+            //                 cv::Point(brect.x, brect.y), //top-left position
+            //                 cv::FONT_HERSHEY_DUPLEX,
+            //                 1.0,
+            //                 CV_RGB(118, 185, 0), //font color
+            //                 2);
+            //     //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+            // }
            
-            imshow("image", img);
+            // imshow("image", img);
             
-            waitKey(0);
+            // waitKey(0);
         }
     }
 

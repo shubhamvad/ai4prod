@@ -42,13 +42,13 @@ int main()
 
     hrnet = new Hrnet();
 
-    if (!hrnet->init("C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/tensorrtModel")) {
+    if (!hrnet->init("C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/tensorrtModel")) {
           
         return 0;
     }
-    cv::Mat image = cv::imread("C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/image/sinner.jpg");
+    cv::Mat image = cv::imread("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/image/2person.jpg");
 
-    if (!yolov4->init("C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/tensorrtModel_yolov4", &includeClass))
+    if (!yolov4->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/tensorrtModel_yolov4", &includeClass))
     {
 
         return 0;
@@ -57,7 +57,7 @@ int main()
     yolov4->preprocessing(image);
 
     yolov4->runmodel();
-
+    
     torch::Tensor result = yolov4->postprocessing();
 
     for (int i = 0; i < result.sizes()[0]; i++)
