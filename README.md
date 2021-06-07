@@ -1,6 +1,6 @@
 ## Ai4prod 👋
 
-**Ai4prod is the first ecosystem built for offering an end-to-end solution to handle AI project for production environment in C++** 
+**Ai4prod is the first ecosystem built for offering an end-to-end solution to handle AI project in production environment using C++** 
 
   
 
@@ -12,7 +12,7 @@
 
 - Easy **Customization**
 
-- Works on **different Hardware** and operating system (Windows,Linux,Jetson)
+- Works on **different Hardware** and operating systems (**Windows,Linux,Jetson**)
 
 - Make coding workflow standard for code **maintainability**
 
@@ -23,31 +23,30 @@
 
   
 
-- Newbie Machine learning engineer who feel lost about how to bring Ai project in production.
+- Newbie Machine Learning Engineers, who feel lost on how to bring Ai project in production.
 
-- Experienced Machine Learning Engineer who are looking for an easy way to use their **custom model with C++ in production**.
+- Experienced Machine Learning Engineers, who are looking for an easy way to use their **custom model with C++ in production**.
 
   
   
 **Who developed Ai4prod?**
 
-Ai4Prod is maintaned from a team of Machine Learning engineer that everyday is trying to bring and maintain Machine Learning project in production in C++
+Ai4Prod is maintaned by a team of Machine Learning engineers, that everyday, are trying to bring and maintain Machine Learning project in production using C++
 
   
 
 **Why Ai4Prod is different**?
 
-Ai4prod if offering you the entire pipeline from training to inference. So learning how to use Ai4Prod gives you the ability to deliver real value with AI.
+Ai4prod is offering you the entire pipeline from training to inference. So learning how to use Ai4Prod gives you the ability to deliver real value with AI.
 
- 
- Ai4prod is fully tested so you don't need to worry about code compatibiity between different library version. We handle all.
+Ai4prod is fully tested, so you don't need to worry about code compatibiity, accuracy between different libraries version. We handle all for you.
 
   
- We developed ai4prod with the idea to simplify the entire pipeline in a machine learning project. As a machine learning engineer we know that make something work in an Ai project is not simple.
+ We developed ai4prod with the idea to simplify the entire pipeline in a machine learning project. As a machine learning engineers, we know that make something works in Ai project is not simple.
 
 We built ai4prod to help us to crete real value in a production environment, so we hope that could also help you.
 
-Ai4prod is developed following our experience in production if you think that something is missing or could be helpfull drop us an email ai **info@ai4prod.ai** or open a thread on github.
+Ai4prod is developed following our experience in production, if you think that something is missing or could be helpfull drop us an email ai **info@ai4prod.ai** or open a thread on github.
 
 We are always open to collaboration.
 
@@ -57,16 +56,15 @@ We are always open to collaboration.
 
   
 
-Ai4prod is built to be as easy as possible to get started. You can reach our website at the following link https://www.ai4prod.ai/
+Ai4prod is built to be as easy as possible to get started. You can reach our website at the following link https://www.ai4prod.ai/, where you can find all the documentation. Here you can find a quick guide.
 
-We provide installation script to install all dependencies.
 
  ### Prerequisites
- 1.  For both platforms you need to install cuda and cudnn IF you want to use GPU acceleration. If you are not familiar how to install we creata a guide https://www.ai4prod.ai/docs/error/tip-tricks/install-cuda-with-cuda-toolkit/
- 2. You need to install CMake >3.13 to compile ai4prod. If you don't know how to do follow our guide https://www.ai4prod.ai/docs/getting-started/. Choose your operating system
+ 1.  For all platforms you need to install cuda and cudnn, IF you want to use GPU acceleration. If you are not familiar on how to install we create a guide https://www.ai4prod.ai/docs/error/tip-tricks/install-cuda-with-cuda-toolkit/
+ 2. You need to install CMake >3.13 to compile ai4prod. If you don't know how to do, follow our guide https://www.ai4prod.ai/docs/getting-started/. Choose your operating system
 
 ### Install dependencies
-We provide installer script for bot Windows and Linux
+We provide installation script for bot Windows and Linux
 
 ### STEP 1
 #### Windows 
@@ -102,6 +100,7 @@ For a complete tutorial have a look here
 https://www.ai4prod.ai/docs/getting-started/build-for-jetson/
 
 ## Tutorial
+We create different tutorials to let you start developing with Ai4Prod on your custom project.
 
 ### Prerequisite
 You need to install Ai4Prod first.
@@ -117,7 +116,7 @@ You need to install Ai4Prod first.
 https://www.ai4prod.ai/docs/tutorial/yolo
 
 ### Instance Segmentation
-https://www.ai4prod.ai/docs/tutorial/hrnet/
+https://www.ai4prod.ai/docs/tutorial/yolact/
 
 ### Pose Estimation
 https://www.ai4prod.ai/docs/tutorial/hrnet/
