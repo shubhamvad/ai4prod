@@ -22,7 +22,6 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "modelInterface.h"
-
 namespace ai4prod
 {
 

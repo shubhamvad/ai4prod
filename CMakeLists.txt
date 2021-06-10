@@ -123,6 +123,7 @@ aiproduction/include/aiproduction_export.h
 aiproduction/include/modelInterface.h
 aiproduction/include/customDataType.h
 aiproduction/include/posedetection.h
+aiproduction/include/semanticsegmentation.h
 )
 
 FILE(GLOB MY_SRCS 
@@ -130,7 +131,9 @@ aiproduction/src/classification.cpp
 aiproduction/src/objectdetection.cpp
 aiproduction/src/instancesegmentation.cpp
 aiproduction/src/posedetection.cpp 
-aiproduction/src/utils.cpp )
+aiproduction/src/utils.cpp
+aiproduction/src/semanticsegmentation.cpp
+)
 
 #ai4production Library
 add_library(aiproduction SHARED ${MY_SRCS} ${MY_SRCS_INCLUDE})

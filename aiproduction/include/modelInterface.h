@@ -21,16 +21,13 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 
 */
 
-
 #ifdef _WIN32
 
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 
 #endif // _WIN32
 
-
 #pragma once
-
 
 #include "yaml-cpp/yaml.h"
 #include <iostream>
@@ -42,8 +39,6 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 //Cmake generated
 #include "aiproduction_export.h"
 #include "customDataType.h"
-
-
 
 #include <json/json.h>
 
@@ -58,9 +53,9 @@ using namespace torch::indexing;
 namespace ai4prod
 {
 
-//include guards
-//#ifndef AIPRODMODELINTERFACE
-//#define AIPRODMODELINTERFACE
+    //include guards
+    //#ifndef AIPRODMODELINTERFACE
+    //#define AIPRODMODELINTERFACE
     //classe interfaccia su come devono essere create le varie classi
     class modelInterfaceClassification
     {
@@ -70,11 +65,10 @@ namespace ai4prod
 
         virtual void runmodel() = 0;
 
-        virtual std::tuple<torch::Tensor,torch::Tensor> postprocessing()=0; 
+        virtual std::tuple<torch::Tensor, torch::Tensor> postprocessing() = 0;
     };
 
-
-     class modelInterfaceObjectDetection
+    class modelInterfaceObjectDetection
     {
 
     public:
@@ -82,31 +76,39 @@ namespace ai4prod
 
         virtual void runmodel() = 0;
 
-        virtual torch::Tensor postprocessing(std::string imagePathAccuracy="")=0;
+        virtual torch::Tensor postprocessing(std::string imagePathAccuracy = "") = 0;
     };
 
-    class modelInterfaceInstanceSegmentation{
+    class modelInterfaceInstanceSegmentation
+    {
 
-        
         virtual void preprocessing(cv::Mat &Image) = 0;
 
         virtual void runmodel() = 0;
 
-        virtual InstanceSegmentationResult postprocessing(std::string imagePathAccuracy="")=0;
-
+        virtual InstanceSegmentationResult postprocessing(std::string imagePathAccuracy = "") = 0;
     };
 
-    class modelInterfacePoseDetection{
+    class modelInterfacePoseDetection
+    {
 
-        virtual void preprocessing(cv::Mat &Image,cv::Rect bbox) = 0;
+        virtual void preprocessing(cv::Mat &Image, cv::Rect bbox) = 0;
 
         virtual void runmodel() = 0;
 
-        virtual torch::Tensor postprocessing(std::string imagePathAccuracy="")=0;
-
-
+        virtual torch::Tensor postprocessing(std::string imagePathAccuracy = "") = 0;
     };
 
-//#endif
+    class modelInterfaceSemanticSegmentation
+    {
+
+        virtual void preprocessing(cv::Mat &Image) = 0;
+
+        virtual void runmodel() = 0;
+
+        virtual torch::Tensor postprocessing(std::string imagePathAccuracy = "") = 0;
+    };
+
+    //#endif
 
 } // namespace ai4prod
