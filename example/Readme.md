@@ -40,6 +40,13 @@ Before run the program you need to copy from {Ai4prod_HOME}/build/vcpkg_installe
 
 To create the executable inside build folder, you will find inference.sln open it and compile as a normal visual studio project
 
+# Models
+
+Before execute inferece you need to download .onnx model related to your example. You can download each model at this link 
+
+https://drive.google.com/drive/folders/1a8m6Ek8qH7eKg8W9CdGQJ3_qeCeYx026?usp=sharing
+
+
 # Issue
 
 If you find some problems open an issue on github
