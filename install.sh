@@ -51,6 +51,8 @@ if [ $CUDA = 10.2 ]; then
     echo "VALID CUDA"
     # To assign a value is not possibile to have spaces around =
     DEPS="1PaZFP3wNDb3x2EkfRAijTsQXNJmfBC4C"
+elif [ $CUDA = 11.1 ]; then
+    DEPS="16H50Fkdy1qLcA2g4BtV7rbBVHCmwVEee"
 else
 
     echo "CUDA VERSION NOT FOUND "

@@ -22,18 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "instancesegmentation.h"
-#ifdef TENSORRT
-
-#include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
-#include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
-
-#endif
-
-#ifdef DIRECTML
-#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
-#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
-
-#endif
+#include "defines.h"
 
 namespace ai4prod
 {

@@ -22,19 +22,8 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "classification.h"
+#include "defines.h"
 
-#ifdef TENSORRT
-
-#include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
-#include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
-
-#endif
-
-#ifdef DIRECTML
-#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
-#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
-
-#endif
 
 using namespace onnxruntime;
 
@@ -169,6 +158,7 @@ namespace ai4prod
                 m_OrtSessionOptions.SetIntraOpNumThreads(1);
                 //ORT_ENABLE_ALL sembra avere le performance migliori
                 m_OrtSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+
             }
 
             std::cout << "MODE " << m_eMode << std::endl;
@@ -264,29 +254,29 @@ namespace ai4prod
 
                     //I cannot set this code into a function and inside if
 #ifdef __linux__
-                   
-                        int ret;
-                        std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
-                        int cacheLenght = cacheModel.length();
-                        char cacheModelchar[cacheLenght + 1];
-                        strcpy(cacheModelchar, cacheModel.c_str());
-                        ret = putenv(cacheModelchar);
+                    int ret;
+                    std::string cacheModel = "ORT_TENSORRT_ENGINE_CACHE_ENABLE=" + m_sEngineCache;
 
-                        std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
-                        int fp16Lenght = cacheModel.length();
-                        char fp16char[cacheLenght + 1];
-                        strcpy(fp16char, fp16.c_str());
-                        putenv(fp16char);
-                        std::string modelTrTmp;
+                    int cacheLenght = cacheModel.length();
+                    char cacheModelchar[cacheLenght + 1];
+                    strcpy(cacheModelchar, cacheModel.c_str());
+                    ret = putenv(cacheModelchar);
 
-                        modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
-                        int n = modelTrTmp.length();
-                        char modelSavePath[n + 1];
-                        strcpy(modelSavePath, modelTrTmp.c_str());
-                        //esporto le path del modello di Tensorrt
+                    std::string fp16 = "ORT_TENSORRT_FP16_ENABLE=" + m_sEngineFp;
+                    int fp16Lenght = cacheModel.length();
+                    char fp16char[cacheLenght + 1];
+                    strcpy(fp16char, fp16.c_str());
+                    putenv(fp16char);
+                    std::string modelTrTmp;
 
-                        putenv(modelSavePath);
+                    modelTrTmp = "ORT_TENSORRT_ENGINE_CACHE_PATH=" + m_sModelTrPath;
+                    int n = modelTrTmp.length();
+                    char modelSavePath[n + 1];
+                    strcpy(modelSavePath, modelTrTmp.c_str());
+                    //esporto le path del modello di Tensorrt
+
+                    putenv(modelSavePath);
 
 #elif _WIN32
 
@@ -295,7 +285,7 @@ namespace ai4prod
                     _putenv_s("ORT_TENSORRT_FP16_ENABLE", m_sEngineFp.c_str());
 
 #endif
-                    
+
                     //OnnxRuntime set Env
                     setOnnxRuntimeEnv();
 
@@ -343,14 +333,11 @@ namespace ai4prod
 
                 input_tensor_size = Image.cols * Image.rows * Image.channels();
 
-
                 inputTensor[0][0] = inputTensor[0][0].sub_(0.485).div_(0.229);
                 inputTensor[0][1] = inputTensor[0][1].sub_(0.456).div_(0.224);
                 inputTensor[0][2] = inputTensor[0][2].sub_(0.406).div_(0.225);
 
                 m_bCheckPre = true;
-
-               
             }
             else
             {
