@@ -53,10 +53,9 @@ using namespace std;
 int main()
 {	
 
-    Yolact *yolact;
+    Yolact yolact;
     
-   	//create new instance
-    yolact = new Yolact();
+   	
 
 	//You need to call init for every new class.
 	//This initizalize class component.
@@ -72,8 +71,8 @@ int main()
 
 	Mat img;
 	img= imread("/media/mic-710aix/test/Develop/ai4prod/example/instance_segmentation/yolact-nadal.jpeg");	
-	yolact->preprocessing(img);
-	yolact->runmodel();
+	yolact.preprocessing(img);
+	yolact.runmodel();
 
 	/*
 	result is a struct {
@@ -86,12 +85,12 @@ int main()
 
 	}
 	*/
-	auto result = yolact->postprocessing();
+	auto result = yolact.postprocessing();
 	
 
 
 	//return vector<Rect>
-	auto resultBbox=yolact->getCorrectBbox(result);
+	auto resultBbox=yolact.getCorrectBbox(result);
 	cout<<"1"<<endl;
 
 	for(auto &rect: resultBbox){
@@ -101,7 +100,7 @@ int main()
 
 	imshow("bbox",img);
 	//return vector<Mat> 
-	auto resultMask = yolact->getCorrectMask(result);
+	auto resultMask = yolact.getCorrectMask(result);
 	
 	for(auto& mask:resultMask){
 		

@@ -30,35 +30,35 @@ int main()
 
     //object detection
 
-    Yolov4 *yolov4;
+    Yolov4 yolov4;
 
-    yolov4 = new Yolov4();
+    
 
     //this retrive only class person from detection result tensor
     vector<int> includeClass = {0};
 
     //Pose detection
-    Hrnet *hrnet;
+    Hrnet hrnet;
 
-    hrnet = new Hrnet();
+   
 
-    if (!hrnet->init("C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/tensorrtModel")) {
+    if (!hrnet.init("C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/tensorrtModel")) {
           
         return 0;
     }
     cv::Mat image = cv::imread("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/image/2person.jpg");
 
-    if (!yolov4->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/tensorrtModel_yolov4", &includeClass))
+    if (!yolov4.init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/tensorrtModel_yolov4", &includeClass))
     {
 
         return 0;
     }
 
-    yolov4->preprocessing(image);
+    yolov4.preprocessing(image);
 
-    yolov4->runmodel();
+    yolov4.runmodel();
     
-    torch::Tensor result = yolov4->postprocessing();
+    torch::Tensor result = yolov4.postprocessing();
 
     for (int i = 0; i < result.sizes()[0]; i++)
     {
@@ -69,11 +69,11 @@ int main()
 
         cv::Rect brect = cv::Rect(x, y, width, height);
 
-        hrnet->preprocessing(image, brect);
+        hrnet.preprocessing(image, brect);
 
-        hrnet->runmodel();
+        hrnet.runmodel();
 
-        torch::Tensor poseResult = hrnet->postprocessing();
+        torch::Tensor poseResult = hrnet.postprocessing();
 
         for (int j = 0; j < poseResult.sizes()[0]; j++)
         {
