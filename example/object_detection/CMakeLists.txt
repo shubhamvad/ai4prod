@@ -44,13 +44,14 @@ if (MSVC)
                      ${OPENCV_DLLS}
                      $<TARGET_FILE_DIR:inference>)
      #tensorrt 
-   file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
-   add_custom_command(TARGET inference
+	if(EXECUTION_PROVIDER STREQUAL "tensorrt") 
+		file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
+		add_custom_command(TARGET inference
                      POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different
                      ${TENSORRT_DLL}
                      $<TARGET_FILE_DIR:inference>)
-     
+    endif() 
                      
     file(GLOB ONNXRUNTIME_DLL "Install/deps/onnxruntime/${AI_EXECUTION_PROVIDER}/lib/onnxruntime/*.dll")
     add_custom_command(TARGET inference
