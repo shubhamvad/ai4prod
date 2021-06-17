@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # # Read command line argument
-VERSION=0.5
+VERSION=0.6
 
 echo "AI4PROD VERSION ": $VERSION
 # get current user not sudo
@@ -19,6 +19,7 @@ parser_definition() {
     msg -- 'Options:'
     #flag withut param flag FLAG -f --flag -- "takes no arguments"
     flag CMAKE --cmake -- "takes no arguments"
+    flag CPU --cpu -- "takes no arguments"
     param CUDA --cuda -- "takes one argument"
     disp :usage -h --help
     disp VERSION --version
@@ -52,12 +53,17 @@ if [ $CUDA = 10.2 ]; then
     # To assign a value is not possibile to have spaces around =
     DEPS="1PaZFP3wNDb3x2EkfRAijTsQXNJmfBC4C"
 elif [ $CUDA = 11.1 ]; then
-    DEPS="16H50Fkdy1qLcA2g4BtV7rbBVHCmwVEee"
+    DEPS="18pC26fn3oFl4P2ApzFC1llGvvV5VAAJi"
+elif [ $CPU ]; then
+    echo "CPU"
+    DEPS="1w7TE6QmZ9LxVze7652N7hITF4gdxdAsQ"
 else
 
-    echo "CUDA VERSION NOT FOUND "
+    echo "DEPENDENCIES VERSION NOT FOUND WITH THIS CONFIGURATION "
     exit
 fi
+
+
 
 echo "CUDNN: $CUDNN, CUDA: $CUDA, OPTION: $OPTION"
 
