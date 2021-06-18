@@ -14,7 +14,7 @@ using namespace std;
 using namespace ai4prod;
 using namespace objectDetection;
 using namespace poseDetection;
-using namespace classification;
+
 
 using namespace std::chrono;
 
@@ -42,13 +42,13 @@ int main()
 
    
 
-    if (!hrnet.init("C:/Users/erict/Desktop/Official/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/tensorrtModel")) {
+    if (!hrnet.init("C:/Users/erict/Desktop/Official/italianC++/ai4prod/example/pose_detection/hrnet.onnx", 256, 192, 80, TensorRT, "C:/Users/erict/Desktop/Official/italianC++/ai4prod/example/pose_detection/tensorrt_hrnet")) {
           
         return 0;
     }
-    cv::Mat image = cv::imread("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/image/2person.jpg");
+    cv::Mat image = cv::imread("C:/Users/erict/Desktop/Official/italianC++/ai4prod/example/pose_detection/sinner.jpg");
 
-    if (!yolov4.init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/pose_detection/tensorrtModel_yolov4", &includeClass))
+    if (!yolov4.init("C:/Users/erict/Desktop/Official/italianC++/ai4prod/example/pose_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "C:/Users/erict/Desktop/Official/italianC++/ai4prod/example/pose_detection/tensorrtModel_yolov4", &includeClass))
     {
 
         return 0;
@@ -82,7 +82,7 @@ int main()
 
                 cv::Point2f joint = cv::Point2f(poseResult[j][i][0].item<float>(), poseResult[j][i][1].item<float>());
 
-                cv::circle(image, joint, 5, (255, 255, 255), 1);
+                cv::circle(image, joint, 5, (255, 255, 255), 4);
             }
         }
 

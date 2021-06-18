@@ -13,7 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 find_package(aiproduction REQUIRED)
 
 #link_directories(inference install-Lib/lib)
-
+message("EXECUTION PROVIDER ${AI_EXECUTION_PROVIDER}")
 add_executable(inference main.cpp)
 
 if(UNIX)
@@ -44,7 +44,7 @@ if (MSVC)
                      ${OPENCV_DLLS}
                      $<TARGET_FILE_DIR:inference>)
      #tensorrt
-	if(EXECUTION_PROVIDER STREQUAL "tensorrt")
+	if(AI_EXECUTION_PROVIDER STREQUAL "tensorrt")
    file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
    add_custom_command(TARGET inference
                      POST_BUILD

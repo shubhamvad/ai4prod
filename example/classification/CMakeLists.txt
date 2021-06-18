@@ -44,7 +44,7 @@ if (MSVC)
                      ${OPENCV_DLLS}
                      $<TARGET_FILE_DIR:inference>)
      #tensorrt 
-   if(EXECUTION_PROVIDER STREQUAL "tensorrt")
+   if(AI_EXECUTION_PROVIDER STREQUAL "tensorrt")
         file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
         add_custom_command(TARGET inference
                      POST_BUILD
