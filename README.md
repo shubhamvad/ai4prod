@@ -66,6 +66,10 @@ Ai4prod is built to be as easy as possible to get started. You can reach our web
 ### Install dependencies
 We provide installation script for bot Windows and Linux
 
+You can download manually from this link. Please choose you operatiing system and use always lastest release.
+
+https://drive.google.com/drive/folders/1B4lXyGM2IQmj6IHFThwlJRqnMGQoTjNq?usp=sharing
+
 ### STEP 1
 #### Windows 
 
