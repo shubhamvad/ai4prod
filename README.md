@@ -66,6 +66,10 @@ Ai4prod is built to be as easy as possible to get started. You can reach our web
 ### Install dependencies
 We provide installation script for bot Windows and Linux
 
+You can download manually from this link. Please choose you operatiing system and use always lastest release.
+
+https://drive.google.com/drive/folders/1B4lXyGM2IQmj6IHFThwlJRqnMGQoTjNq?usp=sharing
+
 ### STEP 1
 #### Windows 
 
@@ -100,7 +104,10 @@ For a complete tutorial have a look here
 https://www.ai4prod.ai/docs/getting-started/build-for-jetson/
 
 ## Tutorial
-We create different tutorials to let you start developing with Ai4Prod on your custom project.
+We create different tutorials to let you start developing with Ai4Prod on your custom project. All examples are available in the example folder. Before run any example you need to download the related .onnx model. 
+
+### Models
+from this link https://drive.google.com/drive/folders/1a8m6Ek8qH7eKg8W9CdGQJ3_qeCeYx026?usp=sharing
 
 ### Prerequisite
 You need to install Ai4Prod first.
@@ -122,7 +129,7 @@ https://www.ai4prod.ai/docs/tutorial/yolact/
 https://www.ai4prod.ai/docs/tutorial/hrnet/
 
 
-## RESULTS
+## Results
 
 ### Inference Time
 

@@ -11,8 +11,6 @@ project(aiprod)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
-
-set(EXECUTION_PROVIDER "tensorrt")
 # check for execution provider 
 # default cpu
 if( NOT DEFINED EXECUTION_PROVIDER)
@@ -178,10 +176,18 @@ elseif(EXECUTION_PROVIDER STREQUAL "directml")
             message(SEND_ERROR "DIRECT ML PROVIDER ONLY WORKS UNDER WINDOWS")
         endif()
     else()
-        message(SEND_ERROR "DIRECTML PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
+        message(SEND_ERROR "${EXECUTION_PROVIDER} PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
     endif()
+elseif(EXECUTION_PROVIDER STREQUAL "cpu")
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
+        message("CPU EXECUTION PROVIDER")
+        target_compile_definitions(aiproduction PRIVATE AICPU)
+    else()
+        message(SEND_ERROR "CPU PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
+    endif()
+
 else()
-    message("WARNING: NO EXECUTION PROVIDER SET. USE DEFAULT Cpu")
+    message(SEND_ERROR  "NO EXECUTION PROVIDER SET. USE -DEXECUTION_PROVIDER= cpu | tensorrt | directml")
 endif()
 
 #TEST
@@ -209,13 +215,14 @@ if(ADDTEST STREQUAL "ON")
                         ${TORCH_DLLS}
                         $<TARGET_FILE_DIR:catch_test>)
         #tensorrt 
-    file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
-    add_custom_command(TARGET catch_test
+    if(EXECUTION_PROVIDER STREQUAL "tensorrt")
+        file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")
+        add_custom_command(TARGET catch_test
                         POST_BUILD
                         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${TENSORRT_DLL}
                         $<TARGET_FILE_DIR:catch_test>)
-        
+    endif()    
                         
         file(GLOB ONNXRUNTIME_DLL "deps/onnxruntime/${EXECUTION_PROVIDER}/lib/onnxruntime/*.dll")
         add_custom_command(TARGET catch_test
@@ -248,7 +255,7 @@ generate_export_header(aiproduction EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}
 set_target_properties(
   aiproduction PROPERTIES
     SOVERSION 0
-    VERSION 0.5.0
+    VERSION 0.6.0
 )
 
 #Installing

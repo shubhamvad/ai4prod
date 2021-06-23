@@ -53,9 +53,8 @@ using namespace std;
 int main()
 {
 	//initialize resnet
-    ResNet50 *resnet;
+    ResNet50 resnet;
    	//create new instance
-    resnet = new ResNet50();
 
 	//You need to call init for every new class.
 	//This initizalize class component.
@@ -68,7 +67,7 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	if(!resnet->init("../resnet50.onnx", 256, 256, 1000, 5, TensorRT, "../tensorrtModel_test")){
+	if(!resnet.init("../resnet50.onnx", 256, 256, 1000, 5, Cpu, "../tensorrtModel")){
 		cout << "exit" << endl;
 		getchar();
 		return 0;
@@ -95,14 +94,14 @@ int main()
 		//ai4prod To understand how these functions works have look here https://www.ai4prod.ai/c-stack/
 
 		//preprocessing(cv::Mat)
-        resnet->preprocessing(img);
+        resnet.preprocessing(img);
 
 		//run model on img
-        resnet->runmodel();
+        resnet.runmodel();
 
 		//return a tuple<Tensor,Tensor>: <ClassId,Probability>
 		//This output is without softmax
-        std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
+        std::tuple<torch::Tensor, torch::Tensor> prediction = resnet.postprocessing();
 
 	cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
 		
