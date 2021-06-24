@@ -22,23 +22,11 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "semanticsegmentation.h"
-#ifdef TENSORRT
-
-#include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/providers.h"
-#include "../../deps/onnxruntime/tensorrt/include/onnxruntime/core/providers/tensorrt/tensorrt_provider_factory.h"
-
-#endif
-
-#ifdef DIRECTML
-#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/providers.h"
-#include "../../deps/onnxruntime/directml/include/onnxruntime/core/providers/dml/dml_provider_factory.h"
-
-#endif
-
+#include "defines.h"
 
 namespace ai4prod
 {
-    namespace semanticSegmentation 
+    namespace semanticSegmentation
     {
         USquaredNet::USquaredNet()
         {
@@ -273,25 +261,85 @@ namespace ai4prod
             return true;
         }
 
+        void USquaredNet::preprocessing(cv::Mat &Image)
+        {
 
-        void USquaredNet::preprocessing(cv::Mat &Image){
+            //guassian blur
+
+            float truncate = 4.0;
+
+            std::vector<float> inputShape = {(float)Image.rows, (float)Image.cols, (float)Image.channels()};
+            std::vector<float> outputShape = {(float)m_iInput_h, (float)m_iInput_w, 3.0};
+
+            std::vector<float> factors = {inputShape[0] / outputShape[0], inputShape[1] / outputShape[1], inputShape[2] / outputShape[2]};
+
+            std::vector<float> sigma;
+
+            for (int i = 0; i < factors.size(); i++)
+            {
+
+                sigma.push_back(std::max((float)0.0, (factors[i] - 1) / 2));
+            }
+
+            std::cout << sigma << std::endl;
+
+            int sizeB = (int)truncate * sigma[2];
+            int sizeG = (int)truncate * sigma[1];
+            int sizeR = (int)truncate * sigma[0];
+
+            if (sizeB == 0 || sizeB % 2 == 0)
+            {
+                sizeB = sizeB + 1;
+            }
+
+            if (sizeG == 0 || sizeG % 2 == 0)
+            {
+                sizeG = sizeG + 1;
+            }
+
+            if (sizeR == 0 || sizeR % 2 == 0)
+            {
+                sizeR = sizeR + 1;
+            }
 
 
+            cv::Mat rgbchannel[3];
+            // The actual splitting.
+            cv::split(Image, rgbchannel);
+
+            cv::GaussianBlur(rgbchannel[0], rgbchannel[0],cv::Size(sizeB,1),sigma[2],sigma[2],0);
+            cv::GaussianBlur(rgbchannel[1], rgbchannel[1],cv::Size(sizeG,1),sigma[1],sigma[1],0);
+            cv::GaussianBlur(rgbchannel[2], rgbchannel[2],cv::Size(sizeR,1),sigma[0],sigma[0],0);
+            //gaussian filter
+
+            cv::Mat merged;
+            
+            cv::merge(rgbchannel,3,merged);
+
+            //cv::cvtColor(merged,merged,cv::COLOR_RGB2BGR);
+
+            cv::resize(merged,merged,cv::Size(m_iInput_h,m_iInput_w));
+
+            cv::imwrite("imageCplus.jpg",merged);
+           
         }
 
-        void USquaredNet::runmodel(){
-
+        void USquaredNet::runmodel()
+        {
         }
 
-        torch::Tensor USquaredNet::postprocessing(std::string imagePathAccuracy){
+        torch::Tensor USquaredNet::postprocessing(std::string imagePathAccuracy)
+        {
 
             torch::Tensor t;
 
             return t;
         }
 
-         USquaredNet::~USquaredNet()
+        USquaredNet::~USquaredNet()
         {
+            m_OrtSession.reset();
+            m_OrtEnv.reset();
         }
 
     }

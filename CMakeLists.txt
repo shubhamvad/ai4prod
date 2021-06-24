@@ -122,6 +122,7 @@ aiproduction/include/modelInterface.h
 aiproduction/include/customDataType.h
 aiproduction/include/posedetection.h
 aiproduction/include/semanticsegmentation.h
+aiproduction/include/defines.h
 )
 
 FILE(GLOB MY_SRCS 
