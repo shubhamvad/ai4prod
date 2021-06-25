@@ -302,38 +302,129 @@ namespace ai4prod
                 sizeR = sizeR + 1;
             }
 
-
             cv::Mat rgbchannel[3];
             // The actual splitting.
             cv::split(Image, rgbchannel);
 
-            cv::GaussianBlur(rgbchannel[0], rgbchannel[0],cv::Size(sizeB,1),sigma[2],sigma[2],0);
-            cv::GaussianBlur(rgbchannel[1], rgbchannel[1],cv::Size(sizeG,1),sigma[1],sigma[1],0);
-            cv::GaussianBlur(rgbchannel[2], rgbchannel[2],cv::Size(sizeR,1),sigma[0],sigma[0],0);
+            cv::GaussianBlur(rgbchannel[0], rgbchannel[0], cv::Size(sizeB, 1), sigma[2], sigma[2], 0);
+            cv::GaussianBlur(rgbchannel[1], rgbchannel[1], cv::Size(sizeG, 1), sigma[1], sigma[1], 0);
+            cv::GaussianBlur(rgbchannel[2], rgbchannel[2], cv::Size(sizeR, 1), sigma[0], sigma[0], 0);
             //gaussian filter
 
             cv::Mat merged;
-            
-            cv::merge(rgbchannel,3,merged);
+
+            cv::merge(rgbchannel, 3, merged);
 
             //cv::cvtColor(merged,merged,cv::COLOR_RGB2BGR);
 
-            cv::resize(merged,merged,cv::Size(m_iInput_h,m_iInput_w));
+            cv::resize(merged, merged, cv::Size(m_iInput_h, m_iInput_w));
 
-            cv::imwrite("imageCplus.jpg",merged);
-           
+            //Image conversion To Tensor
+
+            m_TInputTensor = m_aut.convertMatToTensor(merged, merged.cols, merged.rows, merged.channels(), 1);
+
+            //Normalization
+            m_TInputTensor[0][0] = m_TInputTensor[0][0].sub_(0.485).div_(0.229);
+            m_TInputTensor[0][1] = m_TInputTensor[0][1].sub_(0.456).div_(0.224);
+            m_TInputTensor[0][2] = m_TInputTensor[0][2].sub_(0.406).div_(0.225);
+
+
+            m_InputTorchTensorSize = merged.cols * merged.rows * merged.channels();
         }
 
         void USquaredNet::runmodel()
         {
-        }
 
+            if (m_TInputTensor.is_contiguous())
+            {
+                std::cout << "START INFERENCE" << std::endl;
+                m_TInputTensor = m_TInputTensor;
+
+                m_fpInputOnnxRuntime = static_cast<float *>(m_TInputTensor.storage().data());
+
+                std::vector<int64_t> input_node_dims;
+                std::vector<int64_t> output_node_dims;
+
+                //set variable input onnxruntime
+                for (int i = 0; i < m_num_input_nodes; i++)
+                {
+                    //get input node name
+                    char *input_name = m_OrtSession->GetInputName(i, allocator);
+                    //printf("Output %d : name=%s\n", i, input_name);
+                    m_input_node_names[i] = input_name;
+
+                    //save input node dimension
+                    Ort::TypeInfo type_info = m_OrtSession->GetInputTypeInfo(i);
+
+                    auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+
+                    input_node_dims = tensor_info.GetShape();
+                }
+
+                //set variable output onnxruntime
+
+                for (int i = 0; i < m_num_out_nodes; i++)
+                {
+
+                    //get input node name
+                    char *output_name = m_OrtSession->GetOutputName(i, allocator);
+
+                    //printf("Output %d : name=%s\n", i, output_name);
+                    //m_input_node_names[i] = output_name;
+                    m_output_node_names[i] = output_name;
+                    //save input node dimension
+                    Ort::TypeInfo type_info = m_OrtSession->GetOutputTypeInfo(i);
+                    auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+                    output_node_dims = tensor_info.GetShape();
+                }
+
+                //Session Inference
+
+                auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+                Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, m_fpInputOnnxRuntime, m_InputTorchTensorSize, input_node_dims.data(), 4);
+
+                auto tensortData = input_tensor.GetTensorMutableData<float>();
+
+                //auto tensorINput_test = torch::from_blob((float *)(tensortData), {1, 3, 550, 550}).clone();
+
+                assert(input_tensor.IsTensor());
+
+                std::vector<Ort::Value> output_tensors = m_OrtSession->Run(Ort::RunOptions{nullptr}, m_input_node_names.data(), &input_tensor, 1, m_output_node_names.data(), 7);
+
+                m_fpOutOnnxRuntime[0] = output_tensors[0].GetTensorMutableData<float>();
+                m_fpOutOnnxRuntime[1] = output_tensors[1].GetTensorMutableData<float>();
+                m_fpOutOnnxRuntime[2] = output_tensors[2].GetTensorMutableData<float>();
+                m_fpOutOnnxRuntime[3] = output_tensors[3].GetTensorMutableData<float>();
+                m_fpOutOnnxRuntime[4] = output_tensors[4].GetTensorMutableData<float>();
+                m_fpOutOnnxRuntime[5] = output_tensors[5].GetTensorMutableData<float>();
+                m_fpOutOnnxRuntime[6] = output_tensors[6].GetTensorMutableData<float>();
+            }
+        }
+        /*
+            return a cv::Mat of cv_8UC1 type
+        */
+        cv::Mat USquaredNet::convertPredToMask(torch::Tensor &result)
+        {
+
+            result = result.detach().permute({1, 2, 0});
+            result = result.mul(255).clamp(0, 255).to(torch::kU8);
+            result = result.to(torch::kCPU);
+            cv::Mat resultImg(m_iInput_h, m_iInput_w, CV_8UC1);
+            std::memcpy((void *)resultImg.data, result.data_ptr(), sizeof(torch::kU8) * result.numel());
+
+            return resultImg;
+        }
         torch::Tensor USquaredNet::postprocessing(std::string imagePathAccuracy)
         {
 
-            torch::Tensor t;
+            torch::Tensor out1 = torch::from_blob((float *)(m_fpOutOnnxRuntime[0]), {1, 320, 320}).clone();
 
-            return t;
+            torch::Tensor ma = torch::max(out1);
+            torch::Tensor mi = torch::min(out1);
+
+            torch::Tensor result = (out1 - mi) / (ma - mi);
+
+            return result;
         }
 
         USquaredNet::~USquaredNet()

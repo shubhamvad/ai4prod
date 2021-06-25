@@ -79,7 +79,7 @@ namespace ai4prod
             //session IN/OUT
 
             float *m_fpInputOnnxRuntime;
-            float *m_fpOutOnnxRuntime[5];
+            float *m_fpOutOnnxRuntime[7];
 
             size_t m_InputTorchTensorSize;
 
@@ -100,6 +100,10 @@ namespace ai4prod
             void setSession();
             void setOnnxRuntimeModelInputOutput();
 
+
+           
+
+
         public:
             USquaredNet();
             virtual ~USquaredNet();
@@ -108,6 +112,9 @@ namespace ai4prod
             void preprocessing(cv::Mat &Image);
             void runmodel();
             torch::Tensor postprocessing(std::string imagePathAccuracy = "");
+
+             //Post processing
+            cv::Mat convertPredToMask(torch::Tensor &result);
         };
 
     }//U2Squared
