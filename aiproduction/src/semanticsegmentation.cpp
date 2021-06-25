@@ -429,8 +429,9 @@ namespace ai4prod
 
         USquaredNet::~USquaredNet()
         {
-            m_OrtSession.reset();
-            m_OrtEnv.reset();
+
+            m_OrtSession.release();
+            m_OrtEnv.release();
         }
 
     }

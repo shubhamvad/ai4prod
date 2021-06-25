@@ -497,8 +497,8 @@ namespace ai4prod
         { //deallocate resources only if were allocated
             if (m_bCheckInit)
             {
-                m_OrtSession.reset();
-                m_OrtEnv.reset();
+            m_OrtSession.release();
+            m_OrtEnv.release();
             }
         }
 

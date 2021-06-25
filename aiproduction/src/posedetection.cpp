@@ -573,8 +573,8 @@ namespace ai4prod
 
         Hrnet::~Hrnet()
         {
-            m_OrtSession.reset();
-            m_OrtEnv.reset();
+            m_OrtSession.release();
+            m_OrtEnv.release();
         }
     } //poseEstimation
 

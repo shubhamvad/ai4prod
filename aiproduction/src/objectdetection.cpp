@@ -799,8 +799,8 @@ namespace ai4prod
             if (m_bCheckInit)
             {
 
-                m_OrtSession.reset();
-                m_OrtEnv.reset();
+            m_OrtSession.release();
+            m_OrtEnv.release();
             }
         }
 
@@ -1530,9 +1530,8 @@ namespace ai4prod
         {
             if (m_bCheckInit)
             {
-
-                m_OrtSession.reset();
-                m_OrtEnv.reset();
+            m_OrtSession.release();
+            m_OrtEnv.release();
             }
         }
 
