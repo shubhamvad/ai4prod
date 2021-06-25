@@ -268,6 +268,11 @@ namespace ai4prod
 
             float truncate = 4.0;
 
+            //origImageSize
+            m_iOrig_h=Image.rows;
+            m_iOrig_w= Image.cols;
+
+
             std::vector<float> inputShape = {(float)Image.rows, (float)Image.cols, (float)Image.channels()};
             std::vector<float> outputShape = {(float)m_iInput_h, (float)m_iInput_w, 3.0};
 
@@ -411,6 +416,9 @@ namespace ai4prod
             result = result.to(torch::kCPU);
             cv::Mat resultImg(m_iInput_h, m_iInput_w, CV_8UC1);
             std::memcpy((void *)resultImg.data, result.data_ptr(), sizeof(torch::kU8) * result.numel());
+            
+            //bilinear interpolation
+            cv::resize(resultImg,resultImg,cv::Size(m_iOrig_h,m_iOrig_w),1);
 
             return resultImg;
         }

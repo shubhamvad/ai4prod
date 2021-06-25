@@ -50,8 +50,8 @@ namespace ai4prod
             int m_iInput_h;
             int m_iInput_w;
             //original image width and height
-            int m_iMrows;
-            int m_iMcols;
+            int m_iOrig_h;
+            int m_iOrig_w;
 
             int m_iNumClasses;
             float m_fNmsThresh;
