@@ -75,6 +75,27 @@ namespace ai4prod
             //load confusion Matrix in memory
         }
 
+        /*
+        indeces: correspond to classes
+        return: this function return a probability given from the confusion matrix for each predicted class
+        */
+        torch::Tensor ConfusionMatrix::getProbability(torch::Tensor indeces){
+            
+            std::vector<float> vectorProbability;
+
+            for(int i=0;i<indeces.sizes()[0];i++){
+
+                vectorProbability.push_back(m_SVConfusionMatrix[indeces[i].item<int>()][indeces[i].item<int>()]);
+
+                std::cout<< "probability "<<m_SVConfusionMatrix[indeces[i].item<int>()][indeces[i].item<int>()]<< std::endl;
+            }
+
+            //without clone tensor will be null
+            torch::Tensor probability= torch::from_blob((float*)(vectorProbability.data()), vectorProbability.size()).clone();
+
+            return probability;
+        }
+
         
 
         ConfusionMatrix::~ConfusionMatrix()

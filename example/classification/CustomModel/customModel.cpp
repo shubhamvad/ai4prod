@@ -28,7 +28,6 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include "classification.h"
 #include "explain.h"
 
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -52,30 +51,30 @@ using namespace std;
 // public used to access public method of ResNet50
 class customResnet : public ResNet50
 {
-
+public:
 	void preprocessing(cv::Mat &Image)
 	{
 
 		if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
-            {
+		{
 
-                //resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
-                inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
+			//resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
+			inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
-                input_tensor_size = Image.cols * Image.rows * Image.channels();
+			input_tensor_size = Image.cols * Image.rows * Image.channels();
 
-				//define transform for CIFAR 10
-                inputTensor[0][0] = inputTensor[0][0].sub_(0.4914).div_(0.2023);
-                inputTensor[0][1] = inputTensor[0][1].sub_(0.4822).div_(0.1994);
-                inputTensor[0][2] = inputTensor[0][2].sub_(0.4465).div_(0.2010);
+			//define transform for CIFAR 10
+			inputTensor[0][0] = inputTensor[0][0].sub_(0.4914).div_(0.2023);
+			inputTensor[0][1] = inputTensor[0][1].sub_(0.4822).div_(0.1994);
+			inputTensor[0][2] = inputTensor[0][2].sub_(0.4465).div_(0.2010);
 
-                m_bCheckPre = true;
-            }
-            else
-            {
-                m_sMessage = "call init() before";
-                std::cout << "call init() before" << std::endl;
-            }
+			m_bCheckPre = true;
+		}
+		else
+		{
+			m_sMessage = "call init() before";
+			std::cout << "call init() before" << std::endl;
+		}
 	}
 };
 
@@ -96,26 +95,43 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 
 	//CHANGE THIS VALUE WITH YOURS
-	if(!custRes.init("../../models/resnet18-Cifar10.onnx", 32, 32, 10, 2, Cpu, "../cpuModel")){
+	if (!custRes.init("../../models/resnet18-Cifar10.onnx", 32, 32, 10, 2, Cpu, "../cpuModel"))
+	{
 		cout << "exit" << endl;
 		getchar();
 		return 0;
 	}
 
-	
-
-
-
 	ConfusionMatrix cf;
-
-	cf.init("../cpuModel/confusionMatrixCifar10Scratch.csv", 10);
+	cout << "1" << endl;
+	cf.init("../confusionMatrixCifar10Scratch.csv", 10);
 
 	// std::cout << cf.getConfutionMatrix() << std::endl;
 
+	std::string AccurayFolderPath = "../images/";
+
+	cout << "2" << endl;
+	// read image from folder
+	for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
+	{
+		Mat img;
+		string image_id = entry.path().string();
+		//read image with opencv
+		img = imread(image_id.c_str());
+		custRes.preprocessing(img);
+		
+		custRes.runmodel();
+		std::tuple<torch::Tensor, torch::Tensor> prediction = custRes.postprocessing();
+		
+
+		torch::Tensor CFProbability = cf.getProbability(std::get<0>(prediction));
+		cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
+		
+		cout << "PROBABILITY " << CFProbability[0].item<float>();
+		cout << "Neural network probability " << std::get<1>(prediction)[0].item<float>();
 
 
-
-
+	}
 
 	// //resnet = new ResNet50();
 	// cout << "test" << endl;

@@ -45,7 +45,7 @@ namespace ai4prod
             ConfusionMatrix();
             bool init(std::string pathToCF,int numOfClasses);
 
-            //torch::Tensor getProbability(torch::Tensor result);
+            torch::Tensor getProbability(torch::Tensor result);
 
             std::vector<std::vector<float>> getConfutionMatrix(){
                 return m_SVConfusionMatrix;
