@@ -28,6 +28,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 #include "torch/torch.h"
 
 #include "classification.h"
+#include "explain.h"
 
 
 #include <opencv2/opencv.hpp>
@@ -37,6 +38,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 // include namespace 
 using namespace ai4prod;
 using namespace classification;
+using namespace explain;
 using namespace cv;
 using namespace std::chrono;
 
@@ -67,48 +69,56 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	if(!resnet.init("../resnet50.onnx", 256, 256, 1000, 5, Cpu, "../tensorrtModel")){
-		cout << "exit" << endl;
-		getchar();
-		return 0;
-	} 
+	// if(!resnet.init("../resnet50.onnx", 256, 256, 1000, 5, Cpu, "../cpuModel")){
+	// 	cout << "exit" << endl;
+	// 	getchar();
+	// 	return 0;
+	// } 
+
+	ConfusionMatrix cf;
+
+	cf.init("../cpuModel/confusionMatrix.csv",10);
+
+	std::cout <<cf.getConfutionMatrix()<<std::endl;
+
+	
     
-	//resnet = new ResNet50();
-	cout << "test" << endl;
-	//PATH TO FOLDER 
-    std::string AccurayFolderPath = "../images/";
+	// //resnet = new ResNet50();
+	// cout << "test" << endl;
+	// //PATH TO FOLDER 
+    // std::string AccurayFolderPath = "../images/";
 
-    cout << "Start Classification" << endl;
+    // cout << "Start Classification" << endl;
 
-    for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
-    {
+    // for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
+    // {
 		
 
-        string image_id = entry.path().string();
+    //     string image_id = entry.path().string();
         
-		//opencv Mat
-		Mat img;
-		//read image with opencv
-        img = imread(image_id.c_str());
+	// 	//opencv Mat
+	// 	Mat img;
+	// 	//read image with opencv
+    //     img = imread(image_id.c_str());
 
-		//ai4prod To understand how these functions works have look here https://www.ai4prod.ai/c-stack/
+	// 	//ai4prod To understand how these functions works have look here https://www.ai4prod.ai/c-stack/
 
-		//preprocessing(cv::Mat)
-        resnet.preprocessing(img);
+	// 	//preprocessing(cv::Mat)
+    //     resnet.preprocessing(img);
 
-		//run model on img
-        resnet.runmodel();
+	// 	//run model on img
+    //     resnet.runmodel();
 
-		//return a tuple<Tensor,Tensor>: <ClassId,Probability>
-		//This output is without softmax
-        std::tuple<torch::Tensor, torch::Tensor> prediction = resnet.postprocessing();
+	// 	//return a tuple<Tensor,Tensor>: <ClassId,Probability>
+	// 	//This output is without softmax
+    //     std::tuple<torch::Tensor, torch::Tensor> prediction = resnet.postprocessing();
 
-	cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
+	// cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
 		
-	//std::get<0>(prediction)[0].item<float>();
-	//if You need softmax you can use Libtorch softmax
+	// //std::get<0>(prediction)[0].item<float>();
+	// //if You need softmax you can use Libtorch softmax
     
-    }
-
+    // }
+	std::cout<<"finish"<<std::endl;
 	getchar();
 }

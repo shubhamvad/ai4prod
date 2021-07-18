@@ -236,12 +236,21 @@ if(ADDTEST STREQUAL "ON")
 endif()
 
 #VERIFY EXTRA DEPENDENCIES
-
+#Tracking
 IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extra/Tracking)
 
 set(LIBS ${LIBS} tracking)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extra/Tracking)
+
+endif()
+
+#Explain
+IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extra/Explain)
+
+set(LIBS ${LIBS} explain)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extra/Explain)
 
 endif()
 

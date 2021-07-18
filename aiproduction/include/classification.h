@@ -31,7 +31,7 @@ namespace ai4prod
       class AIPRODUCTION_EXPORT ResNet50 : ai4prod::modelInterfaceClassification
       {
 
-      private:
+      protected:
 
          //INIT VARIABLE
 
