@@ -45,10 +45,11 @@ namespace ai4prod
 
    enum MODE
    {
-
+      	
       TensorRT,
       Cpu,
-      DirectML
+      DirectML,
+      Default
 
    };
 

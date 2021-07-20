@@ -202,6 +202,8 @@ verify if 2 Mat are equal
         if (Mode == "DirectML") {
             return DirectML;
         }
+	
+        return Default;
     }
     //convert enum to string
     std::string aiutils::setYamlMode(MODE t)
@@ -225,6 +227,8 @@ verify if 2 Mat are equal
 
             return "DirectML";
         }
+	
+	return "Default"
     }
 
     //This fuction check if Mode is implementend before instantiate onnxruntime Session

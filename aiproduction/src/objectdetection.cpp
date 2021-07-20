@@ -291,6 +291,7 @@ namespace ai4prod
             {
                 m_sMessage = "Is not possibile to call init() twice. Class already initialized";
                 std::cout << "Is not possibile to call init() twice. Class already initialized" << std::endl;
+		return false;
             }
         }
 
