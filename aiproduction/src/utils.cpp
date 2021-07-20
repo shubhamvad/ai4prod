@@ -228,7 +228,7 @@ verify if 2 Mat are equal
             return "DirectML";
         }
 	
-	return "Default"
+	return "Default";
     }
 
     //This fuction check if Mode is implementend before instantiate onnxruntime Session
