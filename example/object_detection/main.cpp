@@ -61,12 +61,12 @@ int main()
     Yolov4 yolov4;
 
     //linux
-    // Check our api for full description 
+    // Check our api for full description
     //(path_to_onnx_model,image_input_h,image_iniput_w,num_classes,model,config_file_saved_path)
-    
-    if (!yolov4.init("../yolov4_608.onnx", 608, 608, 80, TensorRT, "../tensorrtModel_yolov4"))
-    {
 
+    if (!yolov4.init("../yolov4_608.onnx", 608, 608, 80, Cpu, "../tensorrtModel_yolov4"))
+    {
+        std::cout<< "ERROR"<<std::endl;
         return 0;
     }
 
@@ -83,8 +83,6 @@ int main()
 
         img = imread(image_id.c_str());
 
-       
-
         yolov4.preprocessing(img);
 #ifdef TIME_EVAL
 
@@ -96,12 +94,12 @@ int main()
         auto stop = high_resolution_clock::now();
 
         auto duration = duration_cast<microseconds>(stop - start);
-        cout << "SINGLE TIME INFERENCE 1 " << (float) duration.count() / (1000000 * 1) << "Sec" << endl;
+        cout << "SINGLE TIME INFERENCE 1 " << (float)duration.count() / (1000000 * 1) << "Sec" << endl;
         infTime.push_back((double)duration.count());
 #endif
-        
+
         torch::Tensor result = yolov4.postprocessing();
-        
+
 #ifdef TIME_EVAL
         // if (numDetection == 1000)
         //     break;
@@ -114,37 +112,35 @@ int main()
         else
         {
 
-            
             //if you want to see output results. This slow down the processing
 
-            // for (int i = 0; i < result.sizes()[0]; i++)
-            // {
+            for (int i = 0; i < result.sizes()[0]; i++)
+            {
 
-            //     cv::Rect brect;
-                
-                
+                int x = result[i][0].item<int>();
+                int y = result[i][1].item<int>();
+                int width = result[i][2].item<int>();
+                int height = result[i][3].item<int>();
 
-            //     float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
-                
+                cv::Rect brect = cv::Rect(x, y, width, height);
 
-                
-            //     brect = yolov4.getRect(img, tmp);
-                
-            //     string category = to_string(result[i][4].item<float>());
-            //     cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
-            //     cv::putText(img,                         //target image
-            //                 category.c_str(),            //text
-            //                 cv::Point(brect.x, brect.y), //top-left position
-            //                 cv::FONT_HERSHEY_DUPLEX,
-            //                 1.0,
-            //                 CV_RGB(118, 185, 0), //font color
-            //                 2);
-            //     //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
-            // }
-           
-            // imshow("image", img);
-            
-            // waitKey(0);
+                std::cout << brect << std::endl;
+
+                string category = to_string(result[i][4].item<float>());
+                cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+                cv::putText(img,                         //target image
+                            category.c_str(),            //text
+                            cv::Point(brect.x, brect.y), //top-left position
+                            cv::FONT_HERSHEY_DUPLEX,
+                            1.0,
+                            CV_RGB(118, 185, 0), //font color
+                            2);
+                //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+            }
+
+            imshow("image", img);
+
+            waitKey(0);
         }
     }
 
@@ -160,109 +156,105 @@ int main()
     cout << "program end" << endl;
     return 0;
 
+    //     //YOLO  v3 ---------------------------------------------------------------------
 
+    //     //setup image folder
 
-//     //YOLO  v3 ---------------------------------------------------------------------
+    //     std::string AccurayFolderPath = "/home/aistudios/Desktop/images_Manu/Immagini_cani";
 
-//     //setup image folder
+    //     Yolov3 *yolov3;
 
-//     std::string AccurayFolderPath = "/home/aistudios/Desktop/images_Manu/Immagini_cani";
+    //     //linux
+    //     // Check our api for full description
+    //     // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,NumClasses,Mode,TensortFoldersavedModel)
+    //     yolov3 = new Yolov3();
 
-//     Yolov3 *yolov3;
+    //     if (!yolov3->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/object_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "tensorrtModel_yolov4"))
+    //     {
 
-//     //linux
-//     // Check our api for full description
-//     // Yolov3(path_to_onnx_yolov3model.onnx,imageWidth,imageHeight,NumClasses,Mode,TensortFoldersavedModel)
-//     yolov3 = new Yolov3();
+    //         return 0;
+    //     }
 
-//     if (!yolov3->init("/media/aistudios/44c62318-a7de-4fb6-a3e2-01aba49489c5/Develop/Official/ai4prod/example/object_detection/yolov4_608.onnx", 608, 608, 80, TensorRT, "tensorrtModel_yolov4"))
-//     {
+    //     cout << "START PROCESSING" << endl;
 
-//         return 0;
-//     }
+    //     vector<double> infTime;
 
-//     cout << "START PROCESSING" << endl;
+    //     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
+    //     {
 
-//     vector<double> infTime;
+    //         string image_id = entry.path();
 
-//     for (const auto &entry : fs::directory_iterator(AccurayFolderPath))
-//     {
+    //         Mat img;
 
-//         string image_id = entry.path();
+    //         img = imread(image_id.c_str());
 
-//         Mat img;
+    //         yolov3->preprocessing(img);
+    // #ifdef TIME_EVAL
 
-//         img = imread(image_id.c_str());
+    //         auto start = high_resolution_clock::now();
 
-//         yolov3->preprocessing(img);
-// #ifdef TIME_EVAL
+    // #endif
+    //         yolov3->runmodel();
+    // #ifdef TIME_EVAL
+    //         auto stop = high_resolution_clock::now();
 
-//         auto start = high_resolution_clock::now();
+    //         auto duration = duration_cast<microseconds>(stop - start);
 
-// #endif
-//         yolov3->runmodel();
-// #ifdef TIME_EVAL
-//         auto stop = high_resolution_clock::now();
+    //         infTime.push_back((double)duration.count());
+    // #endif
 
-//         auto duration = duration_cast<microseconds>(stop - start);
+    //         torch::Tensor result = yolov3->postprocessing();
 
-//         infTime.push_back((double)duration.count());
-// #endif
+    // #ifdef TIME_EVAL
+    //         if (numDetection == 1000)
+    //             break;
+    // #endif
 
-//         torch::Tensor result = yolov3->postprocessing();
+    //         if (!result.numel())
+    //         {
+    //             std::cout << "tensor is empty! No detection Found" << std::endl;
+    //         }
+    //         else
+    //         {
 
-// #ifdef TIME_EVAL
-//         if (numDetection == 1000)
-//             break;
-// #endif
+    //             //if you want to see output results. This slow down the processing
 
-//         if (!result.numel())
-//         {
-//             std::cout << "tensor is empty! No detection Found" << std::endl;
-//         }
-//         else
-//         {
+    //             for (int i = 0; i < result.sizes()[0]; i++)
+    //             {
 
-//             //if you want to see output results. This slow down the processing
+    //                 cv::Rect brect;
+    //                 //cout << result << endl;
 
-//             for (int i = 0; i < result.sizes()[0]; i++)
-//             {
+    //                 float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
 
-//                 cv::Rect brect;
-//                 //cout << result << endl;
+    //                 brect = yolov3->get_rect(img, tmp);
 
-//                 float tmp[4] = {result[i][0].item<float>(), result[i][1].item<float>(), result[i][2].item<float>(), result[i][3].item<float>()};
+    //                 string category = to_string(result[i][4].item<float>());
+    //                 cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
+    //                 cv::putText(img,                         //target image
+    //                             category.c_str(),            //text
+    //                             cv::Point(brect.x, brect.y), //top-left position
+    //                             cv::FONT_HERSHEY_DUPLEX,
+    //                             1.0,
+    //                             CV_RGB(118, 185, 0), //font color
+    //                             2);
+    //                 //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
+    //             }
 
-//                 brect = yolov3->get_rect(img, tmp);
+    //             imshow("image", img);
+    //             waitKey(0);
+    //         }
+    //     }
 
-//                 string category = to_string(result[i][4].item<float>());
-//                 cv::rectangle(img, brect, cv::Scalar(255, 0, 0));
-//                 cv::putText(img,                         //target image
-//                             category.c_str(),            //text
-//                             cv::Point(brect.x, brect.y), //top-left position
-//                             cv::FONT_HERSHEY_DUPLEX,
-//                             1.0,
-//                             CV_RGB(118, 185, 0), //font color
-//                             2);
-//                 //put text on rect https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
-//             }
+    // #ifdef TIME_EVAL
 
-//             imshow("image", img);
-//             waitKey(0);
-//         }
-//     }
+    //     double sum_of_elems = 0;
+    //     sum_of_elems = std::accumulate(infTime.begin(), infTime.end(), 0);
 
-// #ifdef TIME_EVAL
+    //     cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000 * 1000) << "Sec" << endl;
 
-//     double sum_of_elems = 0;
-//     sum_of_elems = std::accumulate(infTime.begin(), infTime.end(), 0);
+    // #endif
 
-//     cout << "SINGLE TIME INFERENCE 1 " << sum_of_elems / (1000000 * 1000) << "Sec" << endl;
-
-// #endif
-
-//     cout << "program end" << endl;
-//     return 0;
-
-
+    //     cout << "program end" << endl;
+    //     return 0;
 }

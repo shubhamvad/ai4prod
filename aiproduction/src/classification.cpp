@@ -314,7 +314,7 @@ namespace ai4prod
 
         void ResNet50::preprocessing(cv::Mat &Image)
         {
-
+           
             //ResNet50::model=data;
             if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
             {

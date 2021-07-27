@@ -57,7 +57,7 @@ public:
 
 		if (m_bInit && !m_bCheckPre && !m_bCheckRun && m_bCheckPost)
 		{
-
+			cout<<"NOT PARENT"<<endl;
 			//resize(Image, Image, Size(256, 256), 0.5, 0.5, cv::INTER_LANCZOS4);
 			inputTensor = aut.convertMatToTensor(Image, Image.cols, Image.rows, Image.channels(), 1);
 
@@ -95,7 +95,7 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 
 	//CHANGE THIS VALUE WITH YOURS
-	if (!custRes.init("../../models/resnet18-Cifar10.onnx", 32, 32, 10, 2, Cpu, "../cpuModel"))
+	if (!custRes.init("../../models/Cirfar10-original.onnx", 32, 32, 10, 2, Cpu, "../cpuModel2"))
 	{
 		cout << "exit" << endl;
 		getchar();
@@ -104,7 +104,7 @@ int main()
 
 	ConfusionMatrix cf;
 	cout << "1" << endl;
-	cf.init("../confusionMatrixCifar10Scratch.csv", 10);
+	cf.init("../confMatrix23-07-2.csv", 10);
 
 	// std::cout << cf.getConfutionMatrix() << std::endl;
 
@@ -125,10 +125,13 @@ int main()
 		
 
 		torch::Tensor CFProbability = cf.getProbability(std::get<0>(prediction));
-		cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>();
+		cout << "TOP CLASS " << std::get<0>(prediction)[0].item<float>()<<endl;
 		
-		cout << "PROBABILITY " << CFProbability[0].item<float>();
-		cout << "Neural network probability " << std::get<1>(prediction)[0].item<float>();
+		cout << "PROBABILITY " << CFProbability[0].item<float>()<<endl;
+		
+		cout << "Neural network probability " << std::get<1>(prediction)[0].item<float>()<<endl;
+
+		cout << "IMAGE NAME "<<image_id <<endl;
 
 
 	}

@@ -87,7 +87,7 @@ namespace ai4prod
 
                 vectorProbability.push_back(m_SVConfusionMatrix[indeces[i].item<int>()][indeces[i].item<int>()]);
 
-                std::cout<< "probability "<<m_SVConfusionMatrix[indeces[i].item<int>()][indeces[i].item<int>()]<< std::endl;
+                
             }
 
             //without clone tensor will be null
