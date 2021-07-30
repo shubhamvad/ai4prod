@@ -196,7 +196,7 @@ endif()
 
 if(ADDTEST STREQUAL "ON")
     message("ADD TEST")
-    add_executable(catch_test test/testClassification.cpp ${MY_SRCS_INCLUDE} )
+    add_executable(catch_test test/testClassification.cpp test/testObjectDetection.cpp test/testPoseDetection.cpp ${MY_SRCS_INCLUDE} )
 
 
     target_include_directories(catch_test PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
