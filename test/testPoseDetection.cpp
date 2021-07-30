@@ -131,3 +131,62 @@ TEST_CASE("Init Pose Detection Hrnet TensorRT")
 
     REQUIRE(initFlag == true);
 }
+
+TEST_CASE("Test Pose Detection Output Hrnet TensorRT")
+{
+    std::cout << "TEST POSE DETECTION OUTPUT Hrnet TensorRT" << std::endl;
+
+    Hrnet hrnet;
+    Yolov4 yolov4;
+
+    hrnet.init("../Model/hrnet.onnx", 256, 192, 80, TensorRT,
+               "../test/testHrnetTensorRT");
+
+    std::string image_id = "../Images/posedetection/sinner.jpg";
+
+    cv::Mat image = cv::imread(image_id.c_str());
+
+    vector<int> includeClass = {0};
+    yolov4.init("../Model/yolov4_608.onnx", 608, 608, 80, TensorRT, "../test/testYolov4TensorRt", &includeClass);
+
+    yolov4.preprocessing(image);
+
+    yolov4.runmodel();
+
+    torch::Tensor result = yolov4.postprocessing();
+
+    std::vector<cv::Point2i> testCoordinate = {cv::Point2i(850, 267), cv::Point2i(869, 248), cv::Point2i(850, 248),
+    cv::Point2i(945, 267), cv::Point2i(850, 286), cv::Point2i(1041, 363), cv::Point2i(812, 382), cv::Point2i(1232, 382), cv::Point2i(601, 420), 
+    cv::Point2i(1404, 477), cv::Point2i(430, 382), cv::Point2i(1155, 592), cv::Point2i(1079, 630), cv::Point2i(907, 726), cv::Point2i(1346, 783), 
+    cv::Point2i(754, 993), cv::Point2i(1633, 802)};
+
+    for (int i = 0; i < result.sizes()[0]; i++)
+    {
+        int x = result[i][0].item<int>();
+        int y = result[i][1].item<int>();
+        int width = result[i][2].item<int>();
+        int height = result[i][3].item<int>();
+
+        cv::Rect brect = cv::Rect(x, y, width, height);
+
+        hrnet.preprocessing(image, brect);
+
+        hrnet.runmodel();
+
+        torch::Tensor poseResult = hrnet.postprocessing();
+
+        for (int j = 0; j < poseResult.sizes()[0]; j++)
+        {
+            for (int i = 0; i < 17; i++)
+            {
+
+                cv::Point2i joint = cv::Point2i(poseResult[j][i][0].item<int>(), poseResult[j][i][1].item<int>());
+
+                std::cout << " ITERATION " << i << std::endl;
+
+                REQUIRE(joint.x == testCoordinate[i].x);
+                REQUIRE(joint.y == testCoordinate[i].y);
+            }
+        }
+    }
+}
