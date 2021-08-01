@@ -56,8 +56,7 @@ TEST_CASE("Init Instance Segmentation Yolact Cpu")
 {
     std::cout << "TEST INIT YOLACT ON CPU" << std::endl;
 
-   std::unique_ptr<Yolact> yolact = std::make_unique<Yolact>();
-
+    std::unique_ptr<Yolact> yolact = std::make_unique<Yolact>();
 
     bool initFlag = false;
 
@@ -65,16 +64,53 @@ TEST_CASE("Init Instance Segmentation Yolact Cpu")
     REQUIRE(initFlag == true);
 }
 
-TEST_CASE("Test Object Detection Output Yolact Tensorrt")
+TEST_CASE("Test Instance Segmentation Output Yolact CPU")
 {
-    std::cout << "TEST OBJECT DETECTION OUTPUT Yolact TENSORRT" << std::endl;
+    std::cout << "TEST INSTANCE SEGMENTATION OUTPUT Yolact TENSORRT" << std::endl;
+
+    std::vector<std::vector<int>> gtBbox={{105,21,140,120},{57,50,22,53},{69,57,7,6}};
 
     std::unique_ptr<Yolact> yolact = std::make_unique<Yolact>();
 
     yolact->init("../Model/yolact.onnx", 550, 550, 80, Cpu, "../test/yolactCPU");
     Mat img;
-	img= imread("../yolact-federer.jpeg");	
+    Mat maskOriginal= imread("../Images/instanceSegmentation/maskFull.png",0);
 
+    img = imread("../Images/instanceSegmentation/yolact-federer.jpeg");
+    yolact->preprocessing(img);
+    yolact->runmodel();
+
+    auto result = yolact->postprocessing();
+
+    auto resultBbox=yolact->getCorrectBbox(result);
+
+    for(int i=0;i<resultBbox.size();i++){
+
+		REQUIRE(resultBbox[i].x==gtBbox[i][0]);
+        REQUIRE(resultBbox[i].y==gtBbox[i][1]);
+        REQUIRE(resultBbox[i].height==gtBbox[i][2]);
+        REQUIRE(resultBbox[i].width==gtBbox[i][3]);
+ 	}
+
+
+    std::cout <<"Check MASK" <<std::endl;
+
+
+    //check Mask
+    auto resultMask = yolact->getCorrectMask(result);
+    
+    cv::Mat resultMaskFull= resultMask[0] | resultMask[1] | resultMask[2];
+
+    
+    std::cout <<maskOriginal.type() <<std::endl;
+    std::cout <<resultMaskFull.type() <<std::endl;
+    Mat diffMask= maskOriginal - resultMaskFull;
+    
+
+    //count the number of black pixel
+    int count_black = cv::countNonZero(diffMask == 0);
+    REQUIRE(count_black==50268);
+    
     
 
 }
@@ -93,14 +129,54 @@ TEST_CASE("Init Instance Segmentation Yolact Tensorrt")
     cudaDeviceReset();
 }
 
-// TEST_CASE("Test Object Detection Output Yolact Cpu")
-// {
-//     std::cout << "TEST OBJECT DETECTION OUTPUT YOLACT CPU" << std::endl;
+TEST_CASE("Test Instance Segmentation Output Yolact Tensorrt")
+{
+    std::cout << "TEST INSTANCE SEGMENTATION OUTPUT Yolact TENSORRT" << std::endl;
 
-//     Hrnet hrnet;
-//     bool initFlag = false;
-//     initFlag = hrnet.init("../Model/hrnet.onnx", 256, 192, 80, Cpu,
-//                           "../test/testHrnetCpu");
+    std::vector<std::vector<int>> gtBbox={{105,21,140,120},{56,50,21,55},{68,57,7,7}};
 
-//     REQUIRE(initFlag == true);
-// }
+    std::unique_ptr<Yolact> yolact = std::make_unique<Yolact>();
+
+    yolact->init("../Model/yolact.onnx", 550, 550, 80, TensorRT, "../test/yolactTensorrt");
+    Mat img;
+    Mat maskOriginal= imread("../Images/instanceSegmentation/maskFull.png",0);
+
+    img = imread("../Images/instanceSegmentation/yolact-federer.jpeg");
+    yolact->preprocessing(img);
+    yolact->runmodel();
+
+    auto result = yolact->postprocessing();
+
+    auto resultBbox=yolact->getCorrectBbox(result);
+
+    for(int i=0;i<resultBbox.size();i++){
+
+		REQUIRE(resultBbox[i].x==gtBbox[i][0]);
+        REQUIRE(resultBbox[i].y==gtBbox[i][1]);
+        REQUIRE(resultBbox[i].height==gtBbox[i][2]);
+        REQUIRE(resultBbox[i].width==gtBbox[i][3]);
+ 	}
+
+
+    std::cout <<"Check MASK" <<std::endl;
+
+
+    //check Mask
+    auto resultMask = yolact->getCorrectMask(result);
+    
+    cv::Mat resultMaskFull= resultMask[0] | resultMask[1] | resultMask[2];
+
+    
+    std::cout <<maskOriginal.type() <<std::endl;
+    std::cout <<resultMaskFull.type() <<std::endl;
+    Mat diffMask= maskOriginal - resultMaskFull;
+    
+
+    //count the number of black pixel
+    int count_black = cv::countNonZero(diffMask == 0);
+    REQUIRE(count_black==49970);
+    
+    yolact.release();
+    cudaDeviceReset();
+
+}
