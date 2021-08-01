@@ -32,6 +32,9 @@ using namespace std;
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
 using namespace cv;
 
 namespace fs = std::experimental::filesystem;
@@ -69,7 +72,7 @@ TEST_CASE("Test Object Detection Output Yolov4 Cpu")
                                              {130, 223, 182, 318, 16}};
 
     int indexObjectThres = 0;
-    
+
     for (int i = 0; i < result.sizes()[0]; i++)
     {
 
@@ -98,36 +101,40 @@ TEST_CASE("Init Object Detection yolov4 Tensorrt")
 {
     std::cout << "TEST INIT YOLOV4 ON TENSORRT" << std::endl;
 
-    Yolov4 yolov4;
+    std::unique_ptr<Yolov4> yolov4 = std::make_unique<Yolov4>();
+
     bool initFlag = false;
-    initFlag = yolov4.init("../Model/yolov4_608.onnx", 608, 608, 80, TensorRT, "../test/testYolov4TensorRt");
+    initFlag = yolov4->init("../Model/yolov4_608.onnx", 608, 608, 80, TensorRT, "../test/testYolov4TensorRt");
 
     REQUIRE(initFlag == true);
+
+    yolov4.reset();
+    cudaDeviceReset();
 }
 
 TEST_CASE("Test Object Detection Output Yolov4 Tensorrt")
 {
     std::cout << "TEST OBJECT DETECTION OUTPUT YOLOV4 TENSORRT" << std::endl;
 
-    Yolov4 yolov4;
-    yolov4.init("../Model/yolov4_608.onnx", 608, 608, 80, TensorRT, "../test/testYolov4TensorRt");
+    std::unique_ptr<Yolov4> yolov4 = std::make_unique<Yolov4>();
+    yolov4->init("../Model/yolov4_608.onnx", 608, 608, 80, TensorRT, "../test/testYolov4TensorRt");
 
     Mat img;
     std::string image_id = "../Images/objectdetection/dog.jpg";
     img = imread(image_id.c_str());
 
-    yolov4.preprocessing(img);
+    yolov4->preprocessing(img);
 
-    yolov4.runmodel();
+    yolov4->runmodel();
 
-    torch::Tensor result = yolov4.postprocessing();
+    torch::Tensor result = yolov4->postprocessing();
 
     std::vector<std::vector<int>> coordinate{{121, 121, 449, 303, 1},
                                              {466, 77, 214, 92, 7},
                                              {130, 223, 182, 318, 16}};
 
     int indexObjectThres = 0;
-    
+
     for (int i = 0; i < result.sizes()[0]; i++)
     {
 
@@ -150,4 +157,7 @@ TEST_CASE("Test Object Detection Output Yolov4 Tensorrt")
             indexObjectThres = indexObjectThres + 1;
         }
     }
+
+    yolov4.reset();
+    cudaDeviceReset();
 }

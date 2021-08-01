@@ -196,14 +196,16 @@ endif()
 
 if(ADDTEST STREQUAL "ON")
     message("ADD TEST")
-    add_executable(catch_test test/testClassification.cpp test/testObjectDetection.cpp test/testPoseDetection.cpp ${MY_SRCS_INCLUDE} )
+    find_package(CUDA  REQUIRED)
+    add_executable(catch_test test/testClassification.cpp test/testObjectDetection.cpp test/testPoseDetection.cpp test/testInstanceSegmentation.cpp ${MY_SRCS_INCLUDE} )
 
 
-    target_include_directories(catch_test PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
+    target_include_directories(catch_test PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include "${CUDA_INCLUDE_DIRS}")
 
 
     if(UNIX)
-        target_link_libraries(catch_test "${TORCH_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp_static stdc++fs Catch2::Catch2)
+        #cuda libraries are required to release Gpu memory allocation for TensorRT session
+        target_link_libraries(catch_test "${TORCH_LIBRARIES}" "${CUDA_LIBRARIES}" ${OpenCV_LIBS} aiproduction onnxruntime yaml-cpp jsoncpp_static stdc++fs Catch2::Catch2)
     endif()
 
     if (MSVC)

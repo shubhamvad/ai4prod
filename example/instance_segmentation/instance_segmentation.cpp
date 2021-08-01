@@ -68,9 +68,11 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
+	yolact.init("../yolact.onnx",550,550,80,Cpu,"../yolactCPU");	
+
 
 	Mat img;
-	img= imread("/media/mic-710aix/test/Develop/ai4prod/example/instance_segmentation/yolact-nadal.jpeg");	
+	img= imread("../yolact-federer.jpeg");	
 	yolact.preprocessing(img);
 	yolact.runmodel();
 
@@ -101,14 +103,16 @@ int main()
 	imshow("bbox",img);
 	//return vector<Mat> 
 	auto resultMask = yolact.getCorrectMask(result);
-	
+	cv::Mat fullMask= resultMask[0] | resultMask[1] | resultMask[2];
 	for(auto& mask:resultMask){
 		
-
-		cv::imshow("mask",mask);
-		waitKey(0);
+		
+		// cv::imshow("mask",mask);
+		// waitKey(0);
 	}
 
+		cv::imwrite("../maskFull.png",fullMask);
+		waitKey(0);
 	
 	
 	

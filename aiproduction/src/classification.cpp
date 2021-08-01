@@ -494,9 +494,12 @@ namespace ai4prod
         }
 
         ResNet50::~ResNet50()
-        { //deallocate resources only if were allocated
+        { 
+            
+            //deallocate resources only if were allocated
             if (m_bCheckInit)
             {
+            
             m_OrtSession.release();
             m_OrtEnv.release();
             }

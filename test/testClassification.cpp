@@ -32,6 +32,9 @@ using namespace std;
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
 using namespace cv;
 
 namespace fs = std::experimental::filesystem;
@@ -78,9 +81,12 @@ TEST_CASE("Init classification Resnet Tensorrt")
 {   
     std::cout << "TEST INIT RESNET TENSORRT "<<std::endl;
 
-    ResNet50 resnet;
+    
+
+    std::unique_ptr<ResNet50> resnet= make_unique<ResNet50>();
+    
     bool initFlag = false;
-    initFlag = resnet.init("../Model/resnet50.onnx", 256, 256, 1000, 5, TensorRT,
+    initFlag = resnet->init("../Model/resnet50.onnx", 256, 256, 1000, 5, TensorRT,
                            "../test/testResnetTensorrt");
 
     fs::path p1{"../test/testResnetTensorrt"};
@@ -94,15 +100,18 @@ TEST_CASE("Init classification Resnet Tensorrt")
     REQUIRE(initFlag == true);
     //check if tensorrtModel is saved
     REQUIRE(count > 1);
+
+    resnet.reset();
+    cudaDeviceReset();
 }
 
 
 TEST_CASE("Test Classification Output Resnet TensorRT")
 {
     std::cout << "TEST CLASSIFICATION OUTPUT RESNET ON TENSORRT"<<std::endl;
-    ResNet50 resnet;
+    std::unique_ptr<ResNet50> resnet= make_unique<ResNet50>();
     bool initFlag = false;
-    initFlag = resnet.init("../Model/resnet50.onnx", 256, 256, 1000, 5, TensorRT,
+    initFlag = resnet->init("../Model/resnet50.onnx", 256, 256, 1000, 5, TensorRT,
                            "../test/testResnetTensorrt");
 
     string image_id = "../Images/classification/dog.jpeg";
@@ -112,12 +121,15 @@ TEST_CASE("Test Classification Output Resnet TensorRT")
     //read image with opencv
     img = imread(image_id.c_str());
 
-    resnet.preprocessing(img);
+    resnet->preprocessing(img);
 
     //run model on img
-    resnet.runmodel();
+    resnet->runmodel();
 
-    std::tuple<torch::Tensor, torch::Tensor> prediction = resnet.postprocessing();
+    std::tuple<torch::Tensor, torch::Tensor> prediction = resnet->postprocessing();
 
     REQUIRE(std::get<0>(prediction)[0].item<float>() == 208);
+
+    resnet.reset();
+    cudaDeviceReset();
 }
