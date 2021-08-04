@@ -39,6 +39,7 @@ using namespace cv;
 
 namespace fs = std::experimental::filesystem;
 
+#if defined(AICPU) || defined(TENSORRT)
 
 TEST_CASE("Init classification Resnet Cpu")
 {   
@@ -76,6 +77,10 @@ TEST_CASE("Test Classification Output Resnet Cpu")
 
     REQUIRE(std::get<0>(prediction)[0].item<float>() == 208);
 }
+
+#endif
+
+#if defined(TENSORRT)
 
 TEST_CASE("Init classification Resnet Tensorrt")
 {   
@@ -133,3 +138,5 @@ TEST_CASE("Test Classification Output Resnet TensorRT")
     resnet.reset();
     cudaDeviceReset();
 }
+
+#endif

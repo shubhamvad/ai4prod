@@ -38,7 +38,7 @@ using namespace std;
 using namespace cv;
 
 namespace fs = std::experimental::filesystem;
-
+#if defined AICPU || defined TENSORRT
 TEST_CASE("Init Object Detection yolov4 Cpu")
 {
     std::cout << "TEST INIT YOLOV4 ON CPU" << std::endl;
@@ -96,7 +96,10 @@ TEST_CASE("Test Object Detection Output Yolov4 Cpu")
         }
     }
 }
+#endif
 
+
+#if defined(TENSORRT)
 TEST_CASE("Init Object Detection yolov4 Tensorrt")
 {
     std::cout << "TEST INIT YOLOV4 ON TENSORRT" << std::endl;
@@ -161,3 +164,5 @@ TEST_CASE("Test Object Detection Output Yolov4 Tensorrt")
     yolov4.reset();
     cudaDeviceReset();
 }
+
+#endif

@@ -158,47 +158,13 @@ if(accuracy)
 		
 endif()
 
-# set execution provider preprocess definition 
 
-if(EXECUTION_PROVIDER STREQUAL "tensorrt")
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
-        message("TENSORRT EXECUTION PROVIDER")
-        target_compile_definitions(aiproduction PRIVATE TENSORRT)
-    else()
-        message(SEND_ERROR "TENSORRT PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
-    endif()
-elseif(EXECUTION_PROVIDER STREQUAL "directml")
-    
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
-        message("DIRECTML EXECUTION PROVIDER")
-        if(MSVC)
-            target_compile_definitions(aiproduction PRIVATE DIRECTML)
-        else()
-            message(SEND_ERROR "DIRECT ML PROVIDER ONLY WORKS UNDER WINDOWS")
-        endif()
-    else()
-        message(SEND_ERROR "${EXECUTION_PROVIDER} PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
-    endif()
-elseif(EXECUTION_PROVIDER STREQUAL "cpu")
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
-        message("CPU EXECUTION PROVIDER")
-        target_compile_definitions(aiproduction PRIVATE AICPU)
-    else()
-        message(SEND_ERROR "CPU PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
-    endif()
-
-else()
-    message(SEND_ERROR  "NO EXECUTION PROVIDER SET. USE -DEXECUTION_PROVIDER= cpu | tensorrt | directml")
-endif()
-
-#TEST
-
-
+#create executable for test
 if(ADDTEST STREQUAL "ON")
     message("ADD TEST")
     find_package(CUDA  REQUIRED)
-    add_executable(catch_test test/testClassification.cpp test/testObjectDetection.cpp test/testPoseDetection.cpp test/testInstanceSegmentation.cpp ${MY_SRCS_INCLUDE} )
-
+    add_executable(catch_test test/testClassification.cpp test/testObjectDetection.cpp test/testInstanceSegmentation.cpp test/testPoseDetection.cpp  ${MY_SRCS_INCLUDE} )
+   
 
     target_include_directories(catch_test PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include "${CUDA_INCLUDE_DIRS}")
 
@@ -236,6 +202,54 @@ if(ADDTEST STREQUAL "ON")
     endif()
 
 endif()
+
+# set execution provider preprocess definition 
+
+if(EXECUTION_PROVIDER STREQUAL "tensorrt")
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
+        message("TENSORRT EXECUTION PROVIDER")
+        target_compile_definitions(aiproduction PRIVATE TENSORRT)
+        if(ADDTEST STREQUAL "ON")
+            target_compile_definitions(catch_test PRIVATE TENSORRT)
+        endif()
+    else()
+        message(SEND_ERROR "TENSORRT PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
+    endif()
+elseif(EXECUTION_PROVIDER STREQUAL "directml")
+    
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
+        message("DIRECTML EXECUTION PROVIDER")
+        if(MSVC)
+            target_compile_definitions(aiproduction PRIVATE DIRECTML)
+            if(ADDTEST STREQUAL "ON")
+                target_compile_definitions(catch_test PRIVATE DIRECTML)
+            endif()
+            
+        else()
+            message(SEND_ERROR "DIRECT ML PROVIDER ONLY WORKS UNDER WINDOWS")
+        endif()
+    else()
+        message(SEND_ERROR "${EXECUTION_PROVIDER} PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
+    endif()
+elseif(EXECUTION_PROVIDER STREQUAL "cpu")
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/onnxruntime/${EXECUTION_PROVIDER}/include)
+        message("CPU EXECUTION PROVIDER")
+        target_compile_definitions(aiproduction PRIVATE AICPU)
+        if(ADDTEST STREQUAL "ON")
+            target_compile_definitions(catch_test PRIVATE AICPU)
+        endif()
+    else()
+        message(SEND_ERROR "CPU PROVIDER NOT FOUND. PLEASE DOWNLOAD IT")
+    endif()
+
+else()
+    message(SEND_ERROR  "NO EXECUTION PROVIDER SET. USE -DEXECUTION_PROVIDER= cpu | tensorrt | directml")
+endif()
+
+#TEST
+
+
+
 
 #VERIFY EXTRA DEPENDENCIES
 #Tracking

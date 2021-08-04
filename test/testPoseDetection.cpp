@@ -52,6 +52,8 @@ namespace fs = std::experimental::filesystem;
 using namespace std;
 using namespace cv;
 
+#if defined AICPU || defined TENSORRT
+
 TEST_CASE("Init Pose Detection Hrnet Cpu")
 {
     std::cout << "TEST INIT HRNET ON CPU" << std::endl;
@@ -122,6 +124,10 @@ TEST_CASE("Test Pose Detection Output Hrnet Cpu")
         }
     }
 }
+
+#endif
+
+#if defined(TENSORRT)
 
 TEST_CASE("Init Pose Detection Hrnet TensorRT")
 {
@@ -198,3 +204,5 @@ TEST_CASE("Test Pose Detection Output Hrnet TensorRT")
     hrnet.reset();
     cudaDeviceReset();
 }
+
+#endif

@@ -52,6 +52,8 @@ namespace fs = std::experimental::filesystem;
 
 using namespace std;
 
+
+#if defined AICPU || defined TENSORRT
 TEST_CASE("Init Instance Segmentation Yolact Cpu")
 {
     std::cout << "TEST INIT YOLACT ON CPU" << std::endl;
@@ -129,6 +131,10 @@ TEST_CASE("Init Instance Segmentation Yolact Tensorrt")
     cudaDeviceReset();
 }
 
+#endif
+
+#if defined(TENSORRT)
+
 TEST_CASE("Test Instance Segmentation Output Yolact Tensorrt")
 {
     std::cout << "TEST INSTANCE SEGMENTATION OUTPUT Yolact TENSORRT" << std::endl;
@@ -180,3 +186,5 @@ TEST_CASE("Test Instance Segmentation Output Yolact Tensorrt")
     cudaDeviceReset();
 
 }
+
+#endif
