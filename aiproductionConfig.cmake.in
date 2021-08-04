@@ -16,7 +16,7 @@ find_package(Torch REQUIRED)
 if(${X86_64})
     
     if(UNIX)
-        find_package(OpenCV 4.2 EXACT REQUIRED PATHS ${CMAKE_CURRENT_LIST_DIR}/deps/opencv/)
+        find_package(OpenCV 4.4 EXACT REQUIRED PATHS ${CMAKE_CURRENT_LIST_DIR}/deps/opencv/)
     endif()
     if (MSVC)
         find_package(OpenCV 4.4 EXACT REQUIRED PATHS ${CMAKE_CURRENT_LIST_DIR}/deps/opencv/)
