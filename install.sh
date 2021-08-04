@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # # Read command line argument
-VERSION=0.6
+VERSION=0.6.1
 
 echo "AI4PROD VERSION ": $VERSION
 # get current user not sudo
@@ -53,7 +53,7 @@ if [ $CUDA = 10.2 ]; then
     # To assign a value is not possibile to have spaces around =
     DEPS="1PaZFP3wNDb3x2EkfRAijTsQXNJmfBC4C"
 elif [ $CUDA = 11.1 ]; then
-    DEPS="18pC26fn3oFl4P2ApzFC1llGvvV5VAAJi"
+    DEPS="1rB2mnisEsR2oy8sishyAaTI6O2X-36Lh"
 elif [ $CPU ]; then
     echo "CPU"
     DEPS="1w7TE6QmZ9LxVze7652N7hITF4gdxdAsQ"
