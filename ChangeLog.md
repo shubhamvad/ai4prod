@@ -1,4 +1,12 @@
-#0.6
+
+# 0.7
+
+- Implement new Neural Network for semantic Segmentation
+- Change deps for Linux opencv 4.4.0
+- Fix bug on object_detection example 
+
+
+# 0.6
 
 - Add pose estimation pipeline
 - Add execution only on Cpu without Gpu

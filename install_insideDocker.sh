@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # # Read command line argument
-VERSION=0.6.1
+VERSION=0.7.0
 
 echo "AI4PROD VERSION ": $VERSION
 # get current user not sudo
