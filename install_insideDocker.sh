@@ -51,9 +51,9 @@ fi
 if [ $CUDA = 10.2 ]; then
     echo "VALID CUDA"
     # To assign a value is not possibile to have spaces around =
-    DEPS="1QmJSFbM1KW4nih5Wy2Ft4pagJOTipaZ6"
+    DEPS="1qtmqBx4FViLw6DeF-knm42KCUhvQ9z9F"
 elif [ $CUDA = 11.1 ]; then
-    DEPS="1rB2mnisEsR2oy8sishyAaTI6O2X-36Lh"
+    DEPS="1MyOHi2p78nKwSU7VLcVp9DWqcww2xWOQ"
 elif [ $CPU ]; then
     echo "CPU"
     DEPS="1w7TE6QmZ9LxVze7652N7hITF4gdxdAsQ"
