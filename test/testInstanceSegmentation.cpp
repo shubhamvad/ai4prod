@@ -68,7 +68,7 @@ TEST_CASE("Init Instance Segmentation Yolact Cpu")
 
 TEST_CASE("Test Instance Segmentation Output Yolact CPU")
 {
-    std::cout << "TEST INSTANCE SEGMENTATION OUTPUT Yolact TENSORRT" << std::endl;
+    std::cout << "TEST INSTANCE SEGMENTATION OUTPUT Yolact Cpu" << std::endl;
 
     std::vector<std::vector<int>> gtBbox={{105,21,140,120},{57,50,22,53},{69,57,7,6}};
 
@@ -116,6 +116,8 @@ TEST_CASE("Test Instance Segmentation Output Yolact CPU")
     
 
 }
+#if defined(TENSORRT)
+
 TEST_CASE("Init Instance Segmentation Yolact Tensorrt")
 {
     std::cout << "TEST INIT YOLACT ON Tensorrt" << std::endl;
@@ -133,7 +135,7 @@ TEST_CASE("Init Instance Segmentation Yolact Tensorrt")
 
 #endif
 
-#if defined(TENSORRT)
+
 
 TEST_CASE("Test Instance Segmentation Output Yolact Tensorrt")
 {
