@@ -183,6 +183,14 @@ if(ADDTEST STREQUAL "ON")
                         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${TORCH_DLLS}
                         $<TARGET_FILE_DIR:catch_test>)
+						
+		file(GLOB OPENCV_DLLS "deps/opencv/x64/vc15/bin/*.dll")
+		
+		add_custom_command(TARGET catch_test
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${OPENCV_DLLS}
+                     $<TARGET_FILE_DIR:catch_test>)
         #tensorrt 
     if(EXECUTION_PROVIDER STREQUAL "tensorrt")
         file(GLOB TENSORRT_DLL "C:/tensorrt/lib/*.dll")

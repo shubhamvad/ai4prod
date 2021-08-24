@@ -9,9 +9,15 @@ ECHO %cuda%
 
 IF "%cuda%"=="11.0" (
     ECHO Select cuda 11.0
-    set fileid="1h1ybEJWrysYJ8PKCdL9ELEfUNk7Nn1Qa"
+    set fileid="1YwUiSmpPTWeAUpWbvubqy57VvAjwM18A"
     )ELSE ( ECHO Cuda version not found)
 
+
+IF "%1"=="--cpu" (
+       ECHO Select CPU
+	   set fileid="1m_XtGiWcL0M97uapiEOiLMYauue5DfdG"
+    )ELSE ( ECHO Cpu version not found)
+	
 set cookieFile=cookie.txt
 set confirmFile=confirm.txt
 
@@ -48,8 +54,9 @@ set PATH=%PATH%;C:\Program Files\7-Zip\
 echo %PATH%
 7z x ..\deps.7z
 
-move tensorrt C:\
-
+IF "%cuda%"=="11.0" (
+	move tensorrt C:\
+)
 cd ..
 
 REM Install vcpkg

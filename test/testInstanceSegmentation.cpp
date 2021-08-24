@@ -116,6 +116,9 @@ TEST_CASE("Test Instance Segmentation Output Yolact CPU")
     
 
 }
+
+#endif
+
 #if defined(TENSORRT)
 
 TEST_CASE("Init Instance Segmentation Yolact Tensorrt")
@@ -133,7 +136,7 @@ TEST_CASE("Init Instance Segmentation Yolact Tensorrt")
     cudaDeviceReset();
 }
 
-#endif
+
 
 
 
