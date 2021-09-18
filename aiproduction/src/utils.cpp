@@ -42,10 +42,10 @@ Each pixel value is in range [0,1]
 return: torch::Tensor with the right order of input dimension(B,C,W,H)
 
 */
-    torch::Tensor aiutils::convertMatToTensor(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu)
+    torch::Tensor aiutils::convertMatToTensor(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu, bool rgb)
     {
-
-        cv::cvtColor(ImageBGR, ImageBGR, cv::COLOR_BGR2RGB);
+        if (rgb)
+            cv::cvtColor(ImageBGR, ImageBGR, cv::COLOR_BGR2RGB);
         cv::Mat img_float;
 
         //Conversione dei valori nell'intervallo [0,1] tipico del tensore di Pytorch
@@ -79,11 +79,10 @@ return: torch::Tensor with the right order of input dimension(B,C,W,H)
 
         cv::cvtColor(ImageBGR, ImageBGR, cv::COLOR_BGR2RGB);
         cv::Mat img_float;
-        
+
         ImageBGR.convertTo(img_float, CV_32F, 1.0);
 
         auto img_tensor = torch::from_blob(img_float.data, {batch, height, width, channel}).to(torch::kCPU);
-
 
         // you need to be contiguous to have all address memory of tensor sequentially
         img_tensor = img_tensor.permute({0, 3, 1, 2}).contiguous();
@@ -189,7 +188,7 @@ verify if 2 Mat are equal
 
         if (Mode == "TensorRT")
         {
-            
+
             return TensorRT;
         }
 
@@ -199,7 +198,8 @@ verify if 2 Mat are equal
             return Cpu;
         }
 
-        if (Mode == "DirectML") {
+        if (Mode == "DirectML")
+        {
             return DirectML;
         }
     }

@@ -59,8 +59,8 @@ namespace ai4prod
    {
 
    public:
-      torch::Tensor convertMatToTensor(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu = false);
-      torch::Tensor convertMatToTensor8bit(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu = false);
+      torch::Tensor convertMatToTensor(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu = false,bool rgb=true);
+      torch::Tensor convertMatToTensor8bit(cv::Mat ImageBGR, int width, int height, int channel, int batch, bool gpu = false );
       cv::Mat convertTensortToMat8bit(torch::Tensor tensor, int width, int height);
       cv::Mat convertTensortToMat(torch::Tensor tensor, int width, int height);
       bool equalImage(const cv::Mat &a, const cv::Mat &b);

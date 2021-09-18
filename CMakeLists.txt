@@ -271,11 +271,11 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extra/Explain)
 endif()
 
 #Ocr
-IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extra/Ocr)
-
+IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extra/Ocr_private)
+message("FOUND OCR")
 set(LIBS ${LIBS} ocr)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extra/Ocr)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extra/Ocr_private)
 
 endif()
 
