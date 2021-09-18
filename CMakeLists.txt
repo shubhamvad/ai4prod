@@ -46,7 +46,17 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/Install )
  
 endif()
 
-#set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/deps/opencv/lib")
+
+# set Rpath for runtime
+set(MY_INSTALL_RPATH
+"${CMAKE_INSTALL_PREFIX}/deps/opencv/lib"
+"${CMAKE_INSTALL_PREFIX}/deps/onnxruntime/${EXECUTION_PROVIDER}/lib/onnxruntime"
+"${CMAKE_INSTALL_PREFIX}/deps/libtorch/lib"
+)
+
+
+set(CMAKE_INSTALL_RPATH "${MY_INSTALL_RPATH}")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # library to generate export header
 include(GenerateExportHeader)
@@ -137,7 +147,10 @@ aiproduction/src/semanticsegmentation.cpp
 #ai4production Library
 add_library(aiproduction SHARED ${MY_SRCS} ${MY_SRCS_INCLUDE})
 
-
+# set_target_properties(aiproduction
+#     PROPERTIES
+#     INSTALL_RPATH "${MY_INSTALL_RPATH}"
+# )
 target_include_directories(aiproduction PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/aiproduction/include )
 
 
@@ -315,6 +328,7 @@ install(TARGETS aiproduction
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 )
+
 
 #export ( TARGETS aiproduction FILE ${CMAKE_INSTALL_PREFIX}/aiproductionTargets.cmake  )
 
