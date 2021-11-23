@@ -22,7 +22,7 @@ along with Ai4prod.  If not, see <http://www.gnu.org/licenses/>
 */
 
 
-
+#include <bits/stdc++.h>
 #include <iostream>
 
 #include "torch/torch.h"
@@ -41,6 +41,8 @@ using namespace cv;
 using namespace std::chrono;
 using namespace torch::indexing;
 
+using namespace std::chrono;
+
 //this is needed if you want to scan and entire folder
 // img1.jpg
 // img2.jpg
@@ -52,6 +54,10 @@ using namespace std;
 
 int main()
 {	
+
+	//Time Count
+	clock_t startClock, endClock;
+
 
     Yolact yolact;
     
@@ -68,7 +74,7 @@ int main()
 	//path_to_tensorrt_model: Path where the tensorrt optimized engine is saved
 	
 	//CHANGE THIS VALUE WITH YOURS
-	yolact.init("../yolact.onnx",550,550,80,Cpu,"../yolactCPU");	
+	yolact.init("../yolact.onnx",550,550,80,TensorRT,"../yolactTensorRT");	
 
 
 	Mat img;
@@ -93,7 +99,7 @@ int main()
 
 	//return vector<Rect>
 	auto resultBbox=yolact.getCorrectBbox(result);
-	cout<<"1"<<endl;
+	
 
 	for(auto &rect: resultBbox){
 
@@ -102,7 +108,22 @@ int main()
 
 	imshow("bbox",img);
 	//return vector<Mat> 
+
+	auto start = high_resolution_clock::now();
+	startClock = clock();
 	auto resultMask = yolact.getCorrectMask(result);
+	auto stop = high_resolution_clock::now();
+	endClock = clock();
+
+	auto duration = duration_cast<microseconds>(stop - start);
+	cout << "Mask time " << (float)duration.count() / 1000000 << "Sec" << endl;	
+
+	double time_taken = double(endClock - startClock) / double(CLOCKS_PER_SEC);
+
+	cout << "Mask Time Chrono " << fixed << time_taken << setprecision(5);
+	cout << " sec " << endl;
+	
+	// add mask to same image
 	cv::Mat fullMask= resultMask[0] | resultMask[1] | resultMask[2];
 	for(auto& mask:resultMask){
 		

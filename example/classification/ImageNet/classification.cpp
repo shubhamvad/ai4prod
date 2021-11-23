@@ -81,7 +81,7 @@ int main()
 	// //resnet = new ResNet50();
 	// cout << "test" << endl;
 	// //PATH TO FOLDER 
-    // std::string AccurayFolderPath = "../images/";
+    std::string AccurayFolderPath = "../images/";
 
     // cout << "Start Classification" << endl;
 
