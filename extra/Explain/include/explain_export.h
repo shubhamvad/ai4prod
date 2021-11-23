@@ -9,20 +9,20 @@
 #  ifndef EXPLAIN_EXPORT
 #    ifdef explain_EXPORTS
         /* We are building this library */
-#      define EXPLAIN_EXPORT __attribute__((visibility("default")))
+#      define EXPLAIN_EXPORT __declspec(dllexport)
 #    else
         /* We are using this library */
-#      define EXPLAIN_EXPORT __attribute__((visibility("default")))
+#      define EXPLAIN_EXPORT __declspec(dllimport)
 #    endif
 #  endif
 
 #  ifndef EXPLAIN_NO_EXPORT
-#    define EXPLAIN_NO_EXPORT __attribute__((visibility("hidden")))
+#    define EXPLAIN_NO_EXPORT 
 #  endif
 #endif
 
 #ifndef EXPLAIN_DEPRECATED
-#  define EXPLAIN_DEPRECATED __attribute__ ((__deprecated__))
+#  define EXPLAIN_DEPRECATED __declspec(deprecated)
 #endif
 
 #ifndef EXPLAIN_DEPRECATED_EXPORT

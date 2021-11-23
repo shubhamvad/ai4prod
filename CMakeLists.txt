@@ -285,10 +285,21 @@ endif()
 
 #Ocr
 IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extra/Ocr_private)
-message("FOUND OCR")
-set(LIBS ${LIBS} ocr)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extra/Ocr_private)
+    file(GLOB RESULT ${CMAKE_CURRENT_SOURCE_DIR}/extra/Ocr_private/src/*.cpp)
+
+    list(LENGTH RESULT RES_LEN)
+
+    # check if directory has some file
+    if(RES_LEN EQUAL 0)
+
+
+    else()
+        message("FOUND OCR")
+        set(LIBS ${LIBS} ocr)
+        add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extra/Ocr_private)
+
+    endif()
 
 endif()
 
